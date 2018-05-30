@@ -1,5 +1,5 @@
 # PPORise
-An advanced bot for Pokemon Planet Online powered by Lua scripts.
+A free, open-source and advanced bot for Pokémon Planet.
 
 # TODO
 1) Fix some null exception.
