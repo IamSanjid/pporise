@@ -7,8 +7,14 @@ An advanced bot for Pokemon Planet Online powered by Lua scripts.
 3) Add map feature.
 4) Add pathfinding api.
 
+
+## Libraries
+
+* [MoonSharp](http://www.moonsharp.org/) - Lua interpreter
+* [Json.NET](http://www.newtonsoft.com/json) - JSON framework
+
 # Lua API(s)
-Events:
+* Events:
 onStart() -> This function will be called when your script going to be started.
 onStop() -> This function will be called when your script going to be stopped.
 onPause() -> This function will be called when your script going to pe paused.
@@ -20,7 +26,7 @@ battle automatic actions like attack(), weakAttack(), useItem("Ultra Ball") etc.
 onLearningMove(moveName, pokemonIndex) -> This function is called when one of your Pokémon
 going to learn a move. You can use forgetMove("move name") - forgets a move of the new move learning
 Pokémon.
-Functions:
+* Functions:
 log("message") -> Prints texts on the bot log box.
 fatal("message") -> Prints texts on the bot log box and stops the script/bot.
 logout("message") -> Prints texts and log outs.
