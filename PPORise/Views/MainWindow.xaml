@@ -1,0 +1,569 @@
+﻿<Window x:Name="PPORiseWindow" x:Class="PPORise.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:local="clr-namespace:PPORise"
+        mc:Ignorable="d"
+        Title="PPORise" Height="600" Width="800"
+        Opacity="0.90" AllowsTransparency="True" WindowStyle="None" 
+        Icon="../icon.ico"
+        WindowStartupLocation="CenterScreen" MouseDown="PPORiseWindow_MouseDown" 
+        Background="#1F2225" Loaded="PPORiseWindow_Loaded" FontSize="13.333" ResizeMode="CanResizeWithGrip" Drop="MainWindow_OnDrop">
+    <Window.Resources>
+        <Storyboard x:Key="OpenMenu">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="GridMenu">
+                <EasingDoubleKeyFrame KeyTime="0" Value="50"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="180"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="CloseMenu">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="GridMenu">
+                <EasingDoubleKeyFrame KeyTime="0" Value="180"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.3" Value="50"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <LinearGradientBrush x:Key="CheckedBlue" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#FF7289da" Offset="0" />
+            <GradientStop Color="#FF2c2f33" Offset="1" />
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="GridViewColumnHeaderBackground" EndPoint="0,1" StartPoint="0,0">
+            <GradientStop Color="#FFFFFFFF" Offset="0"/>
+            <GradientStop Color="#FFFFFFFF" Offset="0.4091"/>
+            <GradientStop Color="#FFF7F8F9" Offset="1"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="GridViewColumnHeaderBorderBackground" EndPoint="0,1" StartPoint="0,0">
+            <GradientStop Color="#FFF2F2F2" Offset="0"/>
+            <GradientStop Color="#FFD5D5D5" Offset="1"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="GridViewColumnHeaderHoverBackground" EndPoint="0,1" StartPoint="0,0">
+            <GradientStop Color="#FFBDEDFF" Offset="0"/>
+            <GradientStop Color="#FFB7E7FB" Offset="1"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="GridViewColumnHeaderPressBackground" EndPoint="0,1" StartPoint="0,0">
+            <GradientStop Color="#FF8DD6F7" Offset="0"/>
+            <GradientStop Color="#FF8AD1F5" Offset="1"/>
+        </LinearGradientBrush>
+
+        <Style TargetType="{x:Type GridViewColumnHeader}">
+            <Setter Property="Foreground" Value="#99aab5" />
+            <Setter Property="Width" Value="Auto"/>
+            <Setter Property="Height" Value="Auto"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                        <Grid SnapsToDevicePixels="true">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates"/>
+                                <VisualStateGroup x:Name="FocusStates"/>
+                                <VisualStateGroup x:Name="ValidationStates"/>
+                            </VisualStateManager.VisualStateGroups>
+                            <Border x:Name="HeaderBorder" BorderBrush="#2c2f33" BorderThickness="0,1,0,1" Background="#2c2f33">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition MaxHeight="7"/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <Rectangle x:Name="UpperHighlight" Fill="#FFE3F7FF" Visibility="Collapsed"/>
+                                    <Border Padding="{TemplateBinding Padding}" Grid.RowSpan="2">
+                                        <ContentPresenter x:Name="HeaderContent" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="0,0,0,1" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <Border x:Name="HeaderHoverBorder" BorderThickness="1,0,1,1" Margin="1,1,0,0"/>
+                            <Border x:Name="HeaderPressBorder" BorderThickness="1,1,1,0" Margin="1,0,0,1"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Background" TargetName="HeaderBorder" Value="{StaticResource GridViewColumnHeaderHoverBackground}"/>
+                                <Setter Property="BorderBrush" TargetName="HeaderHoverBorder" Value="#FF88CBEB"/>
+                                <Setter Property="Visibility" TargetName="UpperHighlight" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter Property="Background" TargetName="HeaderBorder" Value="{StaticResource GridViewColumnHeaderPressBackground}"/>
+                                <Setter Property="BorderBrush" TargetName="HeaderHoverBorder" Value="#FF95DAF9"/>
+                                <Setter Property="BorderBrush" TargetName="HeaderPressBorder" Value="#FF7A9EB1"/>
+                                <Setter Property="Visibility" TargetName="UpperHighlight" Value="Visible"/>
+                                <Setter Property="Fill" TargetName="UpperHighlight" Value="#FFBCE4F9"/>
+                                <Setter Property="Margin" TargetName="HeaderContent" Value="1,1,0,0"/>
+                            </Trigger>
+                            <Trigger Property="Height" Value="Auto">
+                                <Setter Property="MinHeight" Value="20"/>
+                            </Trigger>
+                            <Trigger Property="Width" Value="Auto">
+                                <Setter Property="MinWidth" Value="20"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Role" Value="Floating">
+                    <Setter Property="Opacity" Value="0.4082"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                                <Canvas x:Name="PART_FloatingHeaderCanvas">
+                                    <Rectangle Fill="#FF000000" Height="{TemplateBinding ActualHeight}" Opacity="0.4697" Width="{TemplateBinding ActualWidth}"/>
+                                </Canvas>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="Role" Value="Padding">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                                <Border x:Name="HeaderBorder" BorderBrush="#2c2f33" BorderThickness="0,1,0,1" Background="#2c2f33"/>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="Height" Value="Auto">
+                                        <Setter Property="MinHeight" Value="20"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <SolidColorBrush x:Key="CheckedBlueBorder" Color="#FF7289da" />
+        <Style x:Key="SwitchStyle" TargetType="{x:Type CheckBox}">
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}" />
+            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type CheckBox}">
+                        <ControlTemplate.Resources>
+                            <Storyboard x:Key="OnChecking">
+                                <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="slider"
+                                                               Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)">
+                                    <SplineDoubleKeyFrame KeyTime="00:00:00.1000000" Value="30" />
+                                </DoubleAnimationUsingKeyFrames>
+                            </Storyboard>
+                            <Storyboard x:Key="OnUnchecking">
+                                <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="slider"
+                                                               Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)">
+                                    <SplineDoubleKeyFrame KeyTime="00:00:00.1000000" Value="0" />
+                                </DoubleAnimationUsingKeyFrames>
+                            </Storyboard>
+                        </ControlTemplate.Resources>
+                        <DockPanel x:Name="dockPanel">
+                            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                              Content="{TemplateBinding Content}"
+                                              ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              RecognizesAccessKey="True" VerticalAlignment="Center" />
+                            <Grid>
+                                <Border x:Name="BackgroundBorder" BorderBrush="#FF7289da" BorderThickness="1"
+                                        CornerRadius="9" Height="20" Width="55">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#FF23272a" Offset="0" />
+                                            <GradientStop Color="#FF23272a" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition />
+                                            <ColumnDefinition />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Name="On" Grid.Column="0" HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" Text="ON" />
+                                        <TextBlock Name="Off" Grid.Column="1" HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" Text="OFF" />
+                                    </Grid>
+                                </Border>
+                                <Border BorderBrush="#FF23272a" HorizontalAlignment="Left" x:Name="slider" Width="25"
+                                        Height="25" BorderThickness="1" CornerRadius="90"
+                                        RenderTransformOrigin="0.5,0.5" Margin="0">
+                                    <Border.RenderTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                                            <SkewTransform AngleX="0" AngleY="0" />
+                                            <RotateTransform Angle="0" />
+                                            <TranslateTransform X="0" Y="0" />
+                                        </TransformGroup>
+                                    </Border.RenderTransform>
+                                    <Border.Background>
+                                        <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                                            <GradientStop Color="#FF7289da" Offset="0" />
+                                            <GradientStop Color="#FF2c2f33" Offset="0.1" />
+                                            <GradientStop Color="#FF7289da" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                            </Grid>
+                        </DockPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard Storyboard="{StaticResource OnUnchecking}"
+                                                     x:Name="OnUnchecking_BeginStoryboard" />
+                                </Trigger.ExitActions>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard Storyboard="{StaticResource OnChecking}"
+                                                     x:Name="OnChecking_BeginStoryboard" />
+                                </Trigger.EnterActions>
+                                <Setter TargetName="BackgroundBorder" Property="Background"
+                                        Value="{StaticResource CheckedBlue}" />
+                                <Setter TargetName="BackgroundBorder" Property="BorderBrush"
+                                        Value="{StaticResource CheckedBlueBorder}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="New" Executed="ReloadHotKey_Executed" />
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Key="R" Modifiers="Control" Command="New"/>
+    </Window.InputBindings>
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="ButtonBase.Click" SourceName="ButtonOpenMenu">
+            <BeginStoryboard Storyboard="{StaticResource OpenMenu}"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="ButtonBase.Click" SourceName="ButtonCloseMenu">
+            <BeginStoryboard Storyboard="{StaticResource CloseMenu}"/>
+        </EventTrigger>
+    </Window.Triggers>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height=".5*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <DockPanel Grid.Column="0" Grid.Row="0" Height="29" VerticalAlignment="Top" Grid.ColumnSpan="2" Margin="162,0,0,0">
+            <Grid HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <DockPanel Grid.Column="3">
+                    <Border CornerRadius="10">
+                        <Button FontSize="13.333" BorderBrush="{x:Null}" Background="#FF1F2225" Name="CloseButton" Click="CloseButton_Click" Foreground="#FF7289da" Margin="0,5,0,0" Height="Auto" Width="Auto">
+                            <Button.Content>
+                                <iconPacks:PackIconMaterial Kind="Close" Foreground="#99aab5" FontSize="13.333"
+                                                            Margin="4,1,4,1" VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center" />
+                            </Button.Content>
+                            <Button.ToolTip>
+                                <ToolTip Background="#2c2f33">
+                                    <TextBlock Background="#2c2f33" Foreground="#99aab5">Close</TextBlock>
+                                </ToolTip>
+                            </Button.ToolTip>
+                        </Button>
+                    </Border>
+                </DockPanel>
+                <DockPanel Grid.Column="1" Margin="0,0,5,0">
+                    <Button BorderBrush="{x:Null}" Background="#FF1F2225" Name="MinimizeButton" Click="MinimizeButton_Click" Foreground="#FF7289da" Padding="0" Margin="0,15,8,0" Height="Auto" Width="20">
+                        <Button.Content>
+                            <iconPacks:PackIconMaterial Kind="WindowMinimize" Foreground="#99aab5" FontSize="13.333"
+                                                            Margin="0,0,0,0" VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center" />
+                        </Button.Content>
+                        <Button.ToolTip>
+                            <ToolTip Background="#2c2f33">
+                                <TextBlock Background="#2c2f33" Foreground="#99aab5">Minimize</TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                </DockPanel>
+                <DockPanel Grid.Column="2">
+                    <Button BorderBrush="{x:Null}" Background="#FF1F2225" Name="MaximizeButton" Click="MaximizeButton_Click" Foreground="#FF7289da" Padding="0" Margin="0,2,0,0">
+                        <Button.Content>
+                            <iconPacks:PackIconMaterial Kind="WindowMaximize" Foreground="#99aab5" FontSize="13.333"
+                                                            Margin="0,0,0,0" VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center" Name="btnMaximizeIcon" />
+                        </Button.Content>
+                        <Button.ToolTip>
+                            <ToolTip Background="#2c2f33">
+                                <TextBlock Background="#2c2f33" Foreground="#99aab5" Name="btnMaximizeTT">Maximize</TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
+                </DockPanel>
+                <TextBlock Grid.Column="0" Padding="5" Name="MainTitle" TextAlignment="Center" Foreground="#99aab5" Text="PPORise" FontSize="14" MouseDown="MainTitle_MouseDown"/>
+            </Grid>
+        </DockPanel>
+        <DockPanel Grid.Row="3" Grid.ColumnSpan="2" Background="#FF1F2225" HorizontalAlignment="Stretch">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="39*"/>
+                    <ColumnDefinition Width="61*" />
+                </Grid.ColumnDefinitions>
+                <WrapPanel Grid.Column="0" Background="#FF1F2225" HorizontalAlignment="Right" Width="295">
+                    <CheckBox IsChecked="True" x:Name="AutoEvolveSwitch" Style="{StaticResource SwitchStyle}" Margin="2,1,2,1" Content="Auto-evolve: " Checked="AutoEvolveSwitch_Checked" Unchecked="AutoEvolveSwitch_Unchecked" Foreground="#FF99aab5" Background="White">
+                        <CheckBox.ToolTip>
+                            <ToolTip Background="#2c2f33">
+                                <TextBlock Background="#2c2f33" Foreground="#99aab5">Always evolve a pokemon if on else not going to evolve a pokemon.</TextBlock>
+                            </ToolTip>
+                        </CheckBox.ToolTip>
+                    </CheckBox>
+                    <CheckBox x:Name="AutoReconnectSwitch" Style="{StaticResource SwitchStyle}" Margin="2,1,2,1" Content="Auto-reconnect: " Checked="AutoReconnectSwitch_Checked" Unchecked="AutoReconnectSwitch_Unchecked" Foreground="#FF99aab5">
+                        <CheckBox.ToolTip>
+                            <ToolTip Background="#2c2f33">
+                                <TextBlock Background="#2c2f33" Foreground="#99aab5">Reconnect after a few minutes and start the last script.</TextBlock>
+                            </ToolTip>
+                        </CheckBox.ToolTip>
+                    </CheckBox>
+                </WrapPanel>
+                <DockPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Background="{x:Null}" Margin="0,2,20,1" Height="24">
+                    <TextBlock Name="StatusIcon" Foreground="#FF101020" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center">
+                    <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" VerticalAlignment="Center" Foreground="#99aab5" />
+                    </TextBlock>
+                    <TextBlock Name="StatusText" Text="Offline" Foreground="Red" Margin="2,2,2,2" VerticalAlignment="Center"/>
+                    <TextBlock Name="MapNameIcon" Foreground="#FF101020" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center">
+                    <iconPacks:PackIconMaterial Kind="Map" Foreground="#99aab5" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center"/>
+                    </TextBlock>
+                    <TextBlock Name="MapNameText" Text="Not Loaded" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5"/>
+                    <TextBlock Name="PlayerPositionIcon" Foreground="#FF101020" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center">
+                    <iconPacks:PackIconMaterial Kind="MapMarkerRadius" VerticalAlignment="Center"
+                                                HorizontalAlignment="Center" Foreground="#99aab5"/>
+                    </TextBlock>
+                    <TextBlock Name="PlayerPositionText" Text="(?,?)" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5"/>
+                    <TextBlock Name="MoneyIcon" Foreground="#FF101020" FontSize="15" Margin="8,4,2,2" VerticalAlignment="Center">
+                     <iconPacks:PackIconMaterial Kind="CurrencyBtc" VerticalAlignment="Center"
+                                                HorizontalAlignment="Center" Foreground="#99aab5"/>
+                    </TextBlock>
+                    <TextBlock Name="MoneyText" Width="Auto" Text="?" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5">
+                        <TextBlock.ToolTip>
+                            <ToolTip Background="#2c2f33">
+                                <TextBlock Background="#2c2f33" Foreground="#99aab5">Money.</TextBlock>
+                            </ToolTip>
+                        </TextBlock.ToolTip>
+                    </TextBlock>
+                    <TextBlock Name="CreditIcon" Foreground="#FF101020" FontSize="15" Margin="8,4,2,2" VerticalAlignment="Center">
+                        <iconPacks:PackIconMaterial Kind="Seal" VerticalAlignment="Center"
+                                                    HorizontalAlignment="Center" Foreground="#99aab5">
+                            <iconPacks:PackIconMaterial.ToolTip>
+                                <ToolTip Background="#2c2f33">
+                                <TextBlock Background="#2c2f33" Foreground="#99aab5">Credits.</TextBlock>
+                            </ToolTip>
+                                </iconPacks:PackIconMaterial.ToolTip>
+                        </iconPacks:PackIconMaterial>
+                    </TextBlock>
+                    <TextBlock Name="CreditText" Width="Auto" Text="0" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5">
+                        <TextBlock.ToolTip>
+                            <ToolTip Background="#2c2f33">
+                                <TextBlock Background="#2c2f33" Foreground="#99aab5">Credits.</TextBlock>
+                            </ToolTip>
+                        </TextBlock.ToolTip>
+                    </TextBlock>
+                </DockPanel>
+            </Grid>
+
+        </DockPanel>
+        <Grid Name="GridMenu" Grid.Column="0" VerticalAlignment="Stretch" Background="#2c2f33" Grid.RowSpan="3" HorizontalAlignment="Left" Width="180">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="35" Margin="0 1 0 0">
+                <Button FontWeight="Regular" FontSize="13.333" Visibility="Collapsed" Click="ButtonOpenMenu_OnClick" x:Name="ButtonOpenMenu" Height="30" Width="50" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}">
+                    <Button.Content>
+                        <iconPacks:PackIconMaterial Kind="Menu" Foreground="#99aab5" FontWeight="Regular" FontSize="13.333"
+                                                    VerticalAlignment="Center"
+                                                    HorizontalAlignment="Center" Height="25" Width="20"/>
+                    </Button.Content>
+                </Button>
+                <Button FontWeight="Regular" FontSize="13.333" Click="ButtonCloseMenu_OnClick" x:Name="ButtonCloseMenu" Height="30" Width="50" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}">
+                    <Button.Content>
+                        <iconPacks:PackIconMaterial FontWeight="Regular" FontSize="13.333" Kind="ArrowLeft" Foreground="#99aab5"
+                                                    VerticalAlignment="Center"
+                                                    HorizontalAlignment="Center" Height="25" Width="20"/>
+                    </Button.Content>
+                </Button>
+            </Grid>
+            <Grid Grid.Row="1" Margin="4, 5, 0, 0" Height="30" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Click="LoginButton_Click" Grid.Column="0" Name="LoginButton" Width="30" Height="Auto" Background="{x:Null}" BorderBrush="{x:Null}">
+                    <Button.Content>
+                        <materialDesign:PackIcon Name="LoginButtonIcon" Kind="Login" Foreground="#99aab5" Width="23" Height="20" Margin="-10"/>
+                    </Button.Content>
+                    <Button.ToolTip>
+                        <ToolTip Background="#2c2f33">
+                            <TextBlock Background="#2c2f33" Foreground="#99aab5">Login/Logout.</TextBlock>
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+                <materialDesign:PopupBox FontWeight="Regular" FontSize="13.333" Visibility="Collapsed" x:Name="PopupBox" Grid.Column="0" Foreground="#99aab5" Height="30" PlacementMode="BottomAndAlignRightEdges" StaysOpen="False" Background="#1F2225" BorderBrush="#1F2225">
+                    <StackPanel Width="Auto" Opacity="0.9" Background="#1F2225">
+                        <Button Foreground="#99aab5" FontWeight="Regular" FontSize="13.333" x:Name="LoginButton2" Click="LoginButton_Click" Content="Login" Background="{x:Null}" BorderBrush="{x:Null}"/>
+                        <Button Foreground="#99aab5" FontWeight="Regular" FontSize="13.333" Click="StartButton_OnClick" Content="Start Script" Background="{x:Null}" BorderBrush="{x:Null}"/>
+                        <Button Foreground="#99aab5" FontWeight="Regular" FontSize="13.333" Click="StopButton_OnClick" Content="Stop Script" Background="{x:Null}" BorderBrush="{x:Null}"/>
+                        <Button Foreground="#99aab5" FontWeight="Regular" FontSize="13.333" Click="LoadScriptButton_OnClick" Content="Load Script" Background="{x:Null}" BorderBrush="{x:Null}"/>
+                        <Button Foreground="#99aab5" FontWeight="Regular" FontSize="13.333" x:Name="ReloadPopup" Click="ReLoadScriptButton_OnClick" Content="Reload Script" Background="{x:Null}" BorderBrush="{x:Null}"/>
+                    </StackPanel>
+                </materialDesign:PopupBox>
+                <Button Grid.Column="1" Click="StartButton_OnClick" Name="StartButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="30" Height="28" Background="{x:Null}" BorderBrush="{x:Null}">
+                    <Button.Content>
+                        <materialDesign:PackIcon Name="StartScriptButtonIcon" Kind="Play" Foreground="#99aab5" Height="25" Width="25" FontSize="35" Margin="-13 -10 -10 -10"/>
+                    </Button.Content>
+                    <Button.ToolTip>
+                        <ToolTip Background="#2c2f33">
+                            <TextBlock Background="#2c2f33" Foreground="#99aab5">Starts the loaded/paused/stopped script.</TextBlock>
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+                <Button Grid.Column="2" Click="StopButton_OnClick" Name="StopButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto" Height="28" Background="{x:Null}" BorderBrush="{x:Null}">
+                    <Button.Content>
+                        <materialDesign:PackIcon Kind="Stop" Foreground="#99aab5" Height="25" Width="25" Margin="-10" FontSize="35"/>
+                    </Button.Content>
+                    <Button.ToolTip>
+                        <ToolTip Background="#2c2f33">
+                            <TextBlock Background="#2c2f33" Foreground="#99aab5">Stops the started script.</TextBlock>
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+                <Button Grid.Column="3" Name="LoadScriptButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto" Height="28" Background="{x:Null}" BorderBrush="{x:Null}" Click="LoadScriptButton_OnClick">
+                    <Button.Content>
+                        <materialDesign:PackIcon Kind="FolderOpen" Foreground="#99aab5" Height="25" Width="25" Margin="-10" FontSize="35"/>
+                    </Button.Content>
+                    <Button.ToolTip>
+                        <ToolTip Background="#2c2f33">
+                            <TextBlock Background="#2c2f33" Foreground="#99aab5">Load a script.</TextBlock>
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+                <Button Grid.Column="4" Name="ReLoadScriptButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto" Height="28" Background="{x:Null}" BorderBrush="{x:Null}" Click="ReLoadScriptButton_OnClick">
+                    <Button.Content>
+                        <materialDesign:PackIcon Kind="Reload" Foreground="#99aab5" Height="25" Width="25" Margin="-10" FontSize="35"/>
+                    </Button.Content>
+                    <Button.ToolTip>
+                        <ToolTip Background="#2c2f33">
+                            <TextBlock Background="#2c2f33" Foreground="#99aab5">Reloads the previous script.</TextBlock>
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+            </Grid>
+            <ListView MouseDown="PPORiseWindow_MouseDown" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Top" HorizontalAlignment="Left" Grid.Row="2" Background="{x:Null}" BorderBrush="{x:Null}" Margin="0 40" >
+                <ListViewItem Height="60" Name="TeamTab">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <iconPacks:PackIconMaterial Kind="Pokeball" Foreground="#99aab5" FontSize="35"
+                                                    Height="20" Width="38" VerticalAlignment="Center"/>
+                        <TextBlock Text="Team" VerticalAlignment="Center" TextAlignment="Center"
+                                   Foreground="#99aab5" FontSize="17"/>
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem Height="60" Name="ChatTab">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <iconPacks:PackIconMaterial Kind="Wechat" Foreground="#99aab5" FontSize="35"
+                                                    Height="20" Width="38" VerticalAlignment="Center"/>
+                        <TextBlock Text="Chat/Commands" VerticalAlignment="Center" TextAlignment="Center"
+                                   Foreground="#99aab5" FontSize="17"/>
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem Height="60" Name="InventoryTab">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <fa:FontAwesome Icon="Suitcase" Foreground="#99aab5" FontSize="20.333"
+                                                    Height="20" Width="38" VerticalAlignment="Center"/>
+                        <TextBlock Text="Inventory" VerticalAlignment="Center" TextAlignment="Center"
+                                   Foreground="#99aab5" FontSize="17"/>
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem Height="60" Name="BattleStatTab">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <iconPacks:PackIconMaterial Kind="Paw" Foreground="#99aab5" FontSize="35"
+                                                    Height="20" Width="38" VerticalAlignment="Center"/>
+                        <TextBlock Text="Opponents" VerticalAlignment="Center" TextAlignment="Center"
+                                   Foreground="#99aab5" FontSize="17"/>
+                    </StackPanel>
+                </ListViewItem>
+            </ListView>
+            <!--<Button Grid.Row="1" Name="TeamTab" Background="{x:Null}" BorderBrush="{x:Null}">
+                <Button.Content>
+                    <StackPanel Width="108">
+                        <iconPacks:PackIconMaterial Kind="Pokeball" Foreground="#99aab5" FontSize="35"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center" Height="20" Margin="34,0,36,0" Width="38"/>
+                        <TextBlock Text="Team" Margin="4,1,4,1"  VerticalAlignment="Center" TextAlignment="Center"
+                                                            HorizontalAlignment="Center" Foreground="#99aab5" FontSize="15"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>-->
+            <!--<Button Grid.Row="2" Name="ChatTab" Background="{x:Null}" BorderBrush="{x:Null}">
+                <Button.Content>
+                    <StackPanel Width="108">
+                        <iconPacks:PackIconMaterial Kind="Wechat" Foreground="#99aab5" FontSize="35"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center" Height="20" Margin="34,0,36,0" Width="38"/>
+                        <TextBlock Text="Chat/Commands" Margin="-5,1,-10,1"  VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center" TextAlignment="Center" Foreground="#99aab5" FontSize="15" Width="123"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>-->
+            <!--<Button Grid.Row="3" Name="InventoryTab" Background="{x:Null}" BorderBrush="{x:Null}">
+                <Button.Content>
+                    <StackPanel Width="108">
+                        <iconPacks:PackIconMaterial Kind="BriefcaseOutline" Foreground="#99aab5" FontSize="35"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center" Height="20" Margin="34,0,36,0" Width="38"/>
+                        <TextBlock Text="Inventory" Margin="4,1,4,1"  VerticalAlignment="Center" TextAlignment="Center"
+                                                            HorizontalAlignment="Center" Foreground="#99aab5" FontSize="15"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>-->
+            <!--<Button Grid.Row="4" Name="BattleStatTab" Background="{x:Null}" BorderBrush="{x:Null}">
+                <Button.Content>
+                    <StackPanel Width="152">
+                        <iconPacks:PackIconMaterial Kind="Paw" Foreground="#99aab5" FontSize="35"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center" Height="20" Margin="34,0,36,0" Width="38"/>
+                        <TextBlock Text="Opponents" Margin="0,1" TextAlignment="Center"  VerticalAlignment="Center"
+                                                            HorizontalAlignment="Center" Foreground="#99aab5" FontSize="15" Width="152"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>-->
+        </Grid>
+        <Grid Grid.Column="1" Grid.Row="1" MouseDown="PPORiseWindow_MouseDown">
+            <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="TeamContent"/>
+            <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="ChatCommandsContent"/>
+            <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="InventoryContent"/>
+            <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="BattleStatsContent"/>
+        </Grid>
+        <Grid Grid.Row="2" Grid.Column="2">
+            <RichTextBox Grid.Column="1" Name="MessageTextBox"
+                     Background="Black"
+                     BorderBrush="{x:Null}"
+                     IsReadOnly="True"
+                     IsReadOnlyCaretVisible="True"
+                     AcceptsReturn="True" Foreground="{x:Null}"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <RichTextBox.Resources>
+                    <Style TargetType="{x:Type Paragraph}">
+                        <Setter Property="Margin" Value="0"/>
+                    </Style>
+                </RichTextBox.Resources>
+            </RichTextBox>
+        </Grid>
+    </Grid>
+</Window>
+
