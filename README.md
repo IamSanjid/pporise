@@ -2,10 +2,11 @@
 A free, open-source and advanced bot for Pokémon Planet.
 
 # TODO
-1) Fix some null exception.
-2) Make the code better.
-3) Add map feature.
-4) Add pathfinding api.
+1) Add NPC(s) features.
+2) Fix some null exception.
+3) Make the code better.
+4) Add map feature.
+5) Add pathfinding api.
 
 
 ## Libraries
