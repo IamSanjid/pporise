@@ -20,10 +20,10 @@ namespace PPOProtocol
             var allTypes = (PokemonType[])Enum.GetValues(typeof(PokemonType));
 
             _typeChart = new Dictionary<PokemonType, Dictionary<PokemonType, double>>();
-            foreach (PokemonType attacker in allTypes)
+            foreach (var attacker in allTypes)
             {
                 _typeChart[attacker] = new Dictionary<PokemonType, double>();
-                foreach (PokemonType defender in allTypes)
+                foreach (var defender in allTypes)
                 {
                     _typeChart[attacker][defender] = 1.0;
                 }

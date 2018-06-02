@@ -58,9 +58,10 @@
   <ItemGroup>
     <Compile Include="Account.cs" />
     <Compile Include="AccountManager.cs" />
-    <Compile Include="BattleAI.cs" />
+    <Compile Include="AI\BattleAI.cs" />
+    <Compile Include="AI\AI.cs" />
     <Compile Include="BotClient.cs" />
-    <Compile Include="MiningAI.cs" />
+    <Compile Include="AI\MiningAI.cs" />
     <Compile Include="Modules\AutoReconnector.cs" />
     <Compile Include="Modules\MoveTeacher.cs" />
     <Compile Include="Modules\PokemonEvolver.cs" />

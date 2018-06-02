@@ -23,15 +23,13 @@ namespace PPOProtocol
         private MiningObject _lastRock;
         private readonly int _mapInstance = -1;
         private readonly string _moveType = "";
-        private readonly string _url = @"http://pokemon-planet.com/game579.swf";
+        private readonly string _url = @"http://pokemon-planet.com/game581.swf";
 
         private bool _needToLoadR;
         private ExecutionPlan _pingToServer;
 
         public string[] PokemonCaught { get; private set; }
         private ExecutionPlan _saveData;
-        private ExecutionPlan _startMovingLeftAndRight;
-        private ExecutionPlan _startWildBattleTimeout;
         private ExecutionPlan _updatePositionTimeout;
         private ExecutionPlan _checkForLoggingTimeout;
 
@@ -73,6 +71,8 @@ namespace PPOProtocol
         public int MemberTime { get; private set; }
         public GameClient(GameConnection connection)
         {
+            if (connection.GameVersion != null)
+                _url = "http://pokemon-planet.com/" + connection.GameVersion;
             _connection = connection;
             _gameConnection = connection;
             _connection.PacketReceived += Connection_PacketReceived;
@@ -189,7 +189,7 @@ namespace PPOProtocol
 
         private void Connection_JoinedRoom()
         {
-            LogMessage?.Invoke("Logging in...");
+            LogMessage?.Invoke("Loading Game Data...");
             GetTimeStamp("getStartingInfo");
         }
 
@@ -481,6 +481,7 @@ namespace PPOProtocol
                     else if (obj.StartsWith("<"))
                     {
                         //XML packets....
+                        //if (!obj.EndsWith("\0")) return;
                         obj = obj.Replace("\0", "");
 #if DEBUG
                         Console.WriteLine("Got Data From server:");
@@ -1935,9 +1936,6 @@ namespace PPOProtocol
                 Shop = null;
                 OpenedShop = null;
 
-                _startMovingLeftAndRight?.Abort();
-                _startWildBattleTimeout?.Abort();
-
                 _battleTimeout.Cancel();
                 _battleTimeout.Set(Rand.Next(2500, 3000));
                 if (Battle)
@@ -1953,7 +1951,6 @@ namespace PPOProtocol
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
             }
         }
 
@@ -1963,17 +1960,14 @@ namespace PPOProtocol
             {
                 if (Battle)
                     return false;
-
-                _startMovingLeftAndRight = ExecutionPlan.Repeat(500, () => MoveLeftAndRight());
-
                 _battleTimeout.Set(Rand.Next(2500, 3000));
-                _startWildBattleTimeout = ExecutionPlan.Delay(Rand.Next(1000, 2000), () => SendWildBattle());
+                SendWildBattle();
                 return true;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
+                return false;
             }
         }
 
@@ -1983,17 +1977,14 @@ namespace PPOProtocol
             {
                 if (Battle)
                     return false;
-
-                _startMovingLeftAndRight = ExecutionPlan.Repeat(500, () => MoveLeftAndRight());
-
                 _battleTimeout.Set(Rand.Next(2000, 2500));
-                _startWildBattleTimeout = ExecutionPlan.Delay(Rand.Next(1000, 2000), () => SendWildBattle(true));
+                SendWildBattle(true);
                 return true;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
+                return false;
             }
         }
 
@@ -2062,7 +2053,7 @@ namespace PPOProtocol
             {
                 return false;
             }
-            InventoryItem item = GetItemByUid(itemId);
+            var item = GetItemByUid(itemId);
             if (item == null || item.Quntity == 0)
             {
                 return false;
@@ -2146,7 +2137,7 @@ namespace PPOProtocol
             PlayerPositionUpdated?.Invoke();
         }
 
-        // ReSharper disable once UnusedMember.Global
+        // ReSharper disable once UnusedMember.Global actually I just added may be in future it will be needed...
         public bool CheckMapExits(int x, int y)
         {
             if (EncryptedstepsWalked == Connection.CalcMd5(_stepsWalked + "asdfih9230dijndosf0asdpofnwe0c" + Username))
@@ -2245,7 +2236,7 @@ namespace PPOProtocol
 
         public bool MoveLeftAndRight()
         {
-            _movementTimeout.Set(Rand.Next(500, 1000));
+            _movementTimeout.Set(Rand.Next(1000, 1500));
             if (MoveLeft)
             {
                 MoveRight = true;
@@ -2265,7 +2256,7 @@ namespace PPOProtocol
             MoveLeft = true;
             SendMovement("left");
             MoveRight = false;
-            return false;
+            return true;
         }
 
 #endregion

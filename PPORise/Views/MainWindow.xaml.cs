@@ -268,7 +268,7 @@ namespace PPORise
         {
             Dispatcher.InvokeAsync(delegate
             {
-                LogMessage("Logged in successfully!", (Brush)new BrushConverter().ConvertFrom("#28d659"));
+                LogMessage("Loaded Game Data successfully!", (Brush)new BrushConverter().ConvertFrom("#28d659"));
                 StatusText.Text = "Online";
                 StatusText.Foreground = (Brush)new BrushConverter().ConvertFrom("#28d659");
             });

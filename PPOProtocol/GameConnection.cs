@@ -20,6 +20,8 @@ namespace PPOProtocol
         public event Action<Exception> LoggingError;
 
         private readonly HttpConnection _httpConnection;
+
+        public string GameVersion;
         public GameConnection(string username, int socksVersion, string socksHost, int socksPort, string socksUser, string socksPass)
         {
             _useSocks = true;

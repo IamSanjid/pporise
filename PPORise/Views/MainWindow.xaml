@@ -305,13 +305,13 @@
                 <TextBlock Grid.Column="0" Padding="5" Name="MainTitle" TextAlignment="Center" Foreground="#99aab5" Text="PPORise" FontSize="14" MouseDown="MainTitle_MouseDown"/>
             </Grid>
         </DockPanel>
-        <DockPanel Grid.Row="3" Grid.ColumnSpan="2" Background="#FF1F2225" HorizontalAlignment="Stretch">
+        <DockPanel Grid.Row="3" Grid.ColumnSpan="2" Background="#FF1F2225" HorizontalAlignment="Stretch" Margin="0 0 0 3">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="39*"/>
                     <ColumnDefinition Width="61*" />
                 </Grid.ColumnDefinitions>
-                <WrapPanel Grid.Column="0" Background="#FF1F2225" HorizontalAlignment="Right" Width="295">
+                <WrapPanel Grid.Column="0" Background="#FF1F2225" HorizontalAlignment="Left" Width="auto" Margin="14.5 3 0 0">
                     <CheckBox IsChecked="True" x:Name="AutoEvolveSwitch" Style="{StaticResource SwitchStyle}" Margin="2,1,2,1" Content="Auto-evolve: " Checked="AutoEvolveSwitch_Checked" Unchecked="AutoEvolveSwitch_Unchecked" Foreground="#FF99aab5" Background="White">
                         <CheckBox.ToolTip>
                             <ToolTip Background="#2c2f33">
@@ -327,7 +327,7 @@
                         </CheckBox.ToolTip>
                     </CheckBox>
                 </WrapPanel>
-                <DockPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Background="{x:Null}" Margin="0,2,20,1" Height="24">
+                <DockPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Background="{x:Null}" Margin="0,2,20,0" Height="24">
                     <TextBlock Name="StatusIcon" Foreground="#FF101020" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center">
                     <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" VerticalAlignment="Center" Foreground="#99aab5" />
                     </TextBlock>

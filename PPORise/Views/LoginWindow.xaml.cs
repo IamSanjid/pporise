@@ -6,15 +6,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
 using MaterialDesignThemes.Wpf;
 using PPOBot;
 
+// ReSharper disable once CheckNamespace
 namespace PPORise
 {
     /// <summary>
     /// Interaction logic for LoginWindow.xaml
     /// </summary>
+    // ReSharper disable once RedundantExtendsListEntry
     public partial class LoginWindow : Window
     {
         #region CUSTOM EVENTS
@@ -45,7 +46,7 @@ namespace PPORise
         {
             EnableBlur();
         }
-        private void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ButtonState == MouseButtonState.Pressed && e.LeftButton == MouseButtonState.Pressed)
             {
@@ -53,11 +54,11 @@ namespace PPORise
             }
         }
         #endregion
-        private BotClient _bot;
+        private readonly BotClient _bot;
         public bool ShowAccounts { get; set; }
         public string Username => UsernameTextBox.Text.Trim();
         public string Password => PasswordTextBox.Password;
-        public bool HasProxy => ProxyCheckBox.IsChecked.Value;
+        public bool HasProxy => ProxyCheckBox?.IsChecked != null && ProxyCheckBox.IsChecked.Value;
 
         public int ProxyVersion
         {
@@ -73,7 +74,7 @@ namespace PPORise
                         break;
                 }
             }
-            get => Socks4RadioButton.IsChecked.Value ? 4 : 5;
+            get => Socks4RadioButton.IsChecked != null && Socks4RadioButton.IsChecked.Value ? 4 : 5;
         }
         public string ProxyHost => ProxyHostTextBox.Text.Trim();
 
@@ -90,10 +91,12 @@ namespace PPORise
 
             Title = App.Name + " - " + Title;
             UsernameTextBox.Focus();
-            var bc = new BrushConverter();
 
             RefreshAccountList();
             RefreshVisibility();
+
+            if (bot.AccountManager.Accounts.Count > 0)
+                ShowAccounts_Click(null, null);
         }
         public void RefreshAccountList()
         {
@@ -102,7 +105,7 @@ namespace PPORise
             {
                 accountList = _bot.AccountManager.Accounts.Values.OrderBy(e => e.Name);
             }
-            List<string> accountListView = new List<string>();
+            var accountListView = new List<string>();
             foreach (Account account in accountList)
             {
                 accountListView.Add(account.FileName);
@@ -144,9 +147,12 @@ namespace PPORise
         }
         private void RefreshVisibility()
         {
-            Visibility hasProxy = ProxyCheckBox.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
-            Visibility isSocks5 = ProxyCheckBox.IsChecked.Value && Socks5RadioButton.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
-            Visibility hasAuth = ProxyCheckBox.IsChecked.Value && Socks5RadioButton.IsChecked.Value && !AnonymousCheckBox.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
+            // ReSharper disable once PossibleInvalidOperationException
+            var hasProxy = ProxyCheckBox.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
+            // ReSharper disable once PossibleInvalidOperationException
+            var isSocks5 = ProxyCheckBox.IsChecked.Value && Socks5RadioButton.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
+            // ReSharper disable once PossibleInvalidOperationException
+            var hasAuth = ProxyCheckBox.IsChecked.Value && Socks5RadioButton.IsChecked.Value && /*ReSharper disable once PossibleInvalidOperationException*/ !AnonymousCheckBox.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
             if (ProxyTypePanel != null)
             {
                 ProxyTypePanel.Visibility = hasProxy;
@@ -291,20 +297,20 @@ namespace PPORise
             {
                 ShowAccounts_Click(null, null);
             }
-            if (UsernameTextBox.Text == null || UsernameTextBox.Text.Trim() == "")
+            if (string.IsNullOrEmpty(UsernameTextBox.Text))
             {
                 return;
             }
-            Account account = new Account(UsernameTextBox.Text.Trim());
+            var account = new Account(UsernameTextBox.Text.Trim());
 
-            if (PasswordTextBox.Password != "" && PasswordTextBox.Password != null)
+            if (!string.IsNullOrEmpty(PasswordTextBox.Password))
             {
                 account.Password = PasswordTextBox.Password;
             }
 
             if (HasProxy)
             {
-                SocksVersion socksVersion = SocksVersion.None;
+                var socksVersion = SocksVersion.None;
                 if (ProxyVersion == 4)
                 {
                     socksVersion = SocksVersion.Socks4;
@@ -314,11 +320,11 @@ namespace PPORise
                     socksVersion = SocksVersion.Socks5;
                 }
                 account.Socks.Version = socksVersion;
-                if (ProxyHostTextBox.Text != null && ProxyHostTextBox.Text.Trim() != "")
+                if (!string.IsNullOrEmpty(ProxyHostTextBox.Text))
                 {
                     account.Socks.Host = ProxyHostTextBox.Text.Trim();
                 }
-                if (ProxyPortTextBox.Text != null && ProxyPortTextBox.Text.Trim() != "")
+                if (!string.IsNullOrEmpty(ProxyPortTextBox.Text))
                 {
                     int port;
                     if (int.TryParse(ProxyPortTextBox.Text.Trim(), out port))
@@ -326,11 +332,11 @@ namespace PPORise
                         account.Socks.Port = port;
                     }
                 }
-                if (ProxyUsernameTextBox.Text != null && ProxyUsernameTextBox.Text.Trim() != "")
+                if (!string.IsNullOrEmpty(ProxyUsernameTextBox.Text))
                 {
                     account.Socks.Username = ProxyUsernameTextBox.Text.Trim();
                 }
-                if (ProxyPasswordTextBox.Password != null && ProxyPasswordTextBox.Password != "")
+                if (!string.IsNullOrEmpty(ProxyPasswordTextBox.Password))
                 {
                     account.Socks.Password = ProxyPasswordTextBox.Password;
                 }

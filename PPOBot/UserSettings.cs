@@ -42,20 +42,22 @@ namespace PPOBot
             }
         }
 
+        public string Versions => _settings.Versions;
         public UserSettings()
         {
             try
             {
                 if (File.Exists("Settings.json"))
                 {
-                    string fileText = File.ReadAllText("Settings.json");
+                    var fileText = File.ReadAllText("Settings.json");
                     if (JsonConvert.DeserializeObject(fileText) is JObject json) _settings = JsonConvert.DeserializeObject<SettingsCache>(json.ToString());
                     return;
                 }
             }
-            catch {
+            catch
+            {
                 //ignore
-                  }
+            }
             _settings = new SettingsCache();
         }
 
@@ -64,6 +66,7 @@ namespace PPOBot
             public bool AutoReconnect;
             public bool AutoEvolve = true;
             public string LastScript;
+            public string Versions = "game581.swf:163"; //Default value...
 
             public void Save()
             {

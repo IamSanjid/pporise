@@ -208,8 +208,8 @@ namespace PPOBot
             if (client != null)
             {
                 Game.Timer = DateTime.Now;
-                AI = new BattleAI(client);
-                MiningAI = new MiningAI(client);
+                AI = new BattleAI(Game);
+                MiningAI = new MiningAI(Game);
                 client.LogMessage += PrintLogMessage;
                 client.Connected += Game_Connected;
                 client.Disconnected += Game_Disconnected;
@@ -353,6 +353,11 @@ namespace PPOBot
                 else
                 {
                     _gameConnection = new GameConnection(Account.Name);
+                }
+                if (Settings.Versions != null)
+                {
+                    _gameConnection.GameVersion = Settings.Versions.Split(':')[0];
+                    _gameConnection.Version = Convert.ToInt32(Settings.Versions.Split(':')[1]);
                 }
 
                 SetClient(new GameClient(_gameConnection));

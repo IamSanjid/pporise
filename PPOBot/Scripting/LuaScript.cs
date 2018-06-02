@@ -94,7 +94,7 @@ namespace PPOBot.Scripting
 
 		public override bool ExecuteNextAction()
 		{
-			string functionName = Bot.Game.Battle ? "onBattleAction" : "onPathAction";
+			var functionName = Bot.Game.Battle ? "onBattleAction" : "onPathAction";
 			_actionExecuted = false;
 			try
 			{
@@ -137,7 +137,7 @@ namespace PPOBot.Scripting
 			try
 			{
 				TaskUtils.CallActionWithTimeout(() => _lua.DoString(content),
-					() => { throw new Exception("The execution of the script timed out."); }, TimeoutDelay);
+					() => throw new Exception("The execution of the script timed out."), TimeoutDelay);
 			}
 			catch (SyntaxErrorException ex)
 			{
@@ -425,7 +425,7 @@ namespace PPOBot.Scripting
 				Fatal("error: buyItem can only be used when a shop is open.");
 				return false;
 			}
-			ShopItem item = Bot.Game.OpenedShop.ShopItems.FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.InvariantCultureIgnoreCase));
+			var item = Bot.Game.OpenedShop.ShopItems.FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.InvariantCultureIgnoreCase));
 
 			if (item == null)
 			{
@@ -446,7 +446,7 @@ namespace PPOBot.Scripting
 				return false;
 			}
 
-			InventoryItem item = Bot.Game.GetItemFromName(itemName);
+			var item = Bot.Game.GetItemFromName(itemName);
 			if (item == null || item.Quntity == 0)
 			{
 				Fatal("error: giveItemToPokemon: tried to give the non-existing item '" + itemName + "'.");
@@ -479,7 +479,7 @@ namespace PPOBot.Scripting
 		private bool UseItemOnPokemon(string itemName, int pokemonIndex)
 		{
 			itemName = itemName.ToUpperInvariant();
-			InventoryItem item = Bot.Game.GetItemFromName(itemName.ToUpperInvariant());
+			var item = Bot.Game.GetItemFromName(itemName.ToUpperInvariant());
 			if (pokemonIndex < 1 || pokemonIndex > Bot.Game.Team.Count)
 			{
 				Fatal("error: useItemOnPokemon: tried to retrieve the non-existing pokemon " + pokemonIndex + ".");
@@ -530,10 +530,10 @@ namespace PPOBot.Scripting
 			from = Math.Max(from, 1);
 			to = Math.Min(to, Bot.Game.Team.Count);
 
-			int level = ascending ? 0 : int.MaxValue;
-			for (int i = from - 1; i < to; ++i)
+			var level = ascending ? 0 : int.MaxValue;
+			for (var i = from - 1; i < to; ++i)
 			{
-				Pokemon pokemon = Bot.Game.Team[i];
+				var pokemon = Bot.Game.Team[i];
 				if (ascending && pokemon.Level < level) return false;
 				if (!ascending && pokemon.Level > level) return false;
 				level = pokemon.Level;
@@ -1244,15 +1244,24 @@ namespace PPOBot.Scripting
 		// API: Starts a wild battle.
 		private bool StartBattle()
 		{
-			if (Bot.Game.IsFishing)
-				StopFishing();
-			if (Bot.Game.Battle)
-			{
-				Fatal("error: startBattle is only usable when you're not in battle.");
-				return false;
-			}
 
-			return ExecuteAction(Bot.Game.StartWildBattle());
+		    try
+		    {
+		        if (Bot.Game.IsFishing)
+		            StopFishing();
+		        if (Bot.Game.Battle)
+		        {
+		            Fatal("error: startBattle is only usable when you're not in battle.");
+		            return false;
+		        }
+
+		        return ExecuteAction(Bot.Game.StartWildBattle());
+		    }
+		    catch (Exception e)
+		    {
+		        Console.WriteLine(e);
+		        throw;
+		    }
 		}
 		// API: Checks if the bot is fishing or not.
 		private bool IsFishing()
