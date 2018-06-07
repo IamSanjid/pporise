@@ -130,6 +130,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Utils\FlashWindowHelper.cs" />
+    <Compile Include="Views\AboutWindow.xaml.cs">
+      <DependentUpon>AboutWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\BattleStatView.xaml.cs">
       <DependentUpon>BattleStatView.xaml</DependentUpon>
     </Compile>
@@ -145,6 +148,10 @@
     <Compile Include="Views\TeamView.xaml.cs">
       <DependentUpon>TeamView.xaml</DependentUpon>
     </Compile>
+    <Page Include="Views\AboutWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\BattleStatView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

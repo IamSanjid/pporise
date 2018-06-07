@@ -1,24 +1,86 @@
-﻿using PPOProtocol;
+﻿using System.Collections.Generic;
+using PPOProtocol;
 
 // ReSharper disable once CheckNamespace
 namespace PPOBot
 {
     // ReSharper disable once InconsistentNaming
-    public class BattleAI : AI
+    public class BattleAI
     {
-        public BattleAI(GameClient client) : base(client) {}
+        private const int DoubleEdge = 38;
+        private const int DragonRage = 82;
+        private const int DreamEater = 138;
+        private const int Explosion = 153;
+        private const int FalseSwipe = 206;
+        private const int NightShade = 101;
+        private const int Psywave = 149;
+        private const int SeismicToss = 69;
+        private const int Selfdestruct = 120;
+        private const int Synchronoise = 485;
+
+        public readonly HashSet<int> LevitatingPokemons = new HashSet<int>
+        {
+            92, 93, 94, 109, 110, 200, 201, 329, 330, 337, 338, 343, 344, 355, 358, 380, 381,
+            429, 433, 436, 437, 455, 479, 480, 481, 482, 487, 488, 602, 603, 604, 615, 635
+        };
+
+        private bool IsMoveOffensive(PokemonMove move, MovesManager.MoveData moveData)
+        {
+            return moveData.Power > 0 || move.Id == DragonRage || move.Id == SeismicToss || move.Id == NightShade || move.Id == Psywave;
+        }
+        private bool IsMoveOffensive(PokemonMove move, MovesManager.MoveData moveData, PokemonType opponentType1, PokemonType opponentType2)
+        {
+            return moveData.Power > 0 ||
+                   move.Id == DragonRage && opponentType1 != PokemonType.Fairy && opponentType2 != PokemonType.Fairy ||
+                   move.Id == SeismicToss || move.Id == NightShade || move.Id == Psywave;
+        }
+        private double ApplySpecialEffects(PokemonMove move, double power)
+        {
+            if (move.Id == DragonRage)
+            {
+                if (_client.ActiveBattle.FullWildPokemon != null)
+                    return _client.ActiveBattle.FullWildPokemon.CurrentHealth <= 40 ? 10000.0 : 1.0;
+                return _client.ActiveBattle.WildPokemon.CurrentHealth <= 40 ? 10000.0 : 1.0;
+            }
+
+            if (move.Id == SeismicToss || move.Id == NightShade)
+            {
+                if (_client.ActiveBattle.FullWildPokemon != null)
+                    return _client.ActiveBattle.FullWildPokemon.CurrentHealth <= ActivePokemon.Level ? 10000.0 : 1.0;
+                return _client.ActiveBattle.WildPokemon.CurrentHealth <= ActivePokemon.Level ? 10000.0 : 1.0;
+            }
+
+            if (move.Id == Psywave)
+            {
+                if (_client.ActiveBattle.FullWildPokemon != null)
+                    return _client.ActiveBattle.FullWildPokemon.CurrentHealth <= (ActivePokemon.Level / 2) ? 10000.0 : 1.0;
+                return _client.ActiveBattle.WildPokemon.CurrentHealth <= (ActivePokemon.Level / 2) ? 10000.0 : 1.0;
+            }
+
+            if (move.Id == FalseSwipe)
+            {
+                return 0.1;
+            }
+
+            return power;
+        }
+        private readonly GameClient _client;
+        public BattleAI(GameClient client)
+        {
+            _client = client;
+        }
         public bool Run()
         {
-            if (!Client.Battle) return false;
+            if (!_client.Battle) return false;
             if (ActivePokemon.CurrentHealth <= 0) return false;
-            return Client.Run();
+            return _client.Run();
         }
         public int UsablePokemonsCount
         {
             get
             {
-                int usablePokemons = 0;
-                foreach (var pokemon in Client.Team)
+                var usablePokemons = 0;
+                foreach (var pokemon in _client.Team)
                 {
                     if (IsPokemonUsable(pokemon))
                     {
@@ -41,16 +103,16 @@ namespace PPOBot
         }
         public bool SendAnyPokemon()
         {
-            if (Client.IsTrapped) return false;
-            if (!Client.Battle) return false;
-            foreach (var pk in Client.Team)
+            if (_client.IsTrapped) return false;
+            if (!_client.Battle) return false;
+            foreach (var pk in _client.Team)
             {
                 if (pk.CurrentHealth > 0 && pk != ActivePokemon)
                     return SendPokemon(pk.Uid);
             }
             return false;
         }
-        public Pokemon ActivePokemon => Client.Team[Client.ActiveBattle.ActivePokemon];
+        public Pokemon ActivePokemon => _client.Team[_client.ActiveBattle.ActivePokemon];
         public bool UseMove(string moveName)
         {
             if (ActivePokemon.CurrentHealth == 0) return false;
@@ -60,7 +122,7 @@ namespace PPOBot
             {
                 if (move.Name.ToUpperInvariant() == moveName)
                 {
-                    Client.UseAttack(move.Position - 1);
+                    _client.UseAttack(move.Position - 1);
                     return true;
                 }
             }
@@ -68,25 +130,25 @@ namespace PPOBot
         }
         public bool SendPokemon(int index)
         {
-            if (Client.IsTrapped) return false;
-            if (!Client.Battle) return false;
-            if (index < 1 || index > Client.Team.Count) return false;
-            Pokemon pokemon = Client.Team[index - 1];
+            if (_client.IsTrapped) return false;
+            if (!_client.Battle) return false;
+            if (index < 1 || index > _client.Team.Count) return false;
+            Pokemon pokemon = _client.Team[index - 1];
             if (pokemon.CurrentHealth > 0 && pokemon != ActivePokemon)
             {
-                Client.ChangePokemon(pokemon.Uid - 1);
+                _client.ChangePokemon(pokemon.Uid - 1);
                 return true;
             }
             return false;
         }
         public bool SendUsablePokemon()
         {
-            if (Client.IsTrapped) return false;
-            foreach (Pokemon pokemon in Client.Team)
+            if (_client.IsTrapped) return false;
+            foreach (Pokemon pokemon in _client.Team)
             {
                 if (IsPokemonUsable(pokemon) && pokemon != ActivePokemon)
                 {
-                    Client.ChangePokemon(pokemon.Uid - 1);
+                    _client.ChangePokemon(pokemon.Uid - 1);
                     return true;
                 }
             }
@@ -95,14 +157,14 @@ namespace PPOBot
         public bool UseAnyMove()
         {
             if (ActivePokemon.CurrentHealth == 0) return false;
-            if (!Client.Battle) return false;
+            if (!_client.Battle) return false;
 
             for (int i = 0; i < ActivePokemon.Moves.Length; ++i)
             {
                 PokemonMove move = ActivePokemon.Moves[i];
                 if (move.CurrentPoints > 0)
                 {
-                     Client.UseAttack(i);
+                     _client.UseAttack(i);
                     return true;
                 }
             }
@@ -110,12 +172,12 @@ namespace PPOBot
         }
         public bool UseMove(int index)
         {
-            if (!Client.Battle || ActivePokemon.CurrentHealth == 0 || index < 1 || index > 4)
+            if (!_client.Battle || ActivePokemon.CurrentHealth == 0 || index < 1 || index > 4)
             {
                 return false;
             }
 
-            Client.UseAttack(index - 1);
+            _client.UseAttack(index - 1);
             return true;
         }
         private bool UseAttack(bool useBestAttack)
@@ -135,12 +197,12 @@ namespace PPOBot
                 if (move.Name is null || move.Data is null) continue;
 
                 var moveData = MovesManager.Instance.GetMoveData(move.Id);
-                if (move.Id == DreamEater && (Client.ActiveBattle.FullWildPokemon != null ? Client.ActiveBattle.FullWildPokemon.Status.ToUpperInvariant() != "SLEEP" : Client.ActiveBattle.WildPokemon.Status.ToUpperInvariant() != "SLEEP"))
+                if (move.Id == DreamEater && (_client.ActiveBattle.FullWildPokemon != null ? _client.ActiveBattle.FullWildPokemon.Status.ToUpperInvariant() != "SLEEP" : _client.ActiveBattle.WildPokemon.Status.ToUpperInvariant() != "SLEEP"))
                 {
                     continue;
                 }
                 if (move.Id == Explosion || move.Id == Selfdestruct ||
-                    (move.Id == DoubleEdge && ActivePokemon.CurrentHealth < (Client.ActiveBattle.FullWildPokemon?.MaxHealth / 3 ?? Client.ActiveBattle.WildPokemon.MaxHealth / 3)))
+                    (move.Id == DoubleEdge && ActivePokemon.CurrentHealth < (_client.ActiveBattle.FullWildPokemon?.MaxHealth / 3 ?? _client.ActiveBattle.WildPokemon.MaxHealth / 3)))
                 {
                     continue;
                 }
@@ -150,8 +212,8 @@ namespace PPOBot
                 var playerType1 = TypesManager.Instance.Type1[ActivePokemon.Id];
                 var playerType2 = TypesManager.Instance.Type2[ActivePokemon.Id];
 
-                var opponentType1 = TypesManager.Instance.Type1[Client.ActiveBattle.WildPokemon.Id];
-                var opponentType2 = TypesManager.Instance.Type2[Client.ActiveBattle.WildPokemon.Id];
+                var opponentType1 = TypesManager.Instance.Type1[_client.ActiveBattle.WildPokemon.Id];
+                var opponentType2 = TypesManager.Instance.Type2[_client.ActiveBattle.WildPokemon.Id];
 
                 if (!IsMoveOffensive(move, moveData, opponentType1, opponentType2)) continue;
 
@@ -167,12 +229,12 @@ namespace PPOBot
                 power *= TypesManager.Instance.GetMultiplier(attackType, opponentType1);
                 power *= TypesManager.Instance.GetMultiplier(attackType, opponentType2);
 
-                if (attackType == PokemonType.Ground && LevitatingPokemons.Contains(Client.ActiveBattle.WildPokemon.Id))
+                if (attackType == PokemonType.Ground && LevitatingPokemons.Contains(_client.ActiveBattle.WildPokemon.Id))
                 {
                     power = 0;
                 }
 
-                power = ApplySpecialEffects(move, power, ActivePokemon);
+                power = ApplySpecialEffects(move, power);
 
                 if (move.Id == Synchronoise)
                 {
@@ -203,12 +265,12 @@ namespace PPOBot
 
             if (useBestAttack && bestMove != null)
             {
-                Client.UseAttack(bestIndex);
+                _client.UseAttack(bestIndex);
                 return true;
             }
             if (!useBestAttack && worstMove != null)
             {
-                Client.UseAttack(worstIndex);
+                _client.UseAttack(worstIndex);
                 return true;
             }
             return false;

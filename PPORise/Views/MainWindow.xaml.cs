@@ -597,6 +597,7 @@ namespace PPORise
                 }
                 Inventory.ItemsListView.ItemsSource = items;
                 Inventory.ItemsListView.Items.Refresh();
+                InventoryView.UpdateColumnWidths((GridView)Inventory.ItemsListView.View);
             });
         }
 
@@ -658,6 +659,7 @@ namespace PPORise
                     if (opponents is null || opponents.Count > 0 is false || Bot.Game is null) return;
                     BattleStat.EnemiesListView.ItemsSource = opponents;
                     BattleStat.EnemiesListView.Items.Refresh();
+                    BattleStatView.UpdateColumnWidths((GridView)BattleStat.EnemiesListView.View);
                 }
             });
         }
@@ -705,8 +707,9 @@ namespace PPORise
                             Bot.Game.Team = Bot.Game.Team.OrderBy(p => p.Uid).ToList();
                             team = Bot.Game.Team.ToArray();
                             Team.PokemonsListView.ItemsSource = team;
-                            Team.PokemonsListView.Items.Refresh();
+                            Team.PokemonsListView.Items.Refresh();                        
                         }
+                        TeamView.UpdateColumnWidths((GridView)Team.PokemonsListView.View);
 
                     }
                 }
@@ -753,6 +756,8 @@ namespace PPORise
                     {
                         MoneyText.Text = $@"{Bot.Game.Money}$";
                         CreditText.Text = $@"{Bot.Game.Credits}";
+                        MoneyTooltip.Text = $@"Money: {Bot.Game.Money}$";
+                        Money1Tooltip.Text = MoneyTooltip.Text;
                     }
                 }
             });
@@ -879,6 +884,8 @@ namespace PPORise
             ReLoadScriptButton.Visibility = Visibility.Visible;
             StartButton.Visibility = Visibility.Visible;
             StopButton.Visibility = Visibility.Visible;
+            MessageTextBox.CaretPosition = MessageTextBox.Document.ContentEnd;
+            MessageTextBox.ScrollToEnd();
         }
 
         private void ButtonCloseMenu_OnClick(object sender, RoutedEventArgs e)
@@ -891,6 +898,8 @@ namespace PPORise
             ReLoadScriptButton.Visibility = Visibility.Collapsed;
             StartButton.Visibility = Visibility.Collapsed;
             StopButton.Visibility = Visibility.Collapsed;
+            MessageTextBox.CaretPosition = MessageTextBox.Document.ContentEnd;
+            MessageTextBox.ScrollToEnd();
         }
         private async void MainWindow_OnDrop(object sender, DragEventArgs e)
         {
@@ -902,6 +911,11 @@ namespace PPORise
                     await LoadScript(file[0]);
                 }
             }
+        }
+
+        private void AboutButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            new AboutWindow{Owner = this}.ShowDialog();
         }
     }
 }

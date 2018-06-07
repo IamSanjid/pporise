@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,6 +29,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -59,7 +61,6 @@
     <Compile Include="Account.cs" />
     <Compile Include="AccountManager.cs" />
     <Compile Include="AI\BattleAI.cs" />
-    <Compile Include="AI\AI.cs" />
     <Compile Include="BotClient.cs" />
     <Compile Include="AI\MiningAI.cs" />
     <Compile Include="Modules\AutoReconnector.cs" />

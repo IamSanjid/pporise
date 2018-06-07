@@ -241,8 +241,9 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height=".5*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="104*"/>
+            <RowDefinition Height="67*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -305,13 +306,13 @@
                 <TextBlock Grid.Column="0" Padding="5" Name="MainTitle" TextAlignment="Center" Foreground="#99aab5" Text="PPORise" FontSize="14" MouseDown="MainTitle_MouseDown"/>
             </Grid>
         </DockPanel>
-        <DockPanel Grid.Row="3" Grid.ColumnSpan="2" Background="#FF1F2225" HorizontalAlignment="Stretch" Margin="0 0 0 3">
+        <DockPanel Grid.Row="4" Grid.ColumnSpan="2" Background="#FF1F2225" HorizontalAlignment="Stretch">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="39*"/>
-                    <ColumnDefinition Width="61*" />
+                    <ColumnDefinition Width="17*"/>
+                    <ColumnDefinition Width="15*" />
                 </Grid.ColumnDefinitions>
-                <WrapPanel Grid.Column="0" Background="#FF1F2225" HorizontalAlignment="Left" Width="auto" Margin="14.5 3 0 0">
+                <WrapPanel Background="#FF1F2225" HorizontalAlignment="Right" Margin="0 0 20 0" Grid.Column="1">
                     <CheckBox IsChecked="True" x:Name="AutoEvolveSwitch" Style="{StaticResource SwitchStyle}" Margin="2,1,2,1" Content="Auto-evolve: " Checked="AutoEvolveSwitch_Checked" Unchecked="AutoEvolveSwitch_Unchecked" Foreground="#FF99aab5" Background="White">
                         <CheckBox.ToolTip>
                             <ToolTip Background="#2c2f33">
@@ -326,33 +327,52 @@
                             </ToolTip>
                         </CheckBox.ToolTip>
                     </CheckBox>
+                    <Button Name="AboutButton" Click="AboutButton_OnClick" HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto" Height="28" Background="{x:Null}" BorderBrush="{x:Null}" >
+                        <Button.Content>
+                            <materialDesign:PackIcon Kind="Help" Foreground="#99aab5" Height="15" Width="15" Margin="-8" FontSize="5"/>
+                        </Button.Content>
+                        <Button.ToolTip>
+                            <ToolTip Background="#2c2f33">
+                                <TextBlock Background="#2c2f33" Foreground="#99aab5">About/Help.</TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
+                    </Button>
                 </WrapPanel>
-                <DockPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Background="{x:Null}" Margin="0,2,20,0" Height="24">
-                    <TextBlock Name="StatusIcon" Foreground="#FF101020" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center">
+            </Grid>
+
+        </DockPanel>
+        <DockPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Background="{x:Null}" Height="24" Margin="0,3,10,3">
+            <TextBlock Name="StatusIcon" Foreground="#FF101020" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center">
                     <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" VerticalAlignment="Center" Foreground="#99aab5" />
-                    </TextBlock>
-                    <TextBlock Name="StatusText" Text="Offline" Foreground="Red" Margin="2,2,2,2" VerticalAlignment="Center"/>
-                    <TextBlock Name="MapNameIcon" Foreground="#FF101020" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center">
+            </TextBlock>
+            <TextBlock Name="StatusText" Text="Offline" Foreground="Red" Margin="2,2,2,2" VerticalAlignment="Center"/>
+            <TextBlock Name="MapNameIcon" Foreground="#FF101020" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center">
                     <iconPacks:PackIconMaterial Kind="Map" Foreground="#99aab5" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center"/>
-                    </TextBlock>
-                    <TextBlock Name="MapNameText" Text="Not Loaded" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5"/>
-                    <TextBlock Name="PlayerPositionIcon" Foreground="#FF101020" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center">
+            </TextBlock>
+            <TextBlock Name="MapNameText" Text="Not Loaded" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5"/>
+            <TextBlock Name="PlayerPositionIcon" Foreground="#FF101020" FontSize="15" Margin="8,2,2,2" VerticalAlignment="Center">
                     <iconPacks:PackIconMaterial Kind="MapMarkerRadius" VerticalAlignment="Center"
                                                 HorizontalAlignment="Center" Foreground="#99aab5"/>
-                    </TextBlock>
-                    <TextBlock Name="PlayerPositionText" Text="(?,?)" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5"/>
-                    <TextBlock Name="MoneyIcon" Foreground="#FF101020" FontSize="15" Margin="8,4,2,2" VerticalAlignment="Center">
+            </TextBlock>
+            <TextBlock Name="PlayerPositionText" Text="(?,?)" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5"/>
+            <TextBlock Name="MoneyIcon" Foreground="#FF101020" FontSize="15" Margin="8,4,2,2" VerticalAlignment="Center">
                      <iconPacks:PackIconMaterial Kind="CurrencyBtc" VerticalAlignment="Center"
-                                                HorizontalAlignment="Center" Foreground="#99aab5"/>
+                                                HorizontalAlignment="Center" Foreground="#99aab5">
+                         <iconPacks:PackIconMaterial.ToolTip>
+                             <ToolTip Background="#2c2f33">
+                                 <TextBlock Name="Money1Tooltip" Background="#2c2f33" Foreground="#99aab5">Money.</TextBlock>
+                             </ToolTip>
+                         </iconPacks:PackIconMaterial.ToolTip>
+                     </iconPacks:PackIconMaterial>
                     </TextBlock>
-                    <TextBlock Name="MoneyText" Width="Auto" Text="?" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5">
-                        <TextBlock.ToolTip>
-                            <ToolTip Background="#2c2f33">
-                                <TextBlock Background="#2c2f33" Foreground="#99aab5">Money.</TextBlock>
-                            </ToolTip>
-                        </TextBlock.ToolTip>
+            <TextBlock Name="MoneyText" Width="Auto" Text="?" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5">
+                <TextBlock.ToolTip>
+                    <ToolTip Background="#2c2f33">
+                        <TextBlock Name="MoneyTooltip" Background="#2c2f33" Foreground="#99aab5">Money.</TextBlock>
+                    </ToolTip>
+                </TextBlock.ToolTip>
                     </TextBlock>
-                    <TextBlock Name="CreditIcon" Foreground="#FF101020" FontSize="15" Margin="8,4,2,2" VerticalAlignment="Center">
+            <TextBlock Name="CreditIcon" Foreground="#FF101020" FontSize="15" Margin="8,4,2,2" VerticalAlignment="Center">
                         <iconPacks:PackIconMaterial Kind="Seal" VerticalAlignment="Center"
                                                     HorizontalAlignment="Center" Foreground="#99aab5">
                             <iconPacks:PackIconMaterial.ToolTip>
@@ -362,18 +382,15 @@
                                 </iconPacks:PackIconMaterial.ToolTip>
                         </iconPacks:PackIconMaterial>
                     </TextBlock>
-                    <TextBlock Name="CreditText" Width="Auto" Text="0" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5">
-                        <TextBlock.ToolTip>
-                            <ToolTip Background="#2c2f33">
-                                <TextBlock Background="#2c2f33" Foreground="#99aab5">Credits.</TextBlock>
-                            </ToolTip>
-                        </TextBlock.ToolTip>
+            <TextBlock Name="CreditText" Width="Auto" Text="0" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5">
+                <TextBlock.ToolTip>
+                    <ToolTip Background="#2c2f33">
+                        <TextBlock Background="#2c2f33" Foreground="#99aab5">Credits.</TextBlock>
+                    </ToolTip>
+                </TextBlock.ToolTip>
                     </TextBlock>
-                </DockPanel>
-            </Grid>
-
         </DockPanel>
-        <Grid Name="GridMenu" Grid.Column="0" VerticalAlignment="Stretch" Background="#2c2f33" Grid.RowSpan="3" HorizontalAlignment="Left" Width="180">
+        <Grid Name="GridMenu" Grid.Column="0" VerticalAlignment="Stretch" Background="#2c2f33" Grid.RowSpan="4" HorizontalAlignment="Left" Width="180">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -498,58 +515,14 @@
                     </StackPanel>
                 </ListViewItem>
             </ListView>
-            <!--<Button Grid.Row="1" Name="TeamTab" Background="{x:Null}" BorderBrush="{x:Null}">
-                <Button.Content>
-                    <StackPanel Width="108">
-                        <iconPacks:PackIconMaterial Kind="Pokeball" Foreground="#99aab5" FontSize="35"
-                                                            VerticalAlignment="Center"
-                                                            HorizontalAlignment="Center" Height="20" Margin="34,0,36,0" Width="38"/>
-                        <TextBlock Text="Team" Margin="4,1,4,1"  VerticalAlignment="Center" TextAlignment="Center"
-                                                            HorizontalAlignment="Center" Foreground="#99aab5" FontSize="15"/>
-                    </StackPanel>
-                </Button.Content>
-            </Button>-->
-            <!--<Button Grid.Row="2" Name="ChatTab" Background="{x:Null}" BorderBrush="{x:Null}">
-                <Button.Content>
-                    <StackPanel Width="108">
-                        <iconPacks:PackIconMaterial Kind="Wechat" Foreground="#99aab5" FontSize="35"
-                                                            VerticalAlignment="Center"
-                                                            HorizontalAlignment="Center" Height="20" Margin="34,0,36,0" Width="38"/>
-                        <TextBlock Text="Chat/Commands" Margin="-5,1,-10,1"  VerticalAlignment="Center"
-                                                            HorizontalAlignment="Center" TextAlignment="Center" Foreground="#99aab5" FontSize="15" Width="123"/>
-                    </StackPanel>
-                </Button.Content>
-            </Button>-->
-            <!--<Button Grid.Row="3" Name="InventoryTab" Background="{x:Null}" BorderBrush="{x:Null}">
-                <Button.Content>
-                    <StackPanel Width="108">
-                        <iconPacks:PackIconMaterial Kind="BriefcaseOutline" Foreground="#99aab5" FontSize="35"
-                                                            VerticalAlignment="Center"
-                                                            HorizontalAlignment="Center" Height="20" Margin="34,0,36,0" Width="38"/>
-                        <TextBlock Text="Inventory" Margin="4,1,4,1"  VerticalAlignment="Center" TextAlignment="Center"
-                                                            HorizontalAlignment="Center" Foreground="#99aab5" FontSize="15"/>
-                    </StackPanel>
-                </Button.Content>
-            </Button>-->
-            <!--<Button Grid.Row="4" Name="BattleStatTab" Background="{x:Null}" BorderBrush="{x:Null}">
-                <Button.Content>
-                    <StackPanel Width="152">
-                        <iconPacks:PackIconMaterial Kind="Paw" Foreground="#99aab5" FontSize="35"
-                                                            VerticalAlignment="Center"
-                                                            HorizontalAlignment="Center" Height="20" Margin="34,0,36,0" Width="38"/>
-                        <TextBlock Text="Opponents" Margin="0,1" TextAlignment="Center"  VerticalAlignment="Center"
-                                                            HorizontalAlignment="Center" Foreground="#99aab5" FontSize="15" Width="152"/>
-                    </StackPanel>
-                </Button.Content>
-            </Button>-->
         </Grid>
-        <Grid Grid.Column="1" Grid.Row="1" MouseDown="PPORiseWindow_MouseDown">
+        <Grid Grid.Column="1" Grid.Row="2" MouseDown="PPORiseWindow_MouseDown">
             <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="TeamContent"/>
             <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="ChatCommandsContent"/>
             <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="InventoryContent"/>
             <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="BattleStatsContent"/>
         </Grid>
-        <Grid Grid.Row="2" Grid.Column="2">
+        <Grid Grid.Row="3" Grid.Column="1">
             <RichTextBox Grid.Column="1" Name="MessageTextBox"
                      Background="Black"
                      BorderBrush="{x:Null}"

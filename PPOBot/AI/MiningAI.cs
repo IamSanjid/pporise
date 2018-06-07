@@ -8,21 +8,77 @@ using PPOProtocol;
 namespace PPOBot
 {
     // ReSharper disable once InconsistentNaming
-    public class MiningAI : AI
+    public class MiningAI
     {
         //wrost AI ever.... Don't laugh :D
-        private readonly ProtocolTimeout _delayIfNoRockMineable = new ProtocolTimeout();
+        public static class RockPrority
+        {
+            public enum RockPriority
+            {
+                Gold = 9,
+                Rainbow = 8,
+                Dark = 7,
+                Pale = 5,
+                Prism = 4,
+                Green = 3,
+                Blue = 2,
+                Red = 1,
+                None = 0
+            }
 
+            public static RockPriority PriorityFromColor(string color)
+            {
+                switch (color.ToLowerInvariant().Trim())
+                {
+                    case "gold":
+                        return RockPriority.Gold;
+                    case "rainbow":
+                        return RockPriority.Rainbow;
+                    case "dark":
+                        return RockPriority.Dark;
+                    case "pale":
+                        return RockPriority.Pale;
+                    case "prism":
+                        return RockPriority.Prism;
+                    case "green":
+                        return RockPriority.Green;
+                    case "blue":
+                        return RockPriority.Blue;
+                    case "red":
+                        return RockPriority.Red;
+                    default:
+                        return RockPriority.None;
+                }
+            }
+#if DEBUG
+            public static int CountPriorityPower(RockPriority pr)
+            {
+                return (int)pr;
+            }
+#endif
+        }
+
+
+        private readonly ProtocolTimeout _delayIfNoRockMineable = new ProtocolTimeout();
+        private readonly GameClient _client;
+
+        public MiningAI(GameClient client)
+        {
+            _client = client;
+            client.RockDepleted += _client_RockDepleted;
+            client.RockRestored += _client_RockRestored;
+        }
         public bool Update()
         {
             _delayIfNoRockMineable.Update();
             return _delayIfNoRockMineable.IsActive;
         }
         
-        private IList<MiningObject> Rocks => Client.MiningObjects;
+        private IList<MiningObject> Rocks => _client.MiningObjects;
+
         private readonly IList<MiningObject> _minedRocks = new List<MiningObject>();
 
-        protected override void _client_RockRestored(MiningObject rock)
+        private void _client_RockRestored(MiningObject rock)
         {
             try
             {
@@ -41,7 +97,7 @@ namespace PPOBot
             }
         }
 
-        protected override void _client_RockDepleted(MiningObject rock)
+        private void _client_RockDepleted(MiningObject rock)
         {
             try
             {
@@ -63,13 +119,13 @@ namespace PPOBot
         }
 
         private MiningObject _lastRock;
-        public bool IsAnyMineAbleRock() => Client.IsAnyMinableRocks();
-        public bool IsRockMineAbleAt(int x, int y) => Client.IsMinable(x, y);
+        public bool IsAnyMineAbleRock() => _client.IsAnyMinableRocks();
+        public bool IsRockMineAbleAt(int x, int y) => _client.IsMinable(x, y);
         public bool IsRockMineAble(MiningObject rock) => IsRockMineAbleAt(rock.X, rock.Y);
         public bool MineRockAt(int x, int y, string axe)
         {
             if (!IsRockMineAbleAt(x, y)) return false;
-            Client.MineRock(x, y, axe);
+            _client.MineRock(x, y, axe);
             return true;
         }
 
@@ -91,7 +147,7 @@ namespace PPOBot
                     var coloredRocks = new List<MiningObject>();
                     foreach (var rock in tempRocks)
                     {
-                        if (rock.IsGoldMember == Client.IsGoldMember && IsRockMineAble(rock) &&
+                        if (rock.IsGoldMember == _client.IsGoldMember && IsRockMineAble(rock) &&
                             colors.ToList().Contains(rock.Color))
                         {
                             coloredRocks.Add(rock);
@@ -178,7 +234,7 @@ namespace PPOBot
                 var tempRocks = new List<MiningObject>();
                 foreach (var rock in Rocks)
                 {
-                    if (rock.IsGoldMember == Client.IsGoldMember && IsRockMineAble(rock))
+                    if (rock.IsGoldMember == _client.IsGoldMember && IsRockMineAble(rock))
                     {
                         tempRocks.Add(rock);
                     }
@@ -220,7 +276,7 @@ namespace PPOBot
                 if (_minedRocks.Count > 0 && _minedRocks.Contains(rock))
                     continue;
                 if (rock.IsMined) continue;
-                var distance = GameClient.DistanceBetween(Client.PlayerX, Client.PlayerY, rock.X, rock.Y);
+                var distance = GameClient.DistanceBetween(_client.PlayerX, _client.PlayerY, rock.X, rock.Y);
                 var node = new Node
                 {
                     Distance = distance,
@@ -284,15 +340,13 @@ namespace PPOBot
         private bool IsNodeClosest(Node node, IList<MiningObject> rocks)
         {
             if (rocks.Any(r =>
-                GameClient.DistanceBetween(Client.PlayerX, Client.PlayerY, r.X, r.Y) < node.Distance))
+                GameClient.DistanceBetween(_client.PlayerX, _client.PlayerY, r.X, r.Y) < node.Distance))
             {
                 return false;
             }
 
             return true;
         }
-
-        public MiningAI(GameClient client) : base(client) {}
     }
 
     public static class StringExtention

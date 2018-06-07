@@ -7,11 +7,11 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("PPORise")]
-[assembly: AssemblyDescription("An advanced bot for Pokemon Planet Online powered by Lua scripts.")]
+[assembly: AssemblyDescription("A free, open-source and advanced bot for Pokemon Planet.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("PROShine")]
+[assembly: AssemblyCompany("PROShine Contributors")]
 [assembly: AssemblyProduct("PPORise")]
-[assembly: AssemblyCopyright("Copyright © PROShine by Silv3r, 2018")]
+[assembly: AssemblyCopyright("Copyright © PPORise by PROShine Contributors, 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -50,6 +50,6 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.1")]
-[assembly: AssemblyFileVersion("1.0.0.1")]
+[assembly: AssemblyVersion("1.0.0.2")]
+[assembly: AssemblyFileVersion("1.0.0.2")]
 [assembly: NeutralResourcesLanguage("en")]

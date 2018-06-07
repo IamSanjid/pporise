@@ -176,7 +176,14 @@ namespace PPORise
 
                         useItem.Click += UseItem_Click;
                         giveItem.Click += MenuItemGiveItem_Click;
-                        contextMenu.Items.Add(giveItem);
+                        if (_bot.Game.Items
+                                .Where(i => i.IsEquipAble())
+                                .OrderBy(i => i.Name)
+                                .ToList().Count > 0)
+                        {
+                            contextMenu.Items.Add(giveItem);
+                        }
+
                         contextMenu.Items.Add(useItem);
                     }
 
