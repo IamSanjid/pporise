@@ -252,7 +252,7 @@ namespace PPOBot.Scripting
 				_lua.Globals["isOppenentDataReceived"] = new Func<bool>(IsOppenentDataReceived);
 				_lua.Globals["isWildBattle"] = new Func<bool>(IsWildBattle);
 				//path
-				_lua.Globals["startBattle"] = new Func<bool>(StartBattle);
+				_lua.Globals["startBattle"] = new Func<Task<bool>>(StartBattle);
 				_lua.Globals["startFishing"] = new Func<DynValue, bool>(StartFishing);
 				_lua.Globals["stopFishing"] = new Func<bool>(StopFishing);
 				_lua.Globals["startAnyColorRockMining"] = new Func<DynValue, bool>(StartAnyColorRockMining);
@@ -266,7 +266,7 @@ namespace PPOBot.Scripting
 				_lua.Globals["isAutoEvolve"] = new Func<bool>(IsAutoEvolve);
 				_lua.Globals["enableAutoEvolve"] = new Func<bool>(EnableAutoEvolve);
 				_lua.Globals["disableAutoEvolve"] = new Func<bool>(DisableAutoEvolve);
-				_lua.Globals["moveLeftAndRight"] = new Func<bool>(MoveLeftAndRight);
+				_lua.Globals["moveLeftAndRight"] = new Func<Task<bool>>(MoveLeftAndRight);
 				_lua.Globals["getPlayerX"] = new Func<int>(GetPlayerX);
 				_lua.Globals["getPlayerY"] = new Func<int>(GetPlayerY);
 				_lua.Globals["isAnyRockMinable"] = new Func<bool>(IsAnyRockMinable);
@@ -806,10 +806,10 @@ namespace PPOBot.Scripting
 			Pokemon pokemon = Bot.Game.Team[index - 1];
 			return pokemon.MaxHealth;
 		}
-		private bool MoveLeftAndRight()
+		private async Task<bool> MoveLeftAndRight()
 		{
 			if (!ValidateAction("moveLeftAndRight", false)) return false;
-			return Bot.MoveLeftAndRight();
+            return ExecuteAction(await LeftRightMovement());
 		}
 		// API: Returns the effort value for the specified stat of the specified pokémon in the team.
 		private int GetPokemonEffortValue(int pokemonIndex, string statType)
@@ -1241,8 +1241,17 @@ namespace PPOBot.Scripting
 		{
 			return ExecuteAction(Bot.Game.LoadMap(true, map, x, y));
 		}
-		// API: Starts a wild battle.
-		private bool StartBattle()
+
+        private async Task<bool> LeftRightMovement()
+        {
+            await MoveLeft();
+            await MoveRight();
+            return true;
+        }
+        private async Task MoveRight() => await Task.Delay(800).ContinueWith((pr) => Bot.Game.SendMovement("right"));
+        private async Task MoveLeft() => await Task.Delay(800).ContinueWith((pr) => Bot.Game.SendMovement("left"));
+        // API: Starts a wild battle.
+        private async Task<bool> StartBattle()
 		{
 
 		    try
@@ -1254,7 +1263,7 @@ namespace PPOBot.Scripting
 		            Fatal("error: startBattle is only usable when you're not in battle.");
 		            return false;
 		        }
-
+                await LeftRightMovement();
 		        return ExecuteAction(Bot.Game.StartWildBattle());
 		    }
 		    catch (Exception e)

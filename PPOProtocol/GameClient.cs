@@ -23,7 +23,7 @@ namespace PPOProtocol
         private MiningObject _lastRock;
         private readonly int _mapInstance = -1;
         private readonly string _moveType = "";
-        private readonly string _url = @"http://pokemon-planet.com/game581.swf";
+        private readonly string _url = @"http://pokemon-planet.com/game582.swf";
 
         private bool _needToLoadR;
         private ExecutionPlan _pingToServer;
@@ -94,8 +94,8 @@ namespace PPOProtocol
 
             #region
 
-            MoveLeft = false;
-            MoveRight = false;
+            MovedLeft = false;
+            MovedRight = false;
 
             #endregion
         }
@@ -1170,11 +1170,12 @@ namespace PPOProtocol
             PlayerY = Convert.ToInt32(resObj[loopNum + 3]);
             EncryptedTileX = Connection.CalcMd5(PlayerX + "asdfih9230dijndosf0asdpofnwe0c" + Username);
             EncryptedTileY = Connection.CalcMd5(PlayerY + "asdfih9230dijndosf0asdpofnwe0c" + Username);
+            LastUpdateX = PlayerX;
+            LastUpdateY = PlayerY;
             MapName = resObj[loopNum + 4];
             MapName = MapName.Replace(" (", "").Replace(")", "");
             EncryptedMap =
                 Connection.CalcMd5(MapName + "dlod02jhznpd02jdhggyambya8201201nfbmj209ahao8rh2pb" + Username);
-            _pingToServer = ExecutionPlan.Repeat(30000, () => PingServer());
             loc7 = loopNum + 5;
             PlayerDataUpdated?.Invoke();
             LoadMap(false, MapName);
@@ -1197,6 +1198,7 @@ namespace PPOProtocol
             MemberType = resObj[loopNum + 4];
             int.TryParse(resObj[loopNum + 5], out var time);
             MemberTime = time;
+            _pingToServer = ExecutionPlan.Repeat(30000, () => PingServer());
             //User Pokemons
             //[7216762,150,46,46,52,41,38,72,0,0,66,39,5,10,29,1,6,15,0,23,hardy,82,82,52,108,0,10,72,58332,2142,false,26,5,Charmeleon,none,66,,0,Professor Oak,default]`[9388091,148,38,48,52,48,58,78,0,0,44,12,7,41,24,5,9,29,24,18,lax,95,33,109,36,0,1,78,54672,1163,false,25,234,Stantler,none,119,,0,Nuhash2004,default]`
             loc7 = loopNum + 19;
@@ -1322,9 +1324,10 @@ namespace PPOProtocol
                 StopMining();
 
             _loadingTimeout.Set(Rand.Next(2000, 3000));
-            GetTimeStamp("removePlayer", oldMapBattleLost);
             if (_updatePositionTimeout != null)
                 _updatePositionTimeout.Abort();
+
+            GetTimeStamp("removePlayer", oldMapBattleLost);
             _updatedMap = false;
             MapName = tempMap;
             TempMap = "";
@@ -1561,8 +1564,6 @@ namespace PPOProtocol
                 loc8.Add(PlayerY);
                 loc8.Add(_dir);
                 loc8.Add(_moveType);
-                loc8.Add(p1.ToLower());
-                loc8.Add(p2);
                 loc8.Add(_mapInstance != -1 ? MapName + $"({_mapInstance})" : MapName);
                 loc8.Add(IsFishing ? "1" : "0");
                 _connection.SendXtMessage("PokemonPlanetExt", "b55", loc8, "str");
@@ -2231,32 +2232,36 @@ namespace PPOProtocol
 
 #region
 
-        private bool MoveLeft { get; set; }
-        private bool MoveRight { get; set; }
+        private bool MovedLeft { get; set; }
+        private bool MovedRight { get; set; }
 
-        public bool MoveLeftAndRight()
+        public async Task<bool> MoveLeftAndRight()
         {
             _movementTimeout.Set(Rand.Next(1000, 1500));
-            if (MoveLeft)
+            return await Task.Delay(1000).ContinueWith((PR) =>
             {
-                MoveRight = true;
-                SendMovement("right");
-                MoveLeft = false;
-                return true;
-            }
+                if (MovedLeft)
+                {
+                    MovedRight = true;
+                    SendMovement("right");
+                    MovedLeft = false;
+                    return true;
+                }
 
-            if (MoveRight)
-            {
-                MoveLeft = true;
+                if (MovedRight)
+                {
+                    MovedLeft = true;
+                    SendMovement("left");
+                    MovedRight = false;
+                    return true;
+                }
+                
+
+                MovedLeft = true;
                 SendMovement("left");
-                MoveRight = false;
+                MovedRight = false;
                 return true;
-            }
-
-            MoveLeft = true;
-            SendMovement("left");
-            MoveRight = false;
-            return true;
+            });
         }
 
 #endregion

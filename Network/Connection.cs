@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Network
 {
@@ -368,18 +369,15 @@ namespace Network
             }
         }
 
-        private void DisconnectCallback(IAsyncResult ar)
+        private async void DisconnectCallback(IAsyncResult ar)
         {
             if (ar.IsCompleted)
             {
-                _waitForReconnect = ExecutionPlan.Delay(1000, () =>
-                {
-                    Reconnect();
-                });
+                await Reconnect();
             }
         }
 
-        private async void Reconnect()
+        private async Task Reconnect()
         {
             if (_tempSocket != null)
             {
@@ -390,7 +388,8 @@ namespace Network
                         ((IPEndPoint) _tempSocket.RemoteEndPoint)?.Address.ToString(),
                         ((IPEndPoint) _tempSocket.RemoteEndPoint).Port);
 #if DEBUG
-                    Console.WriteLine($"Using Proxy server to connect to the game server. Address: {((IPEndPoint)_tempSocket.RemoteEndPoint).Address} Port: {((IPEndPoint)_tempSocket.RemoteEndPoint).Port}");
+                    Console.WriteLine
+                        ($"Using Proxy server to connect to the game server. Address: {((IPEndPoint)_tempSocket.RemoteEndPoint).Address} Port: {((IPEndPoint)_tempSocket.RemoteEndPoint).Port}");
 #endif
                     Initialize(newTempSocket);
                 }

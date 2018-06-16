@@ -411,7 +411,8 @@ namespace PPORise.Views
                                 "/swapPokemon Pokemon1,Pokemon2\t Swaps Pokemon.\n/getMiningRocks\t--Counts total minable rocks of current map.\n" +
                                 "/useItemOn Item Name,Pokemon_Index\t--Uses the specified item on the specified pokémon.\n/takeItemFromPokemon Pokemon_index\t--Takes the held item from the specified pokemon.\n/giveItemToPokemon Item Name,Pokemon_index\t--Gives the specified item on the specified pokemon.\n" +
                                 "/openShop\t--Opens the Pokemart shop.\n/buyItem ItemName,amount\t--Buys the specified item from the opened shop.\n/pokemon\t--Prints out the Pokemon names that can be found in your current map." +
-                                "\n/countColoredRocks rock_color\t--Counts all rocks which color is specific.\nfindClosestRock\t--Finds the closests rock and prints out the cell.");
+                                "\n/countColoredRocks rock_color\t--Counts all rocks which color is specific.\n/findClosestRock\t--Finds the closests rock and prints out the cell.\n/moveLeft\t--Moves the player left.\n/moveRight\t--Moves the player right." +
+                                "\n/moveDown\t--Moves the player down.\n/moveUp\t--Moves the player up.\n/version\t--Prints out the version current nmber.");
                             break;
                         case "tp2":
                             lock (_bot)
@@ -1096,6 +1097,70 @@ namespace PPORise.Views
                                         "Please login first to use this command or wait for some seconds until it loads all game data.");
                                 }
                             }
+                            break;
+                        case "moveleft":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.Battle || !_bot.Game.IsMapLoaded) return;
+                                    _bot.Game.SendMovement("left");
+                                }
+                                else
+                                {
+                                    AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
+                                        "Please login first to use this command or wait for some seconds until it loads all game data.");
+                                }
+                            }
+                            break;
+                        case "moveright":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.Battle || !_bot.Game.IsMapLoaded) return;
+                                    _bot.Game.SendMovement("right");
+                                }
+                                else
+                                {
+                                    AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
+                                        "Please login first to use this command or wait for some seconds until it loads all game data.");
+                                }
+                            }
+                            break;
+                        case "movedown":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.Battle || !_bot.Game.IsMapLoaded) return;
+                                    _bot.Game.SendMovement("down");
+                                }
+                                else
+                                {
+                                    AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
+                                        "Please login first to use this command or wait for some seconds until it loads all game data.");
+                                }
+                            }
+                            break;
+                        case "moveup":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.Battle || !_bot.Game.IsMapLoaded) return;
+                                    _bot.Game.SendMovement("up");
+                                }
+                                else
+                                {
+                                    AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
+                                        "Please login first to use this command or wait for some seconds until it loads all game data.");
+                                }
+                            }
+                            break;
+                        case "version":
+                            AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
+                                       $"The version of your current bot is {App.Version}.");
                             break;
                         default:
                             AddChatMessage(((ChatPanel) _commandsTab.Content).ChatBox,

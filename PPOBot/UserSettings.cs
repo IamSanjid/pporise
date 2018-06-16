@@ -59,6 +59,7 @@ namespace PPOBot
                 //ignore
             }
             _settings = new SettingsCache();
+            _settings.Save();
         }
 
         private class SettingsCache

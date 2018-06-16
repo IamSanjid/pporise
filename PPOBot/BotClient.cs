@@ -268,11 +268,6 @@ namespace PPOBot
                 throw;
             }
         }
-        public bool MoveLeftAndRight()
-        {
-            if (Game is null) return false;
-            return Game.MoveLeftAndRight();
-        }
         private void ExecuteNextAction()
         {
             try
