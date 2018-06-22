@@ -1162,6 +1162,20 @@ namespace PPORise.Views
                             AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
                                        $"The version of your current bot is {App.Version}.");
                             break;
+                        case "watch":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    _bot.Game.GetTimeStamp("command", command.Trim());
+                                }
+                                else
+                                {
+                                    AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
+                                        "Please login first to use this command or wait for some seconds until it loads all game data.");
+                                }
+                            }
+                            break;
                         default:
                             AddChatMessage(((ChatPanel) _commandsTab.Content).ChatBox,
                                 $"The command \"{command}\", doesn't not exist.", Brushes.OrangeRed);

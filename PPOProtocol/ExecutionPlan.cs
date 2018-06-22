@@ -44,9 +44,10 @@ namespace PPOProtocol
                 _planTimer.Enabled = false;
                 _planTimer.Elapsed -= GenericTimerCallback;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 //
+                Console.WriteLine(ex);
             }
         }
 

@@ -252,7 +252,7 @@ namespace PPOBot.Scripting
 				_lua.Globals["isOppenentDataReceived"] = new Func<bool>(IsOppenentDataReceived);
 				_lua.Globals["isWildBattle"] = new Func<bool>(IsWildBattle);
 				//path
-				_lua.Globals["startBattle"] = new Func<Task<bool>>(StartBattle);
+				_lua.Globals["startBattle"] = new Func<bool>(StartBattle);
 				_lua.Globals["startFishing"] = new Func<DynValue, bool>(StartFishing);
 				_lua.Globals["stopFishing"] = new Func<bool>(StopFishing);
 				_lua.Globals["startAnyColorRockMining"] = new Func<DynValue, bool>(StartAnyColorRockMining);
@@ -266,7 +266,6 @@ namespace PPOBot.Scripting
 				_lua.Globals["isAutoEvolve"] = new Func<bool>(IsAutoEvolve);
 				_lua.Globals["enableAutoEvolve"] = new Func<bool>(EnableAutoEvolve);
 				_lua.Globals["disableAutoEvolve"] = new Func<bool>(DisableAutoEvolve);
-				_lua.Globals["moveLeftAndRight"] = new Func<Task<bool>>(MoveLeftAndRight);
 				_lua.Globals["getPlayerX"] = new Func<int>(GetPlayerX);
 				_lua.Globals["getPlayerY"] = new Func<int>(GetPlayerY);
 				_lua.Globals["isAnyRockMinable"] = new Func<bool>(IsAnyRockMinable);
@@ -806,7 +805,12 @@ namespace PPOBot.Scripting
 			Pokemon pokemon = Bot.Game.Team[index - 1];
 			return pokemon.MaxHealth;
 		}
-		private async Task<bool> MoveLeftAndRight()
+        private async void MoveLeftAndRight()
+        {
+            await MoveLeftAndRightAsync();
+        }
+
+        private async Task<bool> MoveLeftAndRightAsync()
 		{
 			if (!ValidateAction("moveLeftAndRight", false)) return false;
             return ExecuteAction(await LeftRightMovement());
@@ -914,7 +918,8 @@ namespace PPOBot.Scripting
 				Fatal("error: getOpponentHealthPercent can only be used in battle.");
 				return 0;
 			}
-			return (Bot.Game.ActiveBattle.FullWildPokemon != null
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
+            return (Bot.Game.ActiveBattle.FullWildPokemon != null
 					   ? Bot.Game.ActiveBattle.FullWildPokemon.CurrentHealth
 					   : Bot.Game.ActiveBattle.WildPokemon.CurrentHealth) * 100 / (Bot.Game.ActiveBattle.FullWildPokemon != null
 					   ? Bot.Game.ActiveBattle.FullWildPokemon.MaxHealth
@@ -922,31 +927,33 @@ namespace PPOBot.Scripting
 		}
 		private int GetOpponentMaxHealth()
 		{
-			if (!Bot.Game.IsInBattle)
+            if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: getOpponentMaxHealth can only be used in battle.");
 				return 0;
 			}
-			return Bot.Game.ActiveBattle.FullWildPokemon != null ? Bot.Game.ActiveBattle.FullWildPokemon.MaxHealth : Bot.Game.ActiveBattle.WildPokemon.MaxHealth;
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
+            return Bot.Game.ActiveBattle.FullWildPokemon != null ? Bot.Game.ActiveBattle.FullWildPokemon.MaxHealth : Bot.Game.ActiveBattle.WildPokemon.MaxHealth;
 		}
 		private int GetOpponentLevel()
 		{
-			if (!Bot.Game.IsInBattle)
+            if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: getOpponentLevel can only be used in battle.");
 				return 0;
 			}
-			return Bot.Game.ActiveBattle.FullWildPokemon != null ? Bot.Game.ActiveBattle.FullWildPokemon.Level : Bot.Game.ActiveBattle.WildPokemon.Level;
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
+            return Bot.Game.ActiveBattle.FullWildPokemon != null ? Bot.Game.ActiveBattle.FullWildPokemon.Level : Bot.Game.ActiveBattle.WildPokemon.Level;
 		}
 		private string[] GetOpponentType()
 		{
-			if (!Bot.Game.IsInBattle)
+            if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: getOpponentType can only be used in battle.");
 				return null;
 			}
-
-			int id = Bot.Game.ActiveBattle.FullWildPokemon != null ? Bot.Game.ActiveBattle.FullWildPokemon.Id : Bot.Game.ActiveBattle.WildPokemon.Id;
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return null; }
+            int id = Bot.Game.ActiveBattle.FullWildPokemon != null ? Bot.Game.ActiveBattle.FullWildPokemon.Id : Bot.Game.ActiveBattle.WildPokemon.Id;
 
 			if (id <= 0 || id >= TypesManager.Instance.Type1.Count())
 			{
@@ -957,12 +964,13 @@ namespace PPOBot.Scripting
 		}
 		private string GetOpponentStatus()
 		{
-			if (!Bot.Game.IsInBattle)
+            if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: getOpponentStatus can only be used in battle.");
 				return null;
 			}
-			if (Bot.Game.ActiveBattle.FullWildPokemon != null)
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return null; }
+            if (Bot.Game.ActiveBattle.FullWildPokemon != null)
 				return Bot.Game.ActiveBattle.FullWildPokemon.Status;
 			else
 				return Bot.Game.ActiveBattle.WildPokemon.Status;
@@ -986,12 +994,13 @@ namespace PPOBot.Scripting
 		};
 		private int GetOpponentEffortValue(string statType)
 		{
-			if (!Bot.Game.IsInBattle)
+            if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: getOpponentEffortValue can only be used in battle.");
 				return -1;
 			}
-			if (!_stats.ContainsKey(statType.ToUpperInvariant()))
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return -1; }
+            if (!_stats.ContainsKey(statType.ToUpperInvariant()))
 			{
 				Fatal("error: getOpponentEffortValue: the stat '" + statType + "' does not exist.");
 				return -1;
@@ -1007,11 +1016,12 @@ namespace PPOBot.Scripting
 		}
 		private bool IsOpponentEffortValue(string statType)
 		{
-			if (!Bot.Game.IsInBattle)
+            if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: isOpponentEffortValue can only be used in battle.");
 				return false;
 			}
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return false; }
 			if (!_stats.ContainsKey(statType.ToUpperInvariant()))
 			{
 				Fatal("error: isOpponentEffortValue: the stat '" + statType + "' does not exist.");
@@ -1152,40 +1162,51 @@ namespace PPOBot.Scripting
 		}
 		private int GetActivePokemonNumber()
 		{
-			if (!Bot.Game.Battle)
-			{
-				Fatal("error: getActivePokemonNumber is only usable in battle.");
-				return 0;
-			}
-			return Bot.Game.ActiveBattle.ActivePokemon + 1;
+            try
+            {
+                if (!Bot.Game.Battle)
+                {
+                    Fatal("error: getActivePokemonNumber is only usable in battle.");
+                    return 0;
+                }
+                if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
+                return Bot.Game.ActiveBattle.ActivePokemon + 1;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            return 0;
 		}
 		private int GetOpponentHealth()
 		{
-			if (!Bot.Game.Battle)
+            if (!Bot.Game.Battle)
 			{
 				Fatal("error: getOpponentHealth can only be used in battle.");
 				return 0;
 			}
-
-			return Bot.Game.ActiveBattle.FullWildPokemon?.CurrentHealth ?? Bot.Game.ActiveBattle.WildPokemon.CurrentHealth;
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
+            return Bot.Game.ActiveBattle.FullWildPokemon?.CurrentHealth ?? Bot.Game.ActiveBattle.WildPokemon.CurrentHealth;
 		}
 		private string GetOpponentName()
 		{
-			if (!Bot.Game.Battle)
+            if (!Bot.Game.Battle)
 			{
 				Fatal("error: getOpponentName can only be used in battle.");
 				return null;
 			}
-			return Bot.Game.ActiveBattle.WildPokemon.Name;
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return ""; }
+            return Bot.Game.ActiveBattle.WildPokemon.Name;
 		}
 		private bool IsOpponentRare()
 		{
-			if (!Bot.Game.Battle)
+            if (!Bot.Game.Battle)
 			{
 				Fatal("error: isOpponentRare is only usable in battle.");
 				return false;
 			}
-			if (Bot.Game.ActiveBattle.WildPokemon != null)
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return false; }
+            if (Bot.Game.ActiveBattle.WildPokemon != null)
 			{
 				return Bot.Game.ActiveBattle.WildPokemon.IsRare;
 			}
@@ -1198,7 +1219,8 @@ namespace PPOBot.Scripting
 				Fatal("error: isOpponentShiny is only usable in battle.");
 				return false;
 			}
-			if (Bot.Game.ActiveBattle.WildPokemon != null)
+            if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return false; }
+            if (Bot.Game.ActiveBattle.WildPokemon != null)
 			{
 				return Bot.Game.ActiveBattle.WildPokemon.IsShiny;
 			}
@@ -1248,10 +1270,10 @@ namespace PPOBot.Scripting
             await MoveRight();
             return true;
         }
-        private async Task MoveRight() => await Task.Delay(800).ContinueWith((pr) => Bot.Game.SendMovement("right"));
-        private async Task MoveLeft() => await Task.Delay(800).ContinueWith((pr) => Bot.Game.SendMovement("left"));
+        private async Task MoveRight() => await Task.Delay(500).ContinueWith((pr) => Bot.Game.SendMovement("right"));
+        private async Task MoveLeft() => await Task.Delay(500).ContinueWith((pr) => Bot.Game.SendMovement("left"));
         // API: Starts a wild battle.
-        private async Task<bool> StartBattle()
+        private bool StartBattle()
 		{
 
 		    try
@@ -1263,7 +1285,6 @@ namespace PPOBot.Scripting
 		            Fatal("error: startBattle is only usable when you're not in battle.");
 		            return false;
 		        }
-                await LeftRightMovement();
 		        return ExecuteAction(Bot.Game.StartWildBattle());
 		    }
 		    catch (Exception e)

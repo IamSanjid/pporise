@@ -561,7 +561,8 @@ namespace PPORise
                         {
                             LogMessage(
                                 "Something went wrong while trying to log in to the server. " +
-                                "Make sure you have been logged out from the web browser or website and re-check your username and password.", Brushes.OrangeRed);
+                                "Make sure you have been logged out from the web browser or website and re-check your username and password. " +
+                                "Or may be it is your connection problem like slow internet or proxy is slow.", Brushes.OrangeRed);
                         });
                     Bot.Game.ChatMessage += ChatCommandsView.ChatMessage_Receieved;
                     Bot.Game.PrivateChat += ChatCommandsView.ProcessPrivateMessages;
@@ -707,7 +708,7 @@ namespace PPORise
                             Bot.Game.Team = Bot.Game.Team.OrderBy(p => p.Uid).ToList();
                             team = Bot.Game.Team.ToArray();
                             Team.PokemonsListView.ItemsSource = team;
-                            Team.PokemonsListView.Items.Refresh();                        
+                            Team.PokemonsListView.Items.Refresh();
                         }
                         TeamView.UpdateColumnWidths((GridView)Team.PokemonsListView.View);
 

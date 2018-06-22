@@ -11,26 +11,6 @@ using PPOProtocol;
 // ReSharper disable once CheckNamespace
 namespace PPORise
 {
-    /// <summary>
-    /// Interaction logic for TeamView.xaml
-    /// </summary>
-    // ReSharper disable once RedundantExtendsListEntry
-    public class MyListView : ListView
-    {
-        protected override void OnSelectionChanged(SelectionChangedEventArgs e)
-        {
-            //if it is multiselection than execute standard logic
-            if (SelectedItems.Count != 1)
-            {
-                base.OnSelectionChanged(e);
-                return;
-            }
-            var mode = SelectionMode;
-            SelectionMode = SelectionMode.Single;
-            base.OnSelectionChanged(e);
-            SelectionMode = mode;
-        }
-    }
     // ReSharper disable once RedundantExtendsListEntry
     public partial class TeamView : UserControl
     {

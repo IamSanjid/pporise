@@ -15,7 +15,7 @@ namespace PPOProtocol
                 IsTrapped = false;
                 _client = client;
                 var activePokemon = 0;
-                if (_client?.Team != null && _client.Team.Count > 0)
+                if (_client?.Team != null && _client?.Team.Count > 0)
                     for (var i = 0; i < _client.Team.Count; i++)
                         if (_client.Team[i].CurrentHealth > 0)
                         {

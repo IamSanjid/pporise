@@ -72,6 +72,7 @@ namespace PPOBot
         public bool Run()
         {
             if (!_client.Battle) return false;
+            if (_client.ActiveBattle.IsDungeonBattle) return false;
             if (ActivePokemon.CurrentHealth <= 0) return false;
             return _client.Run();
         }
@@ -93,12 +94,14 @@ namespace PPOBot
         public bool Attack()
         {
             if (!IsPokemonUsable(ActivePokemon)) return false;
+            if (HaveToWait) return true;
             return UseAttack(true);
         }
 
         public bool WeakAttack()
         {
             if (!IsPokemonUsable(ActivePokemon)) return false;
+            if (HaveToWait) return true;
             return UseAttack(false);
         }
         public bool SendAnyPokemon()
@@ -112,7 +115,20 @@ namespace PPOBot
             }
             return false;
         }
-        public Pokemon ActivePokemon => _client.Team[_client.ActiveBattle.ActivePokemon];
+        private bool HaveToWait { get; set; } = false;
+        public Pokemon ActivePokemon {
+            get
+            {
+                if (_client.ActiveBattle is null)
+                {
+                    _client.WaitWhileInBattle();
+                    HaveToWait = true;
+                    return _client.Team[0];
+                }
+                HaveToWait = false;
+                return _client.Team[_client.ActiveBattle.ActivePokemon];
+            }
+        }
         public bool UseMove(string moveName)
         {
             if (ActivePokemon.CurrentHealth == 0) return false;

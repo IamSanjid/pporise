@@ -34,7 +34,7 @@ namespace PPOBot.Utils
             }
             else if (task.Result != null)
             {
-                throw task.Result;
+                throw task?.Result;
             }
         }
     }
