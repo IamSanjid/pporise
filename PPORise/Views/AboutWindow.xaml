@@ -15,12 +15,14 @@
         Opacity="0.90" Loaded="Window_Loaded" MouseDown="Window_MouseDown" Width="320" Height="210">
     <Grid>
         <Button FontWeight="Regular" Click="ButtonBase_OnClick" Background="#FF2C2F33" FontSize="12" Foreground="#FF99AAB5" HorizontalAlignment="Left" Margin="232,175,0,0" VerticalAlignment="Top" Width="71" Height="22" Content="Close" BorderBrush="{x:Null}"/>
-        <Label Content="GitHub:" HorizontalAlignment="Left" Margin="10,11,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5"/>
-        <Label Content="https://github.com/IamSanjid/pporise" HorizontalAlignment="Left" Margin="61,11,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
-        <Label Content="Discord:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5"/>
-        <Label Content="https://discord.gg/akxSZ9X" HorizontalAlignment="Left" Margin="61,41,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
-        <Label Content="Scripts:" HorizontalAlignment="Left" Margin="10,71,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5"/>
-        <Label Content="https://github.com/IamSanjid/pporise-scripts" HorizontalAlignment="Left" Margin="61,71,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
+        <Label Content="GitHub:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5"/>
+        <Label Content="https://github.com/IamSanjid/pporise" HorizontalAlignment="Left" Margin="61,10,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
+        <Label Content="Discord:" HorizontalAlignment="Left" Margin="10,30,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5"/>
+        <Label Content="https://discord.gg/akxSZ9X" HorizontalAlignment="Left" Margin="61,30,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
+        <Label Content="Scripts:" HorizontalAlignment="Left" Margin="10,50,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5"/>
+        <Label Content="https://github.com/IamSanjid/pporise-scripts" HorizontalAlignment="Left" Margin="61,50,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
+        <Label Content="Website:" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5"/>
+        <Label Content="https://pporise-bot.000webhostapp.com/" HorizontalAlignment="Left" Margin="61,70,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
         <Label Content="PPORise is a free, open-source and advanced bot for" HorizontalAlignment="Left" Margin="14,96,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5" Width="293" Height="23"/>
         <Label Content="Pokemon Planet powered by Lua scripts." HorizontalAlignment="Left" Margin="40,112,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5" Width="224"/>
         <Label Content="This was created by following PROShine." HorizontalAlignment="Left" Margin="39,128,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5" Width="225"/>

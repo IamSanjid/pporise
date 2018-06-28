@@ -1957,6 +1957,7 @@ namespace PPOProtocol
             //_finishingMiningTimeout.Set(Rand.Next(500, 1000));
             IsMinning = false;
             _miningTimeout.Cancel();
+            GetTimeStamp("sendStopMineAnimation");
             return !IsFishing;
         }
 
@@ -1991,6 +1992,7 @@ namespace PPOProtocol
             {
                 GetTimeStamp("fish", rod);
                 _fishingTimeout.Set(Rand.Next(2000, 2500));
+                GetTimeStamp("sendFishAnimation");
                 IsFishing = true;
                 return true;
             }
@@ -2391,6 +2393,7 @@ namespace PPOProtocol
             //IsMinning = true;
             LogMessage?.Invoke($"Trying to mine the rock at (X:{x}, Y:{y})");
             _miningTimeout.Set(Rand.Next(2500, 3000));
+            GetTimeStamp("sendMineAnimation");
         }
     }
 }

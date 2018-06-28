@@ -821,8 +821,7 @@ namespace PPORise
         private void MainTitle_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 2)
-                MessageBox.Show($"{App.Name} version {App.Version}, by {App.Author}.\n{App.Description}",
-                    $"About - {App.Name}", MessageBoxButton.OK, MessageBoxImage.Information);
+                new AboutWindow { Owner = this }.ShowDialog();
         }
 
         private void StartButton_OnClick(object sender, RoutedEventArgs e)
