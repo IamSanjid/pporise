@@ -31,5 +31,14 @@ namespace PPOProtocol
                         break;
                 }
         }
+        public ShopItem(string[] data, int uid)
+        {
+            Uid = uid;
+            if (data.Length > 1)
+            {
+                Name = data[0];
+                Price = Convert.ToInt32(data[1]);
+            }
+        }
     }
 }

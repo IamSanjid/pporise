@@ -67,7 +67,7 @@ namespace PPOBot
             public bool AutoReconnect;
             public bool AutoEvolve = true;
             public string LastScript;
-            public string Versions = "game582.swf:163"; //Default value...
+            public string Versions = "game588.swf:163"; //Default value...
 
             public void Save()
             {
