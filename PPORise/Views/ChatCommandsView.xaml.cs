@@ -157,9 +157,8 @@ namespace PPORise.Views
         {
             lock (_bot)
             {
-
-
                 var isTradeChat = false;
+                var isClanMsg = false;
                 if (message.Length <= 0) return;
                 if (_bot.Game is null)
                     return;
@@ -168,8 +167,8 @@ namespace PPORise.Views
                 var tempMsg = message;
                 if (tempMsg.IndexOf("%", StringComparison.Ordinal) == 0)
                 {
-                    MessageBox.Show("Unfortunately you cannot chat with you're clan members with this _bot.", "Sorry!",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    tempMsg = tempMsg.Substring(1, tempMsg.Length - 1);
+                    isClanMsg = true;
                 }
                 else if (tempMsg.IndexOf("!", StringComparison.Ordinal) == 0)
                 {
@@ -201,7 +200,20 @@ namespace PPORise.Views
                 {
                     tempMsg = "<g>" + tempMsg;
                 }
-
+                if (isClanMsg)
+                {
+                    if (!string.IsNullOrEmpty(_bot.Game.Clan))
+                    {
+                        _bot.Game.GetTimeStamp("clanMessage", tempMsg);
+                        _lastMessageSent = DateTime.UtcNow.AddSeconds(2);
+                        return;
+                    }
+                    else
+                    {
+                        MessageBox.Show("You're not in a clan. If you're sure that you are in a clan please relog.", "No Clan", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
                 if (isTradeChat)
                 {
                     if (_lastTradeMessageSent < DateTime.UtcNow)
@@ -412,7 +424,7 @@ namespace PPORise.Views
                                 "/useItemOn Item Name,Pokemon_Index\t--Uses the specified item on the specified pokémon.\n/takeItemFromPokemon Pokemon_index\t--Takes the held item from the specified pokemon.\n/giveItemToPokemon Item Name,Pokemon_index\t--Gives the specified item on the specified pokemon.\n" +
                                 "/openShop\t--Opens the Pokemart shop.\n/buyItem ItemName,amount\t--Buys the specified item from the opened shop.\n/pokemon\t--Prints out the Pokemon names that can be found in your current map." +
                                 "\n/countColoredRocks rock_color\t--Counts all rocks which color is specific.\n/findClosestRock\t--Finds the closests rock and prints out the cell.\n/moveLeft\t--Moves the player left.\n/moveRight\t--Moves the player right." +
-                                "\n/moveDown\t--Moves the player down.\n/moveUp\t--Moves the player up.\n/version\t--Prints out the version current nmber.");
+                                "\n/moveDown\t--Moves the player down.\n/moveUp\t--Moves the player up.\n/version\t--Prints out the version of the current bot.");
                             break;
                         case "tp2":
                             lock (_bot)

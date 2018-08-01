@@ -1,7 +1,7 @@
-﻿using System.IO;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using System.IO;
 
 namespace PPOBot
 {
@@ -67,7 +67,7 @@ namespace PPOBot
             public bool AutoReconnect;
             public bool AutoEvolve = true;
             public string LastScript;
-            public string Versions = "game588.swf:163"; //Default value...
+            public string Versions = "game590.swf:163"; //Default value...
 
             public void Save()
             {

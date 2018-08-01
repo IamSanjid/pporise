@@ -71,6 +71,7 @@ namespace PPOProtocol
         private Shop Shop { get; set; }
         public string MemberType { get; private set; }
         public int MemberTime { get; private set; }
+        public string Clan { get; private set; }
         public GameClient(GameConnection connection)
         {
             if (connection.GameVersion != null)
@@ -1253,6 +1254,7 @@ namespace PPOProtocol
             MemberType = resObj[loopNum + 4];
             int.TryParse(resObj[loopNum + 5], out var time);
             MemberTime = time;
+            Clan = resObj[loopNum + 6] == "0" ? "" : resObj[loopNum + 6]; 
             _pingToServer = ExecutionPlan.Repeat(30000, () => PingServer());
             //User Pokemons
             //[7216762,150,46,46,52,41,38,72,0,0,66,39,5,10,29,1,6,15,0,23,hardy,82,82,52,108,0,10,72,58332,2142,false,26,5,Charmeleon,none,66,,0,Professor Oak,default]`[9388091,148,38,48,52,48,58,78,0,0,44,12,7,41,24,5,9,29,24,18,lax,95,33,109,36,0,1,78,54672,1163,false,25,234,Stantler,none,119,,0,Nuhash2004,default]`
@@ -1574,6 +1576,16 @@ namespace PPOProtocol
                     loc8[1] + kg2() + PacketCount));
                 loc8.Add(p1);
                 _connection.SendXtMessage("PokemonPlanetExt", "b66", loc8, "str");
+            }
+            else if (type == "clanMessage")
+            {
+                var loc8 = new ArrayList();
+                loc8.Add(PacketCount.ToString());
+                loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
+                loc8.Add(Connection.CalcMd5(
+                    loc8[1] + kg2() + PacketCount));
+                loc8.Add(p1);
+                _connection.SendXtMessage("PokemonPlanetExt", "b67", loc8, "str");
             }
             else if (type == "pm")
             {
@@ -1949,7 +1961,8 @@ namespace PPOProtocol
                 loc8.Add(PacketCount.ToString());
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(loc8[1] + kg2() + PacketCount));
-                if ((bool)Team[0]?.IsShiny)
+                if (Team is null || Team.Count <= 0) return;
+                if (Team[0].IsShiny)
                     loc8.Add($"{Team[0].Id + _shinyDifference}");
                 else
                     loc8.Add($"{Team[0].Id}");
@@ -2307,11 +2320,11 @@ namespace PPOProtocol
         }
         private string kg1()
         {
-            return ("zsdfih9230dijndosf0asdbn4hasdf2431hbasdf1");
+            return ("zsdfih9230din2ndosf0asdbn4hasdf2431hbasdfb");
         }
         private string kg2()
         {
-            return ("d6m2ndsb6kgyfu7iu8ojzbhgf02n9dujhid40zplpghm0cjb");
+            return ("d6m2ndsb6kgyfu7ibast1ggf02n9dujhid40zplpghm0cjz");
         }
         public bool CheckMapExits(int x, int y)
         {

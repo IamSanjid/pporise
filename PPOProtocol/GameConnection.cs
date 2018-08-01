@@ -39,7 +39,7 @@ namespace PPOProtocol
             _isLoggedInToWebsite = false;
 
             Port = 9339;
-            Host = "158.69.125.191";          
+            Host = "167.114.159.20";          
         }
 
         public GameConnection(string username)
@@ -52,7 +52,7 @@ namespace PPOProtocol
             _isLoggedInToWebsite = false;
 
             Port = 9339;
-            Host = "158.69.125.191";
+            Host = "167.114.159.20";
         }
 
         private void HttpConnection_LoggedIn(string arg1, string arg2, string arg3)
