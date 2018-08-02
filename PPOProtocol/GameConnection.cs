@@ -22,6 +22,8 @@ namespace PPOProtocol
         private readonly HttpConnection _httpConnection;
 
         public string GameVersion;
+        public string KG2Value;
+        public string KG1Value;
         public GameConnection(string username, int socksVersion, string socksHost, int socksPort, string socksUser, string socksPass)
         {
             _useSocks = true;

@@ -24,7 +24,7 @@ namespace PPOProtocol
         private int _mapInstance = -1;
         private readonly string _moveType = "";
         private readonly string _url = @"http://pokemon-planet.com/game582.swf";
-        private CharacterCreation _characterCreation { get; set; } 
+        private CharacterCreation _characterCreation { get; set; }
 
         private bool _needToLoadR;
         private ExecutionPlan _pingToServer;
@@ -215,8 +215,8 @@ namespace PPOProtocol
             Id = _gameConnection.Id;
             HashPassword = _gameConnection.HashPassword;
             LoggedInToWebsite = true;
-            EncryptedPacketCount = Connection.CalcMd5(PacketCount + kg1()+ Username);
-            EncryptedstepsWalked = Connection.CalcMd5(_stepsWalked + kg1() + Username);
+            EncryptedPacketCount = Connection.CalcMd5(PacketCount + kg1 + Username);
+            EncryptedstepsWalked = Connection.CalcMd5(_stepsWalked + kg1 + Username);
         }
 
         private void UpdatePosition()
@@ -233,15 +233,6 @@ namespace PPOProtocol
         {
             if (obj.Length > 1)
             {
-                try
-                {
-                    
-                }
-                catch (Exception e)
-                {
-                    LogMessage?.Invoke(e + "\n" + "If it stops your bot then please contact to developers about this error.");
-                    throw;
-                }
                 if (obj.StartsWith("`"))
                 {
                     obj = obj.Substring(1);
@@ -592,7 +583,7 @@ namespace PPOProtocol
                 if (rmsg.Contains("<br>"))
                 {
                     rmsg = Regex.Replace(rmsg, @"\<(.*?)\>", "||*.");
-                    var rmsgs = rmsg.Split(new[] {"||*."}, StringSplitOptions.RemoveEmptyEntries);
+                    var rmsgs = rmsg.Split(new[] { "||*." }, StringSplitOptions.RemoveEmptyEntries);
                     SystemMessage?.Invoke(rmsgs[0]);
                     rmsgs.ToList().Remove(rmsgs[0]);
                     foreach (var eMsg in rmsgs)
@@ -1218,8 +1209,8 @@ namespace PPOProtocol
             InventoryUpdated?.Invoke();
             PlayerX = Convert.ToInt32(resObj[loopNum + 2]);
             PlayerY = Convert.ToInt32(resObj[loopNum + 3]);
-            EncryptedTileX = Connection.CalcMd5(PlayerX + kg1() + Username);
-            EncryptedTileY = Connection.CalcMd5(PlayerY + kg1() + Username);
+            EncryptedTileX = Connection.CalcMd5(PlayerX + kg1 + Username);
+            EncryptedTileY = Connection.CalcMd5(PlayerY + kg1 + Username);
             LastUpdateX = PlayerX;
             LastUpdateY = PlayerY;
             MapName = resObj[loopNum + 4];
@@ -1254,7 +1245,7 @@ namespace PPOProtocol
             MemberType = resObj[loopNum + 4];
             int.TryParse(resObj[loopNum + 5], out var time);
             MemberTime = time;
-            Clan = resObj[loopNum + 6] == "0" ? "" : resObj[loopNum + 6]; 
+            Clan = resObj[loopNum + 6] == "0" ? "" : resObj[loopNum + 6];
             _pingToServer = ExecutionPlan.Repeat(30000, () => PingServer());
             //User Pokemons
             //[7216762,150,46,46,52,41,38,72,0,0,66,39,5,10,29,1,6,15,0,23,hardy,82,82,52,108,0,10,72,58332,2142,false,26,5,Charmeleon,none,66,,0,Professor Oak,default]`[9388091,148,38,48,52,48,58,78,0,0,44,12,7,41,24,5,9,29,24,18,lax,95,33,109,36,0,1,78,54672,1163,false,25,234,Stantler,none,119,,0,Nuhash2004,default]`
@@ -1395,8 +1386,8 @@ namespace PPOProtocol
                 Connection.CalcMd5(MapName + "dlod02jhznpd02jdhggyambya8201201nfbmj209ahao8rh2pb" + Username);
             PlayerX = x;
             PlayerY = y;
-            EncryptedTileX = Connection.CalcMd5(PlayerX + kg1() + Username);
-            EncryptedTileY = Connection.CalcMd5(PlayerY + kg1() + Username);
+            EncryptedTileX = Connection.CalcMd5(PlayerX + kg1 + Username);
+            EncryptedTileY = Connection.CalcMd5(PlayerY + kg1 + Username);
             _updatePositionTimeout = ExecutionPlan.Repeat(4000, UpdatePosition);
             if (_needToLoadR)
             {
@@ -1476,7 +1467,7 @@ namespace PPOProtocol
                 type != "asf8n2fa" && type != "sendMineAnimation" && type != "sendStopMineAnimation" &&
                 type != "sendFishAnimation" && type != "r" && type != "saveData" && type != "loadCustomMaps")
             {
-                var newEncryption = Connection.CalcMd5(PacketCount + kg1() + Username);
+                var newEncryption = Connection.CalcMd5(PacketCount + kg1 + Username);
                 if (EncryptedPacketCount == newEncryption)
                 {
                     PacketCount++;
@@ -1484,7 +1475,7 @@ namespace PPOProtocol
                     Console.WriteLine($"Packets sent: {PacketCount}, sending type: {type}");
 #endif
                     EncryptedPacketCount =
-                        Connection.CalcMd5(PacketCount + kg1() + Username);
+                        Connection.CalcMd5(PacketCount + kg1 + Username);
                 }
                 else
                 {
@@ -1500,7 +1491,7 @@ namespace PPOProtocol
                 loc8.Add($"moveNum:{p1}");
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add("packetKeyEncrypt:" +
-                         Connection.CalcMd5(packetKey + kg2() +
+                         Connection.CalcMd5(packetKey + kg2 +
                                             PacketCount));
                 loc8.Add("packetKey:" + packetKey);
                 loc8.Add("packetCount:" + PacketCount);
@@ -1512,7 +1503,7 @@ namespace PPOProtocol
                 loc8.Add($"command:{p1}");
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add("packetKeyEncrypt:" +
-                         Connection.CalcMd5(packetKey + kg2() +
+                         Connection.CalcMd5(packetKey + kg2 +
                                             PacketCount));
                 loc8.Add("packetKey:" + packetKey);
                 loc8.Add("packetCount:" + PacketCount);
@@ -1529,7 +1520,7 @@ namespace PPOProtocol
                 loc8.Add("map:" + p1);
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add("packetKeyEncrypt:" +
-                         Connection.CalcMd5(packetKey + kg2() +
+                         Connection.CalcMd5(packetKey + kg2 +
                                             PacketCount));
                 loc8.Add("packetKey:" + packetKey);
                 loc8.Add("packetCount:" + PacketCount);
@@ -1541,7 +1532,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 if (p2 != "")
                     loc8.Add(p2);
@@ -1560,11 +1551,11 @@ namespace PPOProtocol
                 loc8.Add(PacketCount.ToString());
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(HashPassword);
                 loc8.Add(Id);
                 loc8.Add(Connection.CalcMd5(
-                    _url + loc8[1] + kg2() + PacketCount + Username));
+                    _url + loc8[1] + kg2 + PacketCount + Username));
                 _connection.SendXtMessage("PokemonPlanetExt", "b61", loc8, "str");
             }
             else if (type == "pmsg")
@@ -1573,7 +1564,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount.ToString());
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 _connection.SendXtMessage("PokemonPlanetExt", "b66", loc8, "str");
             }
@@ -1583,7 +1574,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount.ToString());
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 _connection.SendXtMessage("PokemonPlanetExt", "b67", loc8, "str");
             }
@@ -1593,7 +1584,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount.ToString());
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 loc8.Add(p2);
                 _connection.SendXtMessage("PokemonPlanetExt", "r36", loc8, "str");
@@ -1618,7 +1609,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(Username);
                 if (p1 != "") loc8.Add(p1.ToLowerInvariant());
                 _connection.SendXtMessage("PokemonPlanetExt", "b74", loc8, "str");
@@ -1629,7 +1620,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(PlayerX);
                 loc8.Add(PlayerY);
                 loc8.Add(_dir);
@@ -1644,7 +1635,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(PlayerX);
                 loc8.Add(PlayerY);
                 loc8.Add(_dir);
@@ -1677,7 +1668,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 loc8.Add(p2);
                 _connection.SendXtMessage("PokemonPlanetExt", "b2", loc8, "str");
@@ -1689,7 +1680,7 @@ namespace PPOProtocol
                 loc8.Add($"buyNum:{p1}");
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add(
-                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2() + PacketCount)}");
+                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2 + PacketCount)}");
                 loc8.Add($"packetKey:{packetKey}");
                 loc8.Add($"packetCount:{PacketCount}");
                 _connection.SendXtMessage("PokemonPlanetExt", "b8", loc8, "xml");
@@ -1699,7 +1690,7 @@ namespace PPOProtocol
                 var loc8 = new ArrayList();
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add(
-                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2() + PacketCount)}");
+                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2 + PacketCount)}");
                 loc8.Add($"packetKey:{packetKey}");
                 loc8.Add($"packetCount:{PacketCount}");
                 _connection.SendXtMessage("PokemonPlanetExt", "b38", loc8, "xml");
@@ -1710,7 +1701,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 _connection.SendXtMessage("PokemonPlanetExt", "b77", loc8, "str");
             }
             else if (type == "wildBattle")
@@ -1719,7 +1710,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(MapName);
                 if (p1 == "")
                     loc8.Add(_moveType);
@@ -1734,7 +1725,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 _connection.SendXtMessage("PokemonPlanetExt", "b80", loc8, "str");
             }
@@ -1744,7 +1735,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 _connection.SendXtMessage("PokemonPlanetExt", "b81", loc8, "str");
             }
             else if (type == "endBattleDisconnect2")
@@ -1753,7 +1744,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 _connection.SendXtMessage("PokemonPlanetExt", "b82", loc8, "str");
             }
             else if (type == "fish")
@@ -1762,7 +1753,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 _connection.SendXtMessage("PokemonPlanetExt", "b70", loc8, "str");
             }
@@ -1795,7 +1786,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 loc8.Add(p2);
                 loc8.Add(p3);
@@ -1853,7 +1844,7 @@ namespace PPOProtocol
                 loc8.Add(PacketCount);
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
                 loc8.Add(Connection.CalcMd5(
-                    loc8[1] + kg2() + PacketCount));
+                    loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 _connection.SendXtMessage("PokemonPlanetExt", "b122", loc8, "str");
             }
@@ -1863,7 +1854,7 @@ namespace PPOProtocol
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add($"itemNum:{p1}");
                 loc8.Add(
-                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2() + PacketCount)}");
+                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2 + PacketCount)}");
                 loc8.Add($"packetKey:{packetKey}");
                 loc8.Add($"packetCount:{PacketCount}");
                 _connection.SendXtMessage("PokemonPlanetExt", "b1", loc8, "xml");
@@ -1878,7 +1869,7 @@ namespace PPOProtocol
                 //loc8.Add(p3 != "" ? $"n:{p3}" : @"n:1");
                 loc8.Add($"p:{p2}");
                 loc8.Add(
-                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2() + PacketCount)}");
+                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2 + PacketCount)}");
                 loc8.Add($"packetKey:{packetKey}");
                 loc8.Add($"packetCount:{PacketCount}");
 
@@ -1889,7 +1880,7 @@ namespace PPOProtocol
                 var loc8 = new ArrayList();
                 loc8.Add(PacketCount.ToString());
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
-                loc8.Add(Connection.CalcMd5(loc8[1] + kg2() + PacketCount));
+                loc8.Add(Connection.CalcMd5(loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 loc8.Add(p2);
                 _connection.SendXtMessage("PokemonPlanetExt", "b58", loc8, "str");
@@ -1899,7 +1890,7 @@ namespace PPOProtocol
                 var loc8 = new ArrayList();
                 loc8.Add(PacketCount.ToString());
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
-                loc8.Add(Connection.CalcMd5(loc8[1] + kg2() + PacketCount));
+                loc8.Add(Connection.CalcMd5(loc8[1] + kg2 + PacketCount));
                 loc8.Add(p1);
                 _connection.SendXtMessage("PokemonPlanetExt", "b59", loc8, "str");
             }
@@ -1908,7 +1899,7 @@ namespace PPOProtocol
                 var loc8 = new ArrayList();
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add(
-                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2() + PacketCount)}");
+                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2 + PacketCount)}");
                 loc8.Add($"packetKey:{packetKey}");
                 loc8.Add($"packetCount:{PacketCount}");
                 _connection.SendXtMessage("PokemonPlanetExt", "b18", loc8, "xml");
@@ -1918,7 +1909,7 @@ namespace PPOProtocol
                 var loc8 = new ArrayList();
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add(
-                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2() + PacketCount)}");
+                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2 + PacketCount)}");
                 loc8.Add($"packetKey:{packetKey}");
                 loc8.Add($"packetCount:{PacketCount}");
                 _connection.SendXtMessage("PokemonPlanetExt", "b19", loc8, "xml");
@@ -1928,7 +1919,7 @@ namespace PPOProtocol
                 var loc8 = new ArrayList();
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add(
-                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2() + PacketCount)}");
+                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2 + PacketCount)}");
                 loc8.Add($"packetKey:{packetKey}");
                 loc8.Add($"packetCount:{PacketCount}");
                 _connection.SendXtMessage("PokemonPlanetExt", "b14", loc8, "xml");
@@ -1938,7 +1929,7 @@ namespace PPOProtocol
                 var loc8 = new ArrayList();
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add(
-                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2() + PacketCount)}");
+                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2 + PacketCount)}");
                 loc8.Add($"packetKey:{packetKey}");
                 loc8.Add($"packetCount:{PacketCount}");
                 _connection.SendXtMessage("PokemonPlanetExt", "b17", loc8, "xml");
@@ -1948,7 +1939,7 @@ namespace PPOProtocol
                 var loc8 = new ArrayList();
                 var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
                 loc8.Add(
-                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2() + PacketCount)}");
+                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2 + PacketCount)}");
                 loc8.Add($"packetKey:{packetKey}");
                 loc8.Add($"packetCount:{PacketCount}");
                 _connection.SendXtMessage("PokemonPlanetExt",
@@ -1960,7 +1951,7 @@ namespace PPOProtocol
                 var loc8 = new ArrayList();
                 loc8.Add(PacketCount.ToString());
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
-                loc8.Add(Connection.CalcMd5(loc8[1] + kg2() + PacketCount));
+                loc8.Add(Connection.CalcMd5(loc8[1] + kg2 + PacketCount));
                 if (Team is null || Team.Count <= 0) return;
                 if (Team[0].IsShiny)
                     loc8.Add($"{Team[0].Id + _shinyDifference}");
@@ -1973,7 +1964,7 @@ namespace PPOProtocol
                 var loc8 = new ArrayList();
                 loc8.Add(PacketCount.ToString());
                 loc8.Add(Connection.GenerateRandomString(Rand.Next(10, 30)));
-                loc8.Add(Connection.CalcMd5(loc8[1] + kg2() + PacketCount));
+                loc8.Add(Connection.CalcMd5(loc8[1] + kg2 + PacketCount));
                 loc8.Add(_characterCreation.Body);
                 loc8.Add(_characterCreation.Eyes);
                 loc8.Add(_characterCreation.Hair);
@@ -2264,10 +2255,10 @@ namespace PPOProtocol
             if (Battle is true || !IsConnected) return;
             if (tempDir.ToLowerInvariant() == "up")
             {
-                if (EncryptedTileY == Connection.CalcMd5(PlayerY + kg1() + Username))
+                if (EncryptedTileY == Connection.CalcMd5(PlayerY + kg1 + Username))
                 {
                     PlayerY--;
-                    EncryptedTileY = Connection.CalcMd5(PlayerY + kg1() + Username);
+                    EncryptedTileY = Connection.CalcMd5(PlayerY + kg1 + Username);
                     GetTimeStamp("sendMovement", tempDir);
                 }
                 else
@@ -2277,10 +2268,10 @@ namespace PPOProtocol
             }
             else if (tempDir.ToLowerInvariant() == "down")
             {
-                if (EncryptedTileY == Connection.CalcMd5(PlayerY + kg1() + Username))
+                if (EncryptedTileY == Connection.CalcMd5(PlayerY + kg1 + Username))
                 {
                     PlayerY++;
-                    EncryptedTileY = Connection.CalcMd5(PlayerY + kg1() + Username);
+                    EncryptedTileY = Connection.CalcMd5(PlayerY + kg1 + Username);
                     GetTimeStamp("sendMovement", tempDir);
                 }
                 else
@@ -2290,10 +2281,10 @@ namespace PPOProtocol
             }
             else if (tempDir.ToLowerInvariant() == "left")
             {
-                if (EncryptedTileX == Connection.CalcMd5(PlayerX + kg1() + Username))
+                if (EncryptedTileX == Connection.CalcMd5(PlayerX + kg1 + Username))
                 {
                     PlayerX--;
-                    EncryptedTileX = Connection.CalcMd5(PlayerX + kg1() + Username);
+                    EncryptedTileX = Connection.CalcMd5(PlayerX + kg1 + Username);
                     GetTimeStamp("sendMovement", tempDir);
                 }
                 else
@@ -2303,10 +2294,10 @@ namespace PPOProtocol
             }
             else if (tempDir.ToLowerInvariant() == "right")
             {
-                if (EncryptedTileX == Connection.CalcMd5(PlayerX + kg1() + Username))
+                if (EncryptedTileX == Connection.CalcMd5(PlayerX + kg1 + Username))
                 {
                     PlayerX++;
-                    EncryptedTileX = Connection.CalcMd5(PlayerX + kg1() + Username);
+                    EncryptedTileX = Connection.CalcMd5(PlayerX + kg1 + Username);
                     GetTimeStamp("sendMovement", tempDir);
                 }
                 else
@@ -2318,26 +2309,20 @@ namespace PPOProtocol
             _dir = tempDir;
             PlayerPositionUpdated?.Invoke();
         }
-        private string kg1()
-        {
-            return ("zsdfih9230din2ndosf0asdbn4hasdf2431hbasdfb");
-        }
-        private string kg2()
-        {
-            return ("d6m2ndsb6kgyfu7ibast1ggf02n9dujhid40zplpghm0cjz");
-        }
+        private string kg1 => _gameConnection.KG1Value;
+        private string kg2 => _gameConnection.KG2Value;
         public bool CheckMapExits(int x, int y)
         {
-            if (EncryptedstepsWalked == Connection.CalcMd5(_stepsWalked + kg1() + Username))
+            if (EncryptedstepsWalked == Connection.CalcMd5(_stepsWalked + kg1 + Username))
             {
                 _stepsWalked++;
-                EncryptedstepsWalked = Connection.CalcMd5(_stepsWalked + kg1() + Username);
+                EncryptedstepsWalked = Connection.CalcMd5(_stepsWalked + kg1 + Username);
                 if (_stepsWalked >= 256)
                 {
                     //getTimeStamp("stepsWalked", tempDir);
                     _stepsWalked = 0;
                     EncryptedstepsWalked =
-                        Connection.CalcMd5(_stepsWalked + kg1() + Username);
+                        Connection.CalcMd5(_stepsWalked + kg1 + Username);
                 }
             }
 
@@ -2387,7 +2372,7 @@ namespace PPOProtocol
             _swapTimeout?.Update();
             _itemTimeout?.Update();
             _miningTimeout?.Update();
-            if(!(bool)_fishingTimeout?.Update())
+            if (!(bool)_fishingTimeout?.Update())
             {
                 IsFishing = false;
             }
@@ -2404,7 +2389,7 @@ namespace PPOProtocol
                 if (Team.Count < 3)
                     SendSwapPokemons(pokemon1, pokemon2 - 1);
                 else if (Team.Count >= 3)
-                    SendSwapPokemons(pokemon1 - 1, pokemon2);               
+                    SendSwapPokemons(pokemon1 - 1, pokemon2);
 
                 _swapTimeout.Set();
                 return true;

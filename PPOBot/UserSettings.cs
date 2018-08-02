@@ -43,6 +43,7 @@ namespace PPOBot
         }
 
         public string Versions => _settings.Versions;
+        public string ProtocolKeys => _settings.ProtocolKeys;
         public UserSettings()
         {
             try
@@ -67,8 +68,8 @@ namespace PPOBot
             public bool AutoReconnect;
             public bool AutoEvolve = true;
             public string LastScript;
-            public string Versions = "game590.swf:163"; //Default value...
-
+            public string Versions = "game591.swf:163"; //Default value...
+            public string ProtocolKeys = "ksdfih9230din2ndosf0asdbn4hasdf2431hbasdfm:k6m2ndsb6kgyfu7ibast1ggf02n9dujhid40zplpghm0cjl"; // I actually don't know what to call it but it is needed for protocol stuffs...
             public void Save()
             {
                 var json = JsonConvert.SerializeObject(this, new JsonSerializerSettings

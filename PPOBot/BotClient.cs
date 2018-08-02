@@ -354,6 +354,11 @@ namespace PPOBot
                     _gameConnection.GameVersion = Settings.Versions.Split(':')[0];
                     _gameConnection.Version = Convert.ToInt32(Settings.Versions.Split(':')[1]);
                 }
+                if (Settings.ProtocolKeys != null)
+                {
+                    _gameConnection.KG1Value = Settings.ProtocolKeys.Split(':')[0];
+                    _gameConnection.KG2Value = Settings.ProtocolKeys.Split(':')[1];
+                }
 
                 SetClient(new GameClient(_gameConnection));
                 await _gameConnection.PostLogin(Account.Name, Account.Password);
