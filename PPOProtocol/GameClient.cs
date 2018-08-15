@@ -540,8 +540,10 @@ namespace PPOProtocol
         private void ProcessChatMessage(string packet)
         {
             //-----------------Stupid way to check chat messages xD------------------------//
-            if (packet.ToLowerInvariant().Contains(RareLengendaryPattern.ToLowerInvariant()) &&
-                packet.ToLowerInvariant().Contains(Username.ToLowerInvariant())) HasEncounteredRarePokemon = true;
+
+            HasEncounteredRarePokemon = (packet.ToLowerInvariant().Contains(RareLengendaryPattern.ToLowerInvariant()) &&
+                packet.ToLowerInvariant().Contains(Username.ToLowerInvariant())) || (packet.ToLowerInvariant().Contains("you have encountered a"));
+
             if (packet.ToLowerInvariant().Contains("error with fishing rod location in inventory") ||
                 packet.ToLowerInvariant().Contains("can't fish again yet"))
             {
