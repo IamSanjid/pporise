@@ -478,6 +478,16 @@ namespace PPOProtocol
                                     _checkForLoggingTimeout?.Abort();
                                     _checkForLoggingTimeout = null;
                                     break;
+                                case "b177":
+                                    LogMessage?.Invoke("Client out of date.");
+                                    Logout();
+                                    _checkForLoggingTimeout?.Abort();
+                                    _checkForLoggingTimeout = null;
+                                    break;
+                                case "b179":
+                                    ExecutionPlan.Delay(Rand.Next(2000, 5000),
+                                                () => GetTimeStamp("declineBattle"));
+                                    break;
                                 case "b5":
                                     MapUpdate(data);
                                     break;
@@ -882,16 +892,12 @@ namespace PPOProtocol
                     if (WildPokemons.Count > 0)
                     {
                         var enemy = ActiveBattle.FullWildPokemon;
-                        if (WildPokemons.Any(p =>
+                        if (!WildPokemons.Any(p =>
                             p.Name == enemy.Name && p.Ability == enemy.Ability &&
                             p.Stats == enemy.Stats && p.Level == enemy.Level && p.IV == enemy.IV))
                         {
-                            WildPokemons.Remove(WildPokemons.LastOrDefault(p =>
-                            p.Name == enemy.Name && p.Ability == enemy.Ability &&
-                            p.Stats == enemy.Stats && p.Level == enemy.Level && p.IV == enemy.IV));
+                            WildPokemons.Add(enemy);
                         }
-
-                        WildPokemons.Add(enemy);
                     }
                     else
                     {
@@ -989,6 +995,9 @@ namespace PPOProtocol
             ActiveBattle = null;
             _battleTimeout.Set(Rand.Next(2500, 4000));
             IsTrapped = false;
+
+            GetTimeStamp("updateFollowPokemon");
+
             if (!lostBattle)
                 GetTimeStamp("r");
             else
@@ -1988,7 +1997,7 @@ namespace PPOProtocol
                 _connection.SendXtMessage("PokemonPlanetExt", "b71", loc8, "str");
             }
         }
-        private int _shinyDifference = 721;
+        private const int _shinyDifference = 721;
         public bool StopFishing()
         {
             IsFishing = false;
@@ -2002,7 +2011,7 @@ namespace PPOProtocol
             //_finishingMiningTimeout.Set(Rand.Next(500, 1000));
             IsMinning = false;
             _miningTimeout.Cancel();
-            GetTimeStamp("sendStopMineAnimation");
+            //GetTimeStamp("sendStopMineAnimation");
             return !IsFishing;
         }
 
@@ -2037,7 +2046,7 @@ namespace PPOProtocol
             {
                 GetTimeStamp("fish", rod);
                 _fishingTimeout.Set(Rand.Next(2000, 2500));
-                GetTimeStamp("sendFishAnimation");
+                //GetTimeStamp("sendFishAnimation");
                 IsFishing = true;
                 return true;
             }
@@ -2438,7 +2447,7 @@ namespace PPOProtocol
             //IsMinning = true;
             LogMessage?.Invoke($"Trying to mine the rock at (X:{x}, Y:{y})");
             _miningTimeout.Set(Rand.Next(2500, 3000));
-            GetTimeStamp("sendMineAnimation");
+            //GetTimeStamp("sendMineAnimation");
         }
     }
 }
