@@ -424,7 +424,41 @@ namespace PPORise.Views
                                 "/useItemOn Item Name,Pokemon_Index\t--Uses the specified item on the specified pokémon.\n/takeItemFromPokemon Pokemon_index\t--Takes the held item from the specified pokemon.\n/giveItemToPokemon Item Name,Pokemon_index\t--Gives the specified item on the specified pokemon.\n" +
                                 "/openShop\t--Opens the Pokemart shop.\n/buyItem ItemName,amount\t--Buys the specified item from the opened shop.\n/pokemon\t--Prints out the Pokemon names that can be found in your current map." +
                                 "\n/countColoredRocks rock_color\t--Counts all rocks which color is specific.\n/findClosestRock\t--Finds the closests rock and prints out the cell.\n/moveLeft\t--Moves the player left.\n/moveRight\t--Moves the player right." +
-                                "\n/moveDown\t--Moves the player down.\n/moveUp\t--Moves the player up.\n/version\t--Prints out the version of the current bot.");
+                                "\n/moveDown\t--Moves the player down.\n/moveUp\t--Moves the player up.\n/version\t--Prints out the version of the current bot.\n/moveToCell X,Y\t--Moves the player to specific coordinate");
+                            break;
+                        case "movetocell":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        var x = Convert.ToInt32(command.Split(',')[0]);
+                                        var y = Convert.ToInt32(command.Split(',')[1]);
+
+                                        _bot.MoveToCell(x, y, "");
+                                    }
+                                }
+                            }
+
+                            break;
+                        case "gethm":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        var hmNum = Convert.ToInt16(command);
+
+                                        _bot.Game.GetHM(hmNum);
+
+                                    }
+                                }
+                            }
+
                             break;
                         case "tp2":
                             lock (_bot)

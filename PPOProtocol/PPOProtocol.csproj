@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="Battle.cs" />
     <Compile Include="CharacterCreation.cs" />
+    <Compile Include="Direction.cs" />
     <Compile Include="EffortValuesManager.cs" />
     <Compile Include="ExecutionPlan.cs" />
     <Compile Include="FishingExtentions.cs" />

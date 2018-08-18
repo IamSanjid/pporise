@@ -14,16 +14,21 @@ namespace PPOProtocol
     {
         public const string RareLengendaryPattern = "has encountered a";
         private int _avatarType;
+        private double _mapMovements;
+        private double _movementSpeedMod;
+        private double _mapMovementSpeed;
 
         private readonly Connection _connection;
         private readonly GameConnection _gameConnection;
         private string _dir = "down";
-        public bool HasEncounteredRarePokemon;
         private bool _inited;
         private MiningObject _lastRock;
         private int _mapInstance = -1;
-        private readonly string _moveType = "";
+        private string _moveType = "";
         private readonly string _url = @"http://pokemon-planet.com/game582.swf";
+        private bool movingForBattle;
+
+        private Queue<Direction> _movements = new Queue<Direction>();
         private CharacterCreation _characterCreation { get; set; }
 
         private bool _needToLoadR;
@@ -52,6 +57,7 @@ namespace PPOProtocol
         public string EncryptedPacketCount;
         public string EncryptedstepsWalked;
         public Battle LastBattle;
+        public bool HasEncounteredRarePokemon;
 
         public bool IsGoldMember => MemberType != null && MemberType.ToLowerInvariant().Trim() == "gold";
         public FishingExtentions Fishing { get; private set; }
@@ -116,7 +122,8 @@ namespace PPOProtocol
         public bool IsConnected => _connection.IsConnected && _connection != null;
 
         public bool IsInactive =>
-            !_loadingTimeout.IsActive
+            _movements.Count == 0 
+            && !_loadingTimeout.IsActive
             && !_movementTimeout.IsActive
             && !_battleTimeout.IsActive
             && !_swapTimeout.IsActive
@@ -151,6 +158,8 @@ namespace PPOProtocol
         public event Action<Shop> ShopOpened;
         public event Action<MiningObject> RockRestored;
         public event Action<MiningObject> RockDepleted;
+
+
 
         public void Logout()
         {
@@ -231,282 +240,292 @@ namespace PPOProtocol
 
         private async void Connection_PacketReceived(string obj)
         {
-            if (obj.Length > 1)
+            try
             {
-                if (obj.StartsWith("`"))
+                if (obj.Length > 1)
                 {
-                    obj = obj.Substring(1);
-                    var data = obj.Split('`');
-                    var type = data[0];
-                    var action = data[1];
-#if DEBUG
-                    Console.WriteLine("Got Data From server:");
-                    Console.WriteLine($"Main: {obj} Type: {type} Action: {action}");
-#endif
-                    switch (type)
+                    if (obj.StartsWith("`"))
                     {
-                        case "xt":
-                            switch (action)
-                            {
-                                case "pmsg":
-                                    ProcessChatMessage(obj);
-                                    break;
-                                case "r17":
-                                    ProcessChatMessage(obj);
-                                    break;
-                                case "r36":
-                                    PrivateChat?.Invoke(data);
-                                    break;
-                                case "r10":
-                                    _inited = true;
-                                    await HandleGetStartingInfo(data);
-                                    break;
-                                case "r44":
-                                    Money = Convert.ToInt32(data[3]);
-                                    var ii = Items.Find(i => i.Name == data[4]);
-                                    ii.Quntity += 1;
-                                    Items = Items.OrderBy(i => i.Uid).ToList();
-                                    InventoryUpdated?.Invoke();
-                                    break;
-                                case "b85":
-                                    var var1 = data[3].Split(',');
-                                    var var2 = data[4].Split(',');
-                                    var iss = 0;
-                                    while (iss < var1.Length)
-                                    {
-                                        var i1 = Items.Find(i => i.Name == var1[iss]);
-                                        i1.Quntity -= 1;
-                                        iss++;
-                                    }
-                                    iss = 0;
-                                    while (iss < var2.Length)
-                                    {
-                                        var i1 = Items.Find(i => i.Name == var2[iss]);
-                                        if (i1 is null)
+                        obj = obj.Substring(1);
+                        var data = obj.Split('`');
+                        var type = data[0];
+                        var action = data[1];
+#if DEBUG
+                        Console.WriteLine("Got Data From server:");
+                        Console.WriteLine($"Main: {obj} Type: {type} Action: {action}");
+#endif
+                        switch (type)
+                        {
+                            case "xt":
+                                switch (action)
+                                {
+                                    case "pmsg":
+                                        ProcessChatMessage(obj);
+                                        break;
+                                    case "r17":
+                                        ProcessChatMessage(obj);
+                                        break;
+                                    case "r36":
+                                        PrivateChat?.Invoke(data);
+                                        break;
+                                    case "r10":
+                                        _inited = true;
+                                        await HandleGetStartingInfo(data);
+                                        break;
+                                    case "r44":
+                                        Money = Convert.ToInt32(data[3]);
+                                        var ii = Items.Find(i => i.Name == data[4]);
+                                        ii.Quntity += 1;
+                                        Items = Items.OrderBy(i => i.Uid).ToList();
+                                        InventoryUpdated?.Invoke();
+                                        break;
+                                    case "b85":
+                                        var var1 = data[3].Split(',');
+                                        var var2 = data[4].Split(',');
+                                        var iss = 0;
+                                        while (iss < var1.Length)
                                         {
-                                            var newI = new InventoryItem(var2[iss]);
-                                            Items.Add(newI);
-                                            newI.Uid = Items.IndexOf(newI);
+                                            var i1 = Items.Find(i => i.Name == var1[iss]);
+                                            i1.Quntity -= 1;
+                                            iss++;
+                                        }
+                                        iss = 0;
+                                        while (iss < var2.Length)
+                                        {
+                                            var i1 = Items.Find(i => i.Name == var2[iss]);
+                                            if (i1 is null)
+                                            {
+                                                var newI = new InventoryItem(var2[iss]);
+                                                Items.Add(newI);
+                                                newI.Uid = Items.IndexOf(newI);
+                                            }
+                                            else
+                                            {
+                                                i1.Quntity += 1;
+                                            }
+                                            iss++;
+                                        }
+
+                                        Items = Items.OrderBy(i => i.Uid).ToList();
+                                        InventoryUpdated?.Invoke();
+                                        break;
+                                    case "b86":
+                                        var itmData = data[3].Split(',');
+                                        var inventoryItem = Items.Find(i => i.Name == itmData[0]);
+                                        inventoryItem.Quntity = inventoryItem.Quntity + Convert.ToInt32(itmData[1]);
+                                        Items = Items.OrderBy(o => o.Uid).ToList();
+                                        InventoryUpdated?.Invoke();
+                                        break;
+                                    case "b88":
+                                        GetTimeStamp("updateMap", MapName);
+                                        break;
+                                    case "r61":
+                                        _avatarType = 1;
+                                        if (!_updatedMap)
+                                            LoadMap(false, MapName);
+                                        break;
+                                    case "r65":
+                                        var loc11 = data[3].Split('|');
+                                        var loc8 = 0;
+                                        Team.Clear();
+                                        while (loc8 < loc11.Length)
+                                        {
+                                            ParsePokemon(loc11[loc8]);
+                                            loc8 = loc8 + 1;
+                                        }
+
+                                        EndBattle();
+                                        break;
+                                    case "r66":
+                                        var loc12 = data[3].Split('|');
+                                        var loc9 = 0;
+                                        Team.Clear();
+                                        while (loc9 < loc12.Length)
+                                        {
+                                            ParsePokemon(loc12[loc9]);
+                                            loc9++;
+                                        }
+
+                                        if (data[4] != "1") LoadMap(true, TempMap, PlayerX, PlayerY);
+                                        EndBattle();
+                                        break;
+                                    case "a":
+                                        LetOtherToSee(data);
+                                        break;
+                                    case "b2":
+                                        var to = Team[Convert.ToInt32(data[3])];
+                                        var from = Team[Convert.ToInt32(data[4])];
+                                        Team[Convert.ToInt32(data[4])] = to;
+                                        Team[Convert.ToInt32(data[3])] = from;
+                                        if (_swapTimeout.IsActive)
+                                        {
+                                            _swapTimeout.Set(Rand.Next(500, 1000));
+                                        }
+                                        TeamUpdated?.Invoke(false);
+                                        break;
+                                    case "r67":
+                                        GetTimeStamp("endBattleDisconnect");
+                                        break;
+                                    case "r70":
+                                        GetTimeStamp("endBattleDisconnect2");
+                                        break;
+                                    case "r5":
+                                        var pokeIndex = Convert.ToInt32(data[3]);
+                                        var itm = GetItemFromName(Team[pokeIndex].ItemHeld);
+                                        if (itm == null)
+                                        {
+                                            var newItm = new InventoryItem(Team[pokeIndex].ItemHeld);
+                                            Items.Add(newItm);
+                                            newItm.Uid = Items.IndexOf(newItm);
+                                            Items[Items.IndexOf(newItm)].Uid = Items.IndexOf(newItm);
                                         }
                                         else
                                         {
-                                            i1.Quntity += 1;
+                                            Items[Items.IndexOf(Items.Find(i => i.Name == itm.Name))].Quntity += 1;
                                         }
-                                        iss++;
-                                    }
+                                        Team[pokeIndex].ItemHeld = "";
+                                        if (_swapTimeout.IsActive)
+                                        {
+                                            _swapTimeout.Set(Rand.Next(500, 1000));
+                                        }
+                                        TeamUpdated?.Invoke(false);
+                                        InventoryUpdated?.Invoke();
+                                        break;
+                                    case "r4":
+                                        var pokeUid = Convert.ToInt32(data[3]);
+                                        var itemUid = Convert.ToInt32(data[4]);
+                                        var item = GetItemByUid(itemUid);
+                                        Items.Remove(item);
+                                        Team[pokeUid].ItemHeld = item.Name;
+                                        Items = Items.OrderBy(i => i.Uid).ToList();
+                                        InventoryUpdated?.Invoke();
+                                        if (_swapTimeout.IsActive)
+                                        {
+                                            _swapTimeout.Set(Rand.Next(500, 1000));
+                                        }
+                                        TeamUpdated?.Invoke(false);
+                                        break;
+                                    case "r78":
 
-                                    Items = Items.OrderBy(i => i.Uid).ToList();
-                                    InventoryUpdated?.Invoke();
-                                    break;
-                                case "b86":
-                                    var itmData = data[3].Split(',');
-                                    var inventoryItem = Items.Find(i => i.Name == itmData[0]);
-                                    inventoryItem.Quntity = inventoryItem.Quntity + Convert.ToInt32(itmData[1]);
-                                    Items = Items.OrderBy(o => o.Uid).ToList();
-                                    InventoryUpdated?.Invoke();
-                                    break;
-                                case "b88":
-                                    GetTimeStamp("updateMap", MapName);
-                                    break;
-                                case "r61":
-                                    _avatarType = 1;
-                                    if (!_updatedMap)
-                                        LoadMap(false, MapName);
-                                    break;
-                                case "r65":
-                                    var loc11 = data[3].Split('|');
-                                    var loc8 = 0;
-                                    Team.Clear();
-                                    while (loc8 < loc11.Length)
-                                    {
-                                        ParsePokemon(loc11[loc8]);
-                                        loc8 = loc8 + 1;
-                                    }
+                                        //Well I really don't know what to do with these....
 
-                                    EndBattle();
-                                    break;
-                                case "r66":
-                                    var loc12 = data[3].Split('|');
-                                    var loc9 = 0;
-                                    Team.Clear();
-                                    while (loc9 < loc12.Length)
-                                    {
-                                        ParsePokemon(loc12[loc9]);
-                                        loc9++;
-                                    }
+                                        // ReSharper disable once UnusedVariable
+                                        var pokedexSeen = data[3].Split(',');
+                                        // ReSharper disable once UnusedVariable
+                                        var pokedexCaught = data[4].Split(',');
 
-                                    if (data[4] != "1") LoadMap(true, TempMap, PlayerX, PlayerY);
-                                    EndBattle();
-                                    break;
-                                case "b2":
-                                    var to = Team[Convert.ToInt32(data[3])];
-                                    var from = Team[Convert.ToInt32(data[4])];
-                                    Team[Convert.ToInt32(data[4])] = to;
-                                    Team[Convert.ToInt32(data[3])] = from;
-                                    if (_swapTimeout.IsActive)
-                                    {
-                                        _swapTimeout.Set(Rand.Next(500, 1000));
-                                    }
-                                    TeamUpdated?.Invoke(false);
-                                    break;
-                                case "r67":
-                                    GetTimeStamp("endBattleDisconnect");
-                                    break;
-                                case "r70":
-                                    GetTimeStamp("endBattleDisconnect2");
-                                    break;
-                                case "r5":
-                                    var pokeIndex = Convert.ToInt32(data[3]);
-                                    var itm = GetItemFromName(Team[pokeIndex].ItemHeld);
-                                    if (itm == null)
-                                    {
-                                        var newItm = new InventoryItem(Team[pokeIndex].ItemHeld);
-                                        Items.Add(newItm);
-                                        newItm.Uid = Items.IndexOf(newItm);
-                                        Items[Items.IndexOf(newItm)].Uid = Items.IndexOf(newItm);
-                                    }
-                                    else
-                                    {
-                                        Items[Items.IndexOf(Items.Find(i => i.Name == itm.Name))].Quntity += 1;
-                                    }
-                                    Team[pokeIndex].ItemHeld = "";
-                                    if (_swapTimeout.IsActive)
-                                    {
-                                        _swapTimeout.Set(Rand.Next(500, 1000));
-                                    }
-                                    TeamUpdated?.Invoke(false);
-                                    InventoryUpdated?.Invoke();
-                                    break;
-                                case "r4":
-                                    var pokeUid = Convert.ToInt32(data[3]);
-                                    var itemUid = Convert.ToInt32(data[4]);
-                                    var item = GetItemByUid(itemUid);
-                                    Items.Remove(item);
-                                    Team[pokeUid].ItemHeld = item.Name;
-                                    Items = Items.OrderBy(i => i.Uid).ToList();
-                                    InventoryUpdated?.Invoke();
-                                    if (_swapTimeout.IsActive)
-                                    {
-                                        _swapTimeout.Set(Rand.Next(500, 1000));
-                                    }
-                                    TeamUpdated?.Invoke(false);
-                                    break;
-                                case "r78":
+                                        break;
+                                    case "w":
+                                        HandleWildBattle(data);
+                                        break;
+                                    case "w2":
+                                        HandleWildBattle(data, true);
+                                        break;
+                                    case "c":
+                                        HandleWildBattleUpdate(data);
+                                        break;
+                                    case "bl":
+                                        TempMap = data[3];
+                                        EncryptedMap = data[4];
+                                        PlayerX = Convert.ToInt32(data[5]);
+                                        PlayerY = Convert.ToInt32(data[6]);
+                                        break;
+                                    case "b87":
+                                        Items.Find(i => i.Name == data[3].Split(',')[0]).Quntity -=
+                                            Convert.ToInt32(data[3].Split(',')[1]);
+                                        if (Items.Find(i => i.Name == data[3].Split(',')[0]).Quntity <= 0)
+                                            Items.Remove(Items.Find(i => i.Name == data[3].Split(',')[0]));
+                                        Items = Items.OrderBy(o => o.Uid).ToList();
+                                        InventoryUpdated?.Invoke();
+                                        break;
+                                    case "r26":
+                                        break;
+                                    case "r28":
+                                        break;
+                                    case "e":
+                                        EndBattle();
+                                        BattleMessage?.Invoke("You have ran away from the battle.");
+                                        break;
+                                    case "b123":
+                                        PokemonCaught[Convert.ToInt32(data[3]) - 1] = "true";
+                                        break;
+                                    case "b139":
+                                        Team[Convert.ToInt32(data[3])] = ParseOnePokemon(data[4]);
+                                        break;
+                                    case "b119":
+                                        ParseMultiPokemon(data[3]);
+                                        break;
+                                    case "b95":
+                                        foreach (var pokemon in Team)
+                                        {
+                                            pokemon.CurrentHealth = pokemon.MaxHealth;
+                                            pokemon.Ailment = "";
+                                            pokemon.AbilityLength = 0;
+                                        }
 
-                                    //Well I really don't know what to do with these....
+                                        if (_swapTimeout.IsActive) _swapTimeout.Set(Rand.Next(500, 1000));
+                                        TeamUpdated?.Invoke(true);
+                                        break;
+                                    case "b121":
+                                        Battle = true;
+                                        CanMove = false;
+                                        IsFishing = false;
+                                        _battleTimeout.Set(Rand.Next(4000, 6000));
+                                        GetTimeStamp("goodHook", "1");
+                                        StopFishing();
+                                        break;
+                                    case "b164":
+                                        HandleMiningRockDepleted(data);
+                                        break;
+                                    case "b165":
+                                        HandleMiningRockRestored(data);
+                                        break;
+                                    case "b166":
+                                        StopMining();
+                                        break;
+                                    case "b167":
+                                        HandleFinishMining(data);
+                                        break;
+                                    case "b141":
+                                        LogMessage?.Invoke("You've been permanently banned from the game.");
+                                        Logout();
+                                        _checkForLoggingTimeout?.Abort();
+                                        _checkForLoggingTimeout = null;
+                                        break;
+                                    case "b177":
+                                        LogMessage?.Invoke("Client out of date.");
+                                        Logout();
+                                        _checkForLoggingTimeout?.Abort();
+                                        _checkForLoggingTimeout = null;
+                                        break;
+                                    case "b179":
+                                        ExecutionPlan.Delay(Rand.Next(2000, 5000),
+                                                    () => GetTimeStamp("declineBattle"));
+                                        break;
+                                    case "b5":
+                                        MapUpdate(data);
+                                        break;
+                                }
 
-                                    // ReSharper disable once UnusedVariable
-                                    var pokedexSeen = data[3].Split(',');
-                                    // ReSharper disable once UnusedVariable
-                                    var pokedexCaught = data[4].Split(',');
-
-                                    break;
-                                case "w":
-                                    HandleWildBattle(data);
-                                    break;
-                                case "w2":
-                                    HandleWildBattle(data, true);
-                                    break;
-                                case "c":
-                                    HandleWildBattleUpdate(data);
-                                    break;
-                                case "bl":
-                                    TempMap = data[3];
-                                    EncryptedMap = data[4];
-                                    PlayerX = Convert.ToInt32(data[5]);
-                                    PlayerY = Convert.ToInt32(data[6]);
-                                    break;
-                                case "b87":
-                                    Items.Find(i => i.Name == data[3].Split(',')[0]).Quntity -=
-                                        Convert.ToInt32(data[3].Split(',')[1]);
-                                    if (Items.Find(i => i.Name == data[3].Split(',')[0]).Quntity <= 0)
-                                        Items.Remove(Items.Find(i => i.Name == data[3].Split(',')[0]));
-                                    Items = Items.OrderBy(o => o.Uid).ToList();
-                                    InventoryUpdated?.Invoke();
-                                    break;
-                                case "r26":
-                                    break;
-                                case "r28":
-                                    break;
-                                case "e":
-                                    EndBattle();
-                                    BattleMessage?.Invoke("You have ran away from the battle.");
-                                    break;
-                                case "b123":
-                                    PokemonCaught[Convert.ToInt32(data[3]) - 1] = "true";
-                                    break;
-                                case "b139":
-                                    Team[Convert.ToInt32(data[3])] = ParseOnePokemon(data[4]);
-                                    break;
-                                case "b119":
-                                    ParseMultiPokemon(data[3]);
-                                    break;
-                                case "b95":
-                                    foreach (var pokemon in Team)
-                                    {
-                                        pokemon.CurrentHealth = pokemon.MaxHealth;
-                                        pokemon.Ailment = "";
-                                        pokemon.AbilityLength = 0;
-                                    }
-
-                                    if (_swapTimeout.IsActive) _swapTimeout.Set(Rand.Next(500, 1000));
-                                    TeamUpdated?.Invoke(true);
-                                    break;
-                                case "b121":
-                                    Battle = true;
-                                    CanMove = false;
-                                    IsFishing = false;
-                                    _battleTimeout.Set(Rand.Next(4000, 6000));
-                                    GetTimeStamp("goodHook", "1");
-                                    StopFishing();
-                                    break;
-                                case "b164":
-                                    HandleMiningRockDepleted(data);
-                                    break;
-                                case "b165":
-                                    HandleMiningRockRestored(data);
-                                    break;
-                                case "b166":
-                                    StopMining();
-                                    break;
-                                case "b167":
-                                    HandleFinishMining(data);
-                                    break;
-                                case "b141":
-                                    LogMessage?.Invoke("You've been permanently banned from the game.");
-                                    Logout();
-                                    _checkForLoggingTimeout?.Abort();
-                                    _checkForLoggingTimeout = null;
-                                    break;
-                                case "b177":
-                                    LogMessage?.Invoke("Client out of date.");
-                                    Logout();
-                                    _checkForLoggingTimeout?.Abort();
-                                    _checkForLoggingTimeout = null;
-                                    break;
-                                case "b179":
-                                    ExecutionPlan.Delay(Rand.Next(2000, 5000),
-                                                () => GetTimeStamp("declineBattle"));
-                                    break;
-                                case "b5":
-                                    MapUpdate(data);
-                                    break;
-                            }
-
-                            break;
+                                break;
+                        }
+                    }
+                    else if (obj.StartsWith("<"))
+                    {
+                        //XML packets....
+                        //if (!obj.EndsWith("\0")) return;
+                        obj = obj.Replace("\0", "");
+#if DEBUG
+                        Console.WriteLine("Got Data From server:");
+                        Console.WriteLine($"Main: {obj}");
+#endif
+                        ParseXml(obj);
                     }
                 }
-                else if (obj.StartsWith("<"))
-                {
-                    //XML packets....
-                    //if (!obj.EndsWith("\0")) return;
-                    obj = obj.Replace("\0", "");
-#if DEBUG
-                    Console.WriteLine("Got Data From server:");
-                    Console.WriteLine($"Main: {obj}");
-#endif
-                    ParseXml(obj);
-                }
+            }
+            catch (Exception)
+            {
+                //ignore
             }
         }
 
@@ -1004,6 +1023,7 @@ namespace PPOProtocol
                 _needToLoadR = true;
             Battle = false;
             HasEncounteredRarePokemon = false;
+            movingForBattle = false;
             CanMove = true;
             BattleEnded?.Invoke();
         }
@@ -1015,12 +1035,15 @@ namespace PPOProtocol
         }
         private void HandleWildBattle(string[] data, bool disconnect = false)
         {
+            _movements.Clear();
+            movingForBattle = false;
             Shop = null;
             LastBattle = null;
             OpenedShop = null;
             Battle = true;
             ActiveBattle = new Battle(data, true, disconnect, this);
             _battleTimeout.Set(Rand.Next(4000, 6000));
+
             CanMove = false;
             if (ActiveBattle.IsWildBattle)
             {
@@ -1312,6 +1335,22 @@ namespace PPOProtocol
                     break;
                 }
             });
+
+            _movementSpeedMod = 1;
+
+            if (Convert.ToInt32(resObj[loopNum + 10]) > 0)
+            {
+                if (Convert.ToInt32(resObj[loopNum + 9]) == 2)
+                {
+                    _movementSpeedMod = 2;
+                }
+                else if (Convert.ToInt32(resObj[loopNum + 9]) == 0.500000)
+                    _movementSpeedMod = 0.500000;
+            }
+
+            _mapMovementSpeed = 8 * _movementSpeedMod;
+
+
             Fishing = new FishingExtentions(resObj[loopNum + 11], resObj[loopNum + 12], resObj[loopNum + 13]);
             PokemonCaught = ParseStringArray(resObj[loopNum + 36]);
             Mining = new MiningExtentions(resObj[loopNum + 48], resObj[loopNum + 49], resObj[loopNum + 50]);
@@ -1372,6 +1411,10 @@ namespace PPOProtocol
         public bool LoadMap(bool switchingMap, string tempMap, int x = int.MinValue, int y = int.MinValue,
             bool customMap = false, string oldMapBattleLost = "")
         {
+            movingForBattle = false;
+            _movementTimeout.Cancel();
+            _movements.Clear();
+
             MiningObjects.Clear();
             Shop = null;
             OpenedShop = null;
@@ -1434,6 +1477,15 @@ namespace PPOProtocol
                 item.Uid = Items.IndexOf(item);
                 Items[Items.IndexOf(item)].Uid = Items.IndexOf(item);
             }
+        }
+
+        private void LetOtherToSee(string[] data)
+        {
+            double offsetAmount = 0;
+            if (_movements.Count > 0)
+                offsetAmount = 64 - _mapMovements;
+            if (_avatarType != 0)
+                GetTimeStamp("sendAddPlayerTarget", data[3], offsetAmount.ToString());
         }
 
         public void SendPacket(string packet)
@@ -1651,7 +1703,10 @@ namespace PPOProtocol
                 loc8.Add(PlayerY);
                 loc8.Add(_dir);
                 loc8.Add(_moveType);
-                _connection.SendXtMessage("PokemonPlanetExt", "b55", loc8, "str");
+                loc8.Add(p1.ToLowerInvariant());
+                loc8.Add(p2);
+                loc8.Add(IsFishing ? "1" : "0");
+                _connection.SendXtMessage("PokemonPlanetExt", "b56", loc8, "str");
             }
             else if (type == "r")
             {
@@ -1935,6 +1990,17 @@ namespace PPOProtocol
                 loc8.Add($"packetCount:{PacketCount}");
                 _connection.SendXtMessage("PokemonPlanetExt", "b14", loc8, "xml");
             }
+            else if (type == "getHM")
+            {
+                var loc8 = new ArrayList();
+                loc8.Add($"hmNum:{p1}");
+                var packetKey = Connection.GenerateRandomString(Rand.Next(10, 30));
+                loc8.Add(
+                    $"packetKeyEncrypt:{Connection.CalcMd5(packetKey + kg2 + PacketCount)}");
+                loc8.Add($"packetKey:{packetKey}");
+                loc8.Add($"packetCount:{PacketCount}");
+                _connection.SendXtMessage("PokemonPlanetExt", "b22", loc8, "xml");
+            }
             else if (type == "declineTrade")
             {
                 var loc8 = new ArrayList();
@@ -2027,6 +2093,36 @@ namespace PPOProtocol
             return false;
         }
 
+        public bool GetHM(int num)
+        {
+            bool result = false;
+
+            switch (num)
+            {
+                case 1 when !HasItemName("HM01 - Cut"):
+                    GetTimeStamp("getHM", num.ToString());
+                    result = true;
+                    break;
+                case 2 when !HasItemName("HM02 - Fly"):
+                    GetTimeStamp("getHM", num.ToString());
+                    result = true;
+                    break;
+                case 3 when !HasItemName("HM03 - Surf"):
+                    GetTimeStamp("getHM", num.ToString());
+                    result = true;
+                    break;
+                case 5 when !HasItemName("HM05 - Flash"):
+                    GetTimeStamp("getHM", num.ToString());
+                    result = true;
+                    break;
+                default:
+                    LogMessage?.Invoke($"Was unable to get HM0{num}.");
+                    break;
+            }
+
+            return result;
+        }
+
         public bool IsAnyMinableRocks()
         {
             return MiningObjects.Count > 0 && MiningObjects.Count(rock => !rock.IsMined) > 0;
@@ -2108,12 +2204,12 @@ namespace PPOProtocol
         public InventoryItem GetItemByUid(int itmUid) => Items.FirstOrDefault(i => i.Uid == itmUid && i.Quntity > 0);
         private void SendWildBattle(bool isSurf = false)
         {
+            _movements.Clear();
             try
             {
                 Shop = null;
                 OpenedShop = null;
 
-                _moveLeftAndRightEx?.Abort();
                 _startBattleEx?.Abort();
 
                 _battleTimeout.Cancel();
@@ -2134,7 +2230,6 @@ namespace PPOProtocol
             }
         }
         private ExecutionPlan _startBattleEx;
-        private ExecutionPlan _moveLeftAndRightEx;
 
         public bool StartWildBattle()
         {
@@ -2142,7 +2237,6 @@ namespace PPOProtocol
             {
                 if (Battle)
                     return false;
-                _moveLeftAndRightEx = ExecutionPlan.Repeat(500, () => MoveLeftAndRight());
                 _battleTimeout.Set(Rand.Next(2500, 3000));
                 _startBattleEx = ExecutionPlan.Delay(2000, () => SendWildBattle());
                 return true;
@@ -2160,7 +2254,6 @@ namespace PPOProtocol
             {
                 if (Battle)
                     return false;
-                _moveLeftAndRightEx = ExecutionPlan.Repeat(500, () => MoveLeftAndRight());
                 _battleTimeout.Set(Rand.Next(2500, 3000));
                 _startBattleEx = ExecutionPlan.Delay(2000, () => SendWildBattle(true));
                 return true;
@@ -2264,6 +2357,11 @@ namespace PPOProtocol
             Shop = null;
             OpenedShop = null;
             if (Battle is true || !IsConnected) return;
+            if (_mapMovements >= 64)
+                _mapMovements = 0;
+            else
+                _mapMovements = _mapMovements + _mapMovementSpeed;
+
             if (tempDir.ToLowerInvariant() == "up")
             {
                 if (EncryptedTileY == Connection.CalcMd5(PlayerY + kg1 + Username))
@@ -2271,6 +2369,7 @@ namespace PPOProtocol
                     PlayerY--;
                     EncryptedTileY = Connection.CalcMd5(PlayerY + kg1 + Username);
                     GetTimeStamp("sendMovement", tempDir);
+                    CheckForBattle();
                 }
                 else
                 {
@@ -2284,6 +2383,7 @@ namespace PPOProtocol
                     PlayerY++;
                     EncryptedTileY = Connection.CalcMd5(PlayerY + kg1 + Username);
                     GetTimeStamp("sendMovement", tempDir);
+                    CheckForBattle();
                 }
                 else
                 {
@@ -2297,6 +2397,7 @@ namespace PPOProtocol
                     PlayerX--;
                     EncryptedTileX = Connection.CalcMd5(PlayerX + kg1 + Username);
                     GetTimeStamp("sendMovement", tempDir);
+                    CheckForBattle();
                 }
                 else
                 {
@@ -2310,6 +2411,7 @@ namespace PPOProtocol
                     PlayerX++;
                     EncryptedTileX = Connection.CalcMd5(PlayerX + kg1 + Username);
                     GetTimeStamp("sendMovement", tempDir);
+                    CheckForBattle();
                 }
                 else
                 {
@@ -2320,6 +2422,64 @@ namespace PPOProtocol
             _dir = tempDir;
             PlayerPositionUpdated?.Invoke();
         }
+
+        private void CheckForBattle()
+        {
+            if (movingForBattle)
+            {
+                if (Team[0].AbilityNo == 1 || Team[0].AbilityNo == 73 || Team[0].AbilityNo == 95)
+                {
+                    if (Rand.Next(1, 14) == 7)
+                    {
+                        SendWildBattle();
+                    } // end if
+                }
+                else if (Team[0].AbilityNo == 35 || Team[0].AbilityNo == 71)
+                {
+                    if (Rand.Next(1, 9) <= 2)
+                    {
+                        SendWildBattle();
+                    } // end if
+                }
+                else if (Team[0].AbilityNo == 99)
+                {
+                    if (Rand.Next(1, 90) <= 15)
+                    {
+                        SendWildBattle();
+                    } // end if
+                }
+                else if (Rand.Next(1, 9) == 7)
+                {
+                    SendWildBattle();
+                } // end else if
+                else if (Team[0].AbilityNo == 1 || Team[0].AbilityNo == 73 || Team[0].AbilityNo == 95)
+                {
+                    if (Rand.Next(1, 27) == 7)
+                    {
+                        SendWildBattle();
+                    } // end if
+                }
+                else if (Team[0].AbilityNo == 35 || Team[0].AbilityNo == 71)
+                {
+                    if (Rand.Next(1, 9) == 7)
+                    {
+                        SendWildBattle();
+                    } // end if
+                }
+                else if (Team[0].AbilityNo == 99)
+                {
+                    if (Rand.Next(1, 180) <= 15)
+                    {
+                        SendWildBattle();
+                    } // end if
+                }
+                else if (Rand.Next(1, 18) == 7)
+                {
+                    SendWildBattle();
+                } // end else if
+            }
+        }
+
         private string kg1 => _gameConnection.KG1Value;
         private string kg2 => _gameConnection.KG2Value;
         public bool CheckMapExits(int x, int y)
@@ -2338,6 +2498,17 @@ namespace PPOProtocol
             }
 
             return false;
+        }
+
+        public void Move(Direction direction, bool isMovingForBattle = false, bool surfBattle = true)
+        {
+            movingForBattle = isMovingForBattle;
+            _moveType = surfBattle ? "surf" : _moveType;
+            _movements.Enqueue(direction);
+        }
+        public void ClearPath()
+        {
+            _movements.Clear();
         }
 
         public bool HasItemName(string itemName)
@@ -2386,6 +2557,19 @@ namespace PPOProtocol
             if (!(bool)_fishingTimeout?.Update())
             {
                 IsFishing = false;
+            }
+
+            UpdateMovement();
+        }
+
+        private void UpdateMovement()
+        {
+            if (!IsMapLoaded) return;
+
+            if (!_movementTimeout.IsActive && _movements.Count > 0)
+            {
+                SendMovement(_movements.Dequeue().AsString());
+                _movementTimeout.Set(250);
             }
         }
 

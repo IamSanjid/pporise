@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using PPOProtocol;
-using System.Windows.Media;
+﻿using PPOBot.Modules;
 using PPOBot.Scripting;
+using PPOProtocol;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using PPOBot.Modules;
+using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace PPOBot
 {
@@ -25,7 +25,7 @@ namespace PPOBot
         public event Action<Exception> Disconnected;
         public event Action<string> LogMessage;
         public event Action ClientChanged;
-        public event Action<string, Brush> ColoredLogMessage;       
+        public event Action<string, Brush> ColoredLogMessage;
 
         private bool _loginUpdate;
         public GameClient Game { get; private set; }
@@ -331,6 +331,44 @@ namespace PPOBot
             {
                 C_LogMessage(message, Brushes.OrangeRed);
             }
+        }
+
+        public bool MoveToCell(int x, int y, string whatReason)
+        {
+            Pathfinding path = new Pathfinding(Game);
+            bool result;
+
+            if (Game.PlayerX == x && Game.PlayerY == y)
+            {
+                result = path.MoveToSameCell(whatReason);
+            }
+            else
+            {
+                result = path.MoveTo(x, y, whatReason);
+            }
+            return result;
+        }
+        public bool MoveLeftRight(int startX, int startY, int destX, int destY, string movingReason = "")
+        {
+            bool result;
+
+            if (startX != destX && startY != destY)
+                return false;
+
+            if (Game.PlayerX == destX && Game.PlayerY == destY)
+            {
+                result = MoveToCell(startX, startY, movingReason);
+            }
+            else if (Game.PlayerX == startX && Game.PlayerY == startY)
+            {
+                result = MoveToCell(destX, destY, movingReason);
+            }
+            else
+            {
+                result = MoveToCell(startX, startY, movingReason);
+            }
+
+            return result;
         }
 
         private GameConnection _gameConnection;

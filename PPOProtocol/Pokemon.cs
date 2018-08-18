@@ -17,6 +17,9 @@ namespace PPOProtocol
         public int AbilityLength { get; set; }
         public string Ailment { get; set; }
         private string _itemHeld;
+
+        public int AbilityNo { get; set; }
+
         public string ItemHeld {
             get
             {
@@ -146,7 +149,8 @@ namespace PPOProtocol
                                 _nature = no.InnerText;
                                 break;
                             case "ability":
-                                Ability = new PokemonAbility(Convert.ToInt32(no.InnerText));
+                                AbilityNo = Convert.ToInt32(no.InnerText);
+                                Ability = new PokemonAbility(AbilityNo);
                                 break;
                             case "ailment":
                                 Ailment = no.InnerText;
@@ -274,7 +278,10 @@ namespace PPOProtocol
 
             _nature = data[20];
             if (data[35] != "")
-                Ability = new PokemonAbility(Convert.ToInt32(data[35]));
+            {
+                AbilityNo = Convert.ToInt32(data[35]);
+                Ability = new PokemonAbility(AbilityNo);
+            }
             if (data[37] != "")
                 AbilityLength = Convert.ToInt32(data[37]);
             if (data[1] != "")
