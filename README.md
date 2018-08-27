@@ -13,6 +13,12 @@ A free, open-source and advanced bot for Pokémon Planet.
 * [MoonSharp](http://www.moonsharp.org/) - Lua interpreter
 * [Json.NET](http://www.newtonsoft.com/json) - JSON framework
 
+
+# Icons
+
+Found the Icon from: https://my.dek-d.com/MyLittleSnail/poll/?id=159898 (How I found it? A long story mate.)
+
+
 # Lua API(s)
 * Events:
 onStart() -> This function will be called when your script going to be started.
