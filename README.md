@@ -16,7 +16,7 @@ A free, open-source and advanced bot for Pokémon Planet.
 
 # Icons
 
-Found the Icon from: https://my.dek-d.com/MyLittleSnail/poll/?id=159898 (How I found it? A long story mate.)
+Found the Icon from: https://image.dek-d.com/27/0690/3719/125744257 (How I found it? A long story mate.)
 
 
 # Lua API(s)
