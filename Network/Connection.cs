@@ -33,7 +33,7 @@ namespace Network
 
         private bool _wasDisconnected;
 
-        public int SocketVersion = 4;
+        private int _socketVersion;
 
         public int ActiveRoomId = 1;
         private readonly string _initialHashTest;
@@ -181,8 +181,9 @@ namespace Network
             }
         }
 
-        public void Initialize(Socket socket)
+        public void Initialize(Socket socket, int socketVersion)
         {
+            _socketVersion = socketVersion;
             _endPoint = (IPEndPoint) socket.RemoteEndPoint;
             _tempSocket = socket;
             _socket = socket;
@@ -384,14 +385,14 @@ namespace Network
                 if (_tempSocket.RemoteEndPoint != null)
                 {
                     // ReSharper disable once PossibleNullReferenceException
-                    var newTempSocket = await SocksConnection.OpenConnection(SocketVersion, Host, Port,
+                    var newTempSocket = await SocksConnection.OpenConnection(_socketVersion, Host, Port,
                         ((IPEndPoint) _tempSocket.RemoteEndPoint)?.Address.ToString(),
                         ((IPEndPoint) _tempSocket.RemoteEndPoint).Port);
 #if DEBUG
                     Console.WriteLine
                         ($"Using Proxy server to connect to the game server. Address: {((IPEndPoint)_tempSocket.RemoteEndPoint).Address} Port: {((IPEndPoint)_tempSocket.RemoteEndPoint).Port}");
 #endif
-                    Initialize(newTempSocket);
+                    Initialize(newTempSocket, _socketVersion);
                 }
             }
             else

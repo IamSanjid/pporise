@@ -12,8 +12,7 @@ namespace PPOProtocol
         private int _socksPort;
         private string _socksUser;
         private string _socksPass;
-        private bool _isLoggedInToWebsite;
-        public bool IsLoggedInToWebsite => _isLoggedInToWebsite;
+        public bool IsLoggedInToWebsite { get; private set; }
         public string Id { get; private set; }
 
         public event Action LoggedIn;
@@ -38,7 +37,7 @@ namespace PPOProtocol
             _httpConnection.LoggingError += HttpConnection_LoggingError;
             Username = username;
 
-            _isLoggedInToWebsite = false;
+            IsLoggedInToWebsite = false;
 
             Port = 9339;
             Host = "167.114.159.20";          
@@ -51,7 +50,7 @@ namespace PPOProtocol
             _httpConnection.LoggingError += HttpConnection_LoggingError;
             Username = username;
 
-            _isLoggedInToWebsite = false;
+            IsLoggedInToWebsite = false;
 
             Port = 9339;
             Host = "167.114.159.20";
@@ -62,7 +61,7 @@ namespace PPOProtocol
             Id = arg1;
             Username = arg2;
             HashPassword = arg3;
-            _isLoggedInToWebsite = true;
+            IsLoggedInToWebsite = true;
             LoggedIn?.Invoke();
         }
 
@@ -81,8 +80,7 @@ namespace PPOProtocol
                 try
                 {
                     var socket = await SocksConnection.OpenConnection(_socksVersion, Host, Port, _socksHost, _socksPort, _socksUser, _socksPass);
-                    SocketVersion = _socksVersion;
-                    Initialize(socket);
+                    Initialize(socket, _socksVersion);
                 }
                 catch (Exception ex)
                 {
