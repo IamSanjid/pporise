@@ -85,6 +85,9 @@ startFishing("rod name") -> starts fishing with given rod.
 stopFishing() -> stops fishing.
 startSurfBattle() -> Starts a surf wild battle.
 teleportTo(Map Name, X, Y) -> Put map name and put coordinators. It will teleport you to a specific map. :D
+moveToCell(cellX, cellY, "battle" or "surf battle") -> Moves to the specified coordinates for battle.
+moveLinearX(cellX1, cellX2, cellY) -> Moves left and right from one specific cell to another spcific cell.
+moveLinearY(cellY1, cellY2, cellX) -> Moves up and down from one specific cell to another spcific cell.
 getMapName() -> gets current map name.
 isFishing() -> returns true if you started fishing.
 isAutoEvolve() -> returns true if you have enabled auto evolving feature.
