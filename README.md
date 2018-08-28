@@ -20,7 +20,7 @@ Found the Icon from: https://image.dek-d.com/27/0690/3719/125744257 (How I found
 
 
 # Lua API(s)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~LUA Events~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                          *LUA Events*
 onStart() -> This function will be called when your script going to be started.
 onStop() -> This function will be called when your script going to be stopped.
 onPause() -> This function will be called when your script going to pe paused.
@@ -32,7 +32,7 @@ battle automatic actions like attack(), weakAttack(), useItem("Ultra Ball") etc.
 onLearningMove(moveName, pokemonIndex) -> This function is called when one of your Pokémon
 going to learn a move. You can use forgetMove("move name") - forgets a move of the new move learning
 Pokémon.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~API(s)/Methods/Actions/Funcions~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                *API(s)/Methods/Actions/Funcions*
 log("message") -> Prints texts on the bot log box.
 fatal("message") -> Prints texts on the bot log box and stops the script/bot.
 logout("message") -> Prints texts and log outs.
@@ -46,7 +46,7 @@ getFishingLevel() -> Returns the fishing level.
 getMiningTotalExperience() -> Returns the mining total experience.
 getMiningCurrentExperience() -> Returns the mining current experience.
 getMiningLevel() -> Returns the mining level.
-~~~~~~~~~~~~~Battle~~~~~~~~~~~~~~~~~~
+                                         *Battle*
 isOpponentShiny() -> finds out if opponent is shiny or not.
 isOpponentEffortValue("type") -> returns true if opponent give specific/desired EV(Effort Value).
 getOpponentType() -> gets opponent types returns a string array.
@@ -71,7 +71,7 @@ attack() -> uses best attack against Opponent.
 weakAttack() -> uses weakest attack(which can damage opponent, to use non-damaging moves like Hypnosis use "useMove('Hypnosis')") against opponent. (E.g. This will use False Swipe if you have that Pokémon your team).
 isOppenentDataReceived() -> Returns true if received all stat datas about Opponent.
 getOpponentIV(stat_type) -> Gets opponent's specific stat IV.
-~~~~~~~~~~~~~~~Item/Shop~~~~~~~~~~~~~~~~~~~~~
+                                        *Item/Shop*
 useItem(item Name) -> Uses an item doesn't care if in battle or not.
 useFirstItem() -> Uses first item, can be only used in battles.
 getItemQuantity("item name") -> Returns the quantity of the specified item in the inventory.
@@ -82,7 +82,7 @@ giveItemToPokemon("item name", pokemon_index) -> Gives the specified item on the
 buyItem("item name", amount) -> Buys the specified item from the opened shop.
 openShop() -> Opens a Pokemart Shop. You must be in a Pokemart.
 isShopOpen() -> Returns true if there is a shop opened.
-~~~~~~~~~~~~~~~Path~~~~~~~~~~~~~~~~~~~~~
+                                          *Path*
 startBattle() -> Starts a wild battle.
 startFishing("rod name") -> starts fishing with given rod.
 stopFishing() -> stops fishing.
@@ -104,7 +104,7 @@ Eg. startColoredRockMining("Old Pickaxe", "Red") this will mine only minable red
 moveToCell(cellX, cellY, "battle" or "surf battle") -> Moves to the specified coordinates for battle.
 moveLinearX(cellX1, cellX2, cellY) -> Moves left and right from one specific cell to another spcific cell.
 moveLinearY(cellY1, cellY2, cellX) -> Moves up and down from one specific cell to another spcific cell.
-~~~~~~~~~~~~~Pokemon~~~~~~~~~~~~~~~
+                                      *Pokemon Datas*
 getPokemonHealth(index) -> gets specific user Pokemon current health. E.g if getPokemonHealth(1) here index is 1 so it will get health of 1st Pokemon.
 getPokemonStatus(index) -> get specific user Pokemon's status. Works like getPokemonHealth.
 getPokemonLevel(index) -> get specific user Pokemon's level. Works like getPokemonHealth.
@@ -132,7 +132,7 @@ sortTeamByLevelAscending() -> Sorts the pokémon in the team by level in ascendi
 sortTeamByLevelDescending() -> Sorts the pokémon in the team by level in descending order, one pokémon at a time.
 sortTeamRangeByLevelAscending(fromIndex, toIndex) -> Sorts the specified part of the team by level in ascending order, one pokémon at a time.
 sortTeamRangeByLevelDescending(fromIndex, toIndex) -> Sorts the specified part of the team by level in descending order, one pokémon at a time.
-~~~~~~~~~~~Pokemon move learning~~~~~~~~
+                                          *Pokemon move learning*
 Only usable when learning a move, inside onLearningMove.
 forgetAnyMoveExcept() -> E.g forgetAnyMoveExcept({"Fly", "Cut", "Psychic", "Thunder"})- Forgets any move expect some given moves to learn a new move.
 forgetMove() -> E.g forgetMove("Dragon Rage") - Forgets the specified move, if existing, in order to learn a new one.
