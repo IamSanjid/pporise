@@ -380,12 +380,19 @@ namespace PPOBot
                 Account = acc;
                 if (Account.Socks.Version != SocksVersion.None)
                 {
-                    _gameConnection = new GameConnection(Account.Name, (int)Account.Socks.Version, Account.Socks.Host,
-                        Account.Socks.Port, Account.Socks.Username, Account.Socks.Password);
+                    if (Account.HttpProxy.Port > -1 && !string.IsNullOrEmpty(Account.HttpProxy.Host))
+                        _gameConnection = new GameConnection(Account.Name, (int)Account.Socks.Version, Account.Socks.Host,
+                            Account.Socks.Port, Account.Socks.Username, Account.Socks.Password, Account.HttpProxy.Host, Account.HttpProxy.Port);
+                    else
+                        _gameConnection = new GameConnection(Account.Name, (int)Account.Socks.Version, Account.Socks.Host,
+                            Account.Socks.Port, Account.Socks.Username, Account.Socks.Password);
                 }
                 else
                 {
-                    _gameConnection = new GameConnection(Account.Name);
+                    if (Account.HttpProxy.Port > -1 && !string.IsNullOrEmpty(Account.HttpProxy.Host))
+                        _gameConnection = new GameConnection(Account.Name, Account.HttpProxy.Host, Account.HttpProxy.Port);
+                    else
+                        _gameConnection = new GameConnection(Account.Name);
                 }
                 if (Settings.Versions != null)
                 {

@@ -40,6 +40,9 @@
                     <RowDefinition />
                     <RowDefinition />
                     <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
                     <RowDefinition Height="30" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
@@ -65,22 +68,27 @@
                     </ComboBox.Resources>-->
 
                 <CheckBox Name="ProxyCheckBox" Grid.Row="3" Grid.Column="1" Checked="ProxyCheckBox_Checked" Unchecked="ProxyCheckBox_Checked" Foreground="#FF99AAB5" BorderBrush="#FF707070">Connect through a proxy server</CheckBox>
-                <StackPanel Name="ProxyTypePanel" Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                <CheckBox Name="HttpProxyCheck" Grid.Row="4" Margin="1" Grid.Column="1" Checked="ProxyCheckBox_Checked" Unchecked="ProxyCheckBox_Checked" Foreground="#FF99AAB5">Use Http Proxy for website connection</CheckBox>
+                <StackPanel Name="ProxyTypePanel" Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
                     <RadioButton Name="Socks4RadioButton" Checked="ProxyCheckBox_Checked" Unchecked="ProxyCheckBox_Checked" Margin="0,0,10,0" Foreground="#FF99AAB5">SOCKS4</RadioButton>
                     <RadioButton Name="Socks5RadioButton" Checked="ProxyCheckBox_Checked" Unchecked="ProxyCheckBox_Checked" IsChecked="True" Foreground="#FF99AAB5" BorderBrush="#FF707070">SOCKS5</RadioButton>
                 </StackPanel>
-                <Label Name="ProxyHostLabel" Grid.Row="5" Grid.Column="0" Content="Host:" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="1" Foreground="#FF99AAB5" />
-                <TextBox Name="ProxyHostTextBox" Width="256" Grid.Row="5" Margin="2" Grid.Column="1" Background="#FF2C2F33" Foreground="#FF99AAB5" BorderBrush="{x:Null}"></TextBox>
-                <Label Name="ProxyPortLabel" Grid.Row="6" Grid.Column="0" Content="Port:" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="1" Foreground="#FF99AAB5" />
-                <TextBox Name="ProxyPortTextBox" Width="256" Grid.Row="6" Grid.Column="1" Margin="1" Background="#FF2C2F33" Foreground="#FF99AAB5" BorderBrush="{x:Null}"></TextBox>
-                <CheckBox Name="AnonymousCheckBox" Grid.Row="7" Grid.Column="1" Margin="0" Checked="ProxyCheckBox_Checked" Unchecked="ProxyCheckBox_Checked" IsChecked="True" Foreground="#FF99AAB5">Use anonymous authentication</CheckBox>
-                <Label Name="ProxyUsernameLabel" Grid.Row="8" Grid.Column="0" Content="Username:" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0" Foreground="#FF99AAB5" />
-                <TextBox Name="ProxyUsernameTextBox" Width="256" Grid.Row="8" Grid.Column="1" Margin="1" Background="#FF2C2F33" Foreground="#FF99AAB5" BorderBrush="{x:Null}"></TextBox>
-                <Label Name="ProxyPasswordLabel" Grid.Row="9" Grid.Column="0" Content="Password:" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0" Foreground="#FF99AAB5" />
-                <PasswordBox Name="ProxyPasswordTextBox" Grid.Row="9" Grid.Column="1" Margin="1" Background="#FF2C2F33" Foreground="#FF99AAB5" BorderBrush="{x:Null}"></PasswordBox>
+                <Label Name="ProxyHostLabel" Grid.Row="6" Grid.Column="0" Content="Host:" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="1" Foreground="#FF99AAB5" />
+                <TextBox Name="ProxyHostTextBox" Grid.Row="6" Margin="2" Grid.Column="1" Background="#FF2C2F33" Foreground="#FF99AAB5" BorderBrush="{x:Null}"></TextBox>
+                <Label Name="ProxyPortLabel" Grid.Row="7" Grid.Column="0" Content="Port:" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="1" Foreground="#FF99AAB5" />
+                <TextBox Name="ProxyPortTextBox" Grid.Row="7" Grid.Column="1" Margin="1" Background="#FF2C2F33" Foreground="#FF99AAB5" BorderBrush="{x:Null}"></TextBox>
+                <CheckBox Name="AnonymousCheckBox" Grid.Row="8" Grid.Column="1" Margin="0" Checked="ProxyCheckBox_Checked" Unchecked="ProxyCheckBox_Checked" IsChecked="True" Foreground="#FF99AAB5">Use anonymous authentication</CheckBox>
+                <Label Name="ProxyUsernameLabel" Grid.Row="9" Grid.Column="0" Content="Username:" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0" Foreground="#FF99AAB5" />
+                <TextBox Name="ProxyUsernameTextBox" Grid.Row="9" Grid.Column="1" Margin="1" Background="#FF2C2F33" Foreground="#FF99AAB5" BorderBrush="{x:Null}"></TextBox>
+                <Label Name="ProxyPasswordLabel" Grid.Row="10" Grid.Column="0" Content="Password:" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0" Foreground="#FF99AAB5" />
+                <PasswordBox Name="ProxyPasswordTextBox" Grid.Row="10" Grid.Column="1" Margin="1" Background="#FF2C2F33" Foreground="#FF99AAB5" BorderBrush="{x:Null}"></PasswordBox>
+                <Label Name="HttpProxyHostLabel" Grid.Row="11" Grid.Column="0" Content="HTTP Host:" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="1" Foreground="#FF99AAB5" />
+                <TextBox Name="HttpProxyHostTextBox" Grid.Row="11" Margin="2" Grid.Column="1" Background="#FF2C2F33" Foreground="#FF99AAB5" BorderBrush="{x:Null}"></TextBox>
+                <Label Name="HttpProxyPortLabel" Grid.Row="12" Grid.Column="0" Content="HTTP Port:" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="1" Foreground="#FF99AAB5" />
+                <TextBox Name="HttpProxyPortTextBox" Grid.Row="12" Grid.Column="1" Margin="1" Background="#FF2C2F33" Foreground="#FF99AAB5" BorderBrush="{x:Null}"></TextBox>
 
-                <Button FontSize="12" FontWeight="Regular" Grid.Row="10" Grid.Column="0" IsCancel="True" Content="Cancel" Background="#FF2C2F33" Foreground="#FF99AAB5" Margin="1" BorderBrush="{x:Null}"></Button>
-                <Grid Grid.Row="10" Grid.Column="1">
+                <Button FontSize="12" FontWeight="Regular" Grid.Row="13" Grid.Column="0" IsCancel="True" Content="Cancel" Background="#FF2C2F33" Foreground="#FF99AAB5" Margin="1" BorderBrush="{x:Null}"></Button>
+                <Grid Grid.Row="13" Grid.Column="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="*" />
@@ -103,7 +111,7 @@
                 <RowDefinition Height="30" />
             </Grid.RowDefinitions>
             <ListBox FontSize="12" FontWeight="Regular" Name="AccountListView" Grid.Row="0" ItemsSource="{Binding AccountName}" SelectionChanged="AccountListView_SelectionChanged" Background="#FF1F2225" Foreground="#FF99AAB5" BorderBrush="{x:Null}">
-               
+
             </ListBox>
             <Button Margin="1" FontSize="12" FontWeight="Regular" Name="DeleteAccountButton" Grid.Row="1" Content="Delete" Background="#FF2C2F33" Foreground="#FF99AAB5" Click="DeleteAccountButton_Click" BorderBrush="{x:Null}" />
         </Grid>

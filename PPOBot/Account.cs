@@ -12,6 +12,7 @@ namespace PPOBot
         public string Name { get; set; }
         public string Password { get; set; }
         public Socks Socks { get; set; }
+        public HttpProxy HttpProxy { get; set; }
 
         [JsonIgnore]
         public string FileName { get; set; }
@@ -20,6 +21,7 @@ namespace PPOBot
         {
             Name = name;
             Socks = new Socks();
+            HttpProxy = new HttpProxy();
         }
     }
 }

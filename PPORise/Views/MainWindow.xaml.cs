@@ -255,7 +255,7 @@ namespace PPORise
         {
             Dispatcher.InvokeAsync(delegate
             {
-                LogMessage(@"Logging failed. Please check your password and username again or your internet connection.", Brushes.OrangeRed);
+                LogMessage(@"Logging failed. Please check your password and username again or your internet connection or please use another http proxy (if you have used one).", Brushes.OrangeRed);
                 LoginButton.IsEnabled = true;
                 LoginButton2.Content = "Login";
                 LoginButton2.IsEnabled = true;
@@ -419,13 +419,18 @@ namespace PPORise
                 lock(Bot)
                 {
                     var account = new Account(login.Username) { Password = login.Password };
-                    if (login.HasProxy)
+                    if (login.HasProxy && login.ProxyPort > 0)
                     {
                         account.Socks.Version = (SocksVersion)login.ProxyVersion;
                         account.Socks.Host = login.ProxyHost;
                         account.Socks.Port = login.ProxyPort;
                         account.Socks.Username = login.ProxyUsername;
                         account.Socks.Password = login.ProxyPassword;
+                    }
+                    if (login.HasHttpProxy && login.HttpProxyPort > 0)
+                    {
+                        account.HttpProxy.Host = login.HttpProxyHost;
+                        account.HttpProxy.Port = login.HttpProxyPort;
                     }
                     Bot.Login(account);
                 }

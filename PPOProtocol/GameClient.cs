@@ -1619,6 +1619,7 @@ namespace PPOProtocol
                 loc8.Add(Id);
                 loc8.Add(Connection.CalcMd5(
                     _url + loc8[1] + kg2 + PacketCount + Username));
+                loc8.Add("1");
                 _connection.SendXtMessage("PokemonPlanetExt", "b61", loc8, "str");
             }
             else if (type == "pmsg")

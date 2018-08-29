@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Network
@@ -18,10 +21,24 @@ namespace Network
 
         private const string LoginWebUrl = "http://pokemon-planet.com/forums/index.php?action=login2";
         private const string UserInfoUrl = "http://www.pokemon-planet.com/getUserInfo.php";
+
         public HttpConnection()
         {
             Client = new HttpClient();
         }
+
+        public HttpConnection(string host, int port)
+        {
+            Client = new HttpClient
+            (
+                new HttpClientHandler
+                {
+                    UseProxy = true,
+                    Proxy = new WebProxy($"{host}:{port}", false)
+                }
+            );
+        }
+
         public async Task PostLogin(string user, string pass)
         {
             try
@@ -56,20 +73,12 @@ namespace Network
                                     _passwrod = data3[1];
                                     Console.WriteLine(_id + "-" + _username + "-" + _passwrod);
                                     LoggedIn?.Invoke(_id, _username, _passwrod);
+                                    return;
                                 }
-                                else
-                                    LoggingError?.Invoke(null);
-                            }
-                            else
-                            {
-                                LoggingError?.Invoke(null);
                             }
                         }
                     }
-                    else
-                    {
-                        LoggingError?.Invoke(null);
-                    }
+                    LoggingError?.Invoke(null);
                 }
             }
             catch (Exception ex)

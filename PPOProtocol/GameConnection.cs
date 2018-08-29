@@ -18,12 +18,12 @@ namespace PPOProtocol
         public event Action LoggedIn;
         public event Action<Exception> LoggingError;
 
-        private readonly HttpConnection _httpConnection;
+        private HttpConnection _httpConnection;
 
         public string GameVersion;
         public string KG2Value;
         public string KG1Value;
-        public GameConnection(string username, int socksVersion, string socksHost, int socksPort, string socksUser, string socksPass)
+        public GameConnection(string username, int socksVersion, string socksHost, int socksPort, string socksUser, string socksPass, string httphost = "", int httpport = -1)
         {
             _useSocks = true;
             _socksVersion = socksVersion;
@@ -32,15 +32,34 @@ namespace PPOProtocol
             _socksUser = socksUser;
             _socksPass = socksPass;
 
-            _httpConnection = new HttpConnection();
+            if (!string.IsNullOrEmpty(httphost) && httpport > 0)
+                _httpConnection = new HttpConnection(httphost, httpport);
+            else
+                _httpConnection = new HttpConnection();
+
             _httpConnection.LoggedIn += HttpConnection_LoggedIn;
             _httpConnection.LoggingError += HttpConnection_LoggingError;
+
             Username = username;
 
             IsLoggedInToWebsite = false;
 
             Port = 9339;
             Host = "167.114.159.20";          
+        }
+
+        public GameConnection(string username, string httphost, int httpport)
+        {
+            _httpConnection = new HttpConnection(httphost, httpport);
+            _httpConnection.LoggedIn += HttpConnection_LoggedIn;
+            _httpConnection.LoggingError += HttpConnection_LoggingError;
+
+            Username = username;
+
+            IsLoggedInToWebsite = false;
+
+            Port = 9339;
+            Host = "167.114.159.20";
         }
 
         public GameConnection(string username)
@@ -90,7 +109,7 @@ namespace PPOProtocol
         }
         public async Task PostLogin(string userName, string password)
         {
-             await _httpConnection.PostLogin(userName, password);
+            await _httpConnection.PostLogin(userName, password);
         }
     }
 }
