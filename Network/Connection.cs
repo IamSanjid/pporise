@@ -62,7 +62,7 @@ namespace Network
         public void Login(string zone, string name, string pass)
         {
             var loc3 = "tsys";
-            var loc2 = $"<login z=\'{zone}\'><nick><![CDATA[{name}]]></nick><pword><![CDATA[{pass}]]></pword></login>";
+            var loc2 = $"<login z=\'" + zone + "\'><nick><![CDATA[" + name + "]]></nick><pword><![CDATA[" + pass + "]]></pword></login>";
             Send(loc3, "login", 0, loc2);
         }
 
@@ -348,15 +348,6 @@ namespace Network
                         LogMessage?.Invoke("Sending authentication to the server....");
                         Login(Zone, Username, HashPassword);
                     }
-                    else if (packet.Contains(Username) && packet.Contains("xt")
-                                                        && packet.Contains("xtRes") &&
-                                                        packet.Contains("_cmd") &&
-                                                        packet.Contains("name")
-                                                        && packet.Contains("login"))
-                    {
-                        SuccessfullyAuthenticated?.Invoke();
-                        GetRoomList();
-                    }
                     else if (packet.Contains("rmList"))
                     {
                         AutoJoin();
@@ -366,6 +357,13 @@ namespace Network
                         IsLoggedIn = true;
                         JoinedRoom?.Invoke();
                     }
+                }
+                else if (packet.Contains("xt") &&
+                                    packet.Contains("l") &&
+                                    packet.Contains("-1"))
+                {
+                    SuccessfullyAuthenticated?.Invoke();
+                    GetRoomList();
                 }
             }
         }
@@ -458,7 +456,7 @@ namespace Network
 
         private string makeHeader(string headerObj)
         {
-            dynamic loc2 = $"<msg {headerObj[0]}=\'{headerObj.Substring(1)}\'>";
+            dynamic loc2 = $"<msg {headerObj[0]}='{headerObj.Substring(1)}'>";
             return loc2;
         }
 

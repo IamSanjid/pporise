@@ -273,6 +273,9 @@ namespace PPOBot.Scripting
 				_lua.Globals["moveToCell"] = new Func<int, int, string, bool>(MoveToCell);
 				_lua.Globals["moveLinearX"] = new Func<int, int, int, string, bool>(MoveLinearX);
 				_lua.Globals["moveLinearY"] = new Func<int, int, int, string, bool>(MoveLinearY);
+				_lua.Globals["useBike"] = new Func<bool>(UseBike);
+				_lua.Globals["openTreasure"] = new Func<int, int, bool>(OpenTreasure);
+				_lua.Globals["openAllTreasures"] = new Func<bool>(OpenAllTreasures);
 				//Pokemon
 				_lua.Globals["isTeamSortedByLevelAscending"] = new Func<bool>(IsTeamSortedByLevelAscending);
 				_lua.Globals["isTeamSortedByLevelDescending"] = new Func<bool>(IsTeamSortedByLevelDescending);
@@ -339,6 +342,48 @@ namespace PPOBot.Scripting
 				}
 				CallContent(_content);
 			});
+		}
+
+		private bool OpenAllTreasures()
+		{
+			if (HasItem("Treasure Key"))
+			{
+				foreach(var tr in Bot.Game.EliteChests)
+				{
+					if (!tr.Opened)
+					{
+						Bot.Game.GetTimeStamp("openChest", tr.X.ToString(), tr.Y.ToString());
+						ExecuteAction(true);
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		private bool OpenTreasure(int x, int y)
+		{
+			if (HasItem("Treasure Key"))
+			{
+				if (Bot.Game.EliteChests.Any(tr => tr.X == x && tr.Y == y && !tr.Opened))
+				{
+					var tr = Bot.Game.EliteChests.Find(tre => tre.X == x && tre.Y == y && !tre.Opened);
+					Bot.Game.GetTimeStamp("openChest", tr.X.ToString(), tr.Y.ToString());
+					ExecuteAction(true);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private bool UseBike()
+		{
+			if (HasItem("Bike") && !Bot.Game._moveType.ToLowerInvariant().Contains("surf"))
+			{
+				Bot.Game._moveType = "bike";
+				return true;
+			}
+			return false;
 		}
 
 		// API: Moves to specific cell

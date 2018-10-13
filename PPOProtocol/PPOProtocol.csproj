@@ -55,6 +55,7 @@
     <Compile Include="CharacterCreation.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="EffortValuesManager.cs" />
+    <Compile Include="EliteChest.cs" />
     <Compile Include="ExecutionPlan.cs" />
     <Compile Include="FishingExtentions.cs" />
     <Compile Include="GameClient.cs" />

@@ -396,6 +396,19 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
+            <Image Source="/PPORise;component/HeaderMask.png" HorizontalAlignment="Left" VerticalAlignment="Top" Width="232" RenderTransformOrigin="0.5,0.5" Margin="-31,-35,-21,0" Grid.RowSpan="3">
+                <Image.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform Angle="12.564"/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Image.RenderTransform>
+                <Image.OpacityMask>
+                    <ImageBrush ImageSource="/PPORise;component/HeaderMask.png"/>
+                </Image.OpacityMask>
+            </Image>
             <Grid Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="35" Margin="0 1 0 0">
                 <Button FontWeight="Regular" FontSize="13.333" Visibility="Collapsed" Click="ButtonOpenMenu_OnClick" x:Name="ButtonOpenMenu" Height="30" Width="50" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}">
                     <Button.Content>
