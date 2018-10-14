@@ -2397,7 +2397,7 @@ namespace PPOProtocol
 
                 _movementTimeout.Set(Rand.Next(1000, 1500));
                 _battleTimeout.Set(Rand.Next(3100, 3600));
-                _startBattleEx = ExecutionPlan.Delay(2000, () => SendWildBattle());
+                SendWildBattle();
                 return true;
             }
             catch (Exception e)
@@ -2415,7 +2415,7 @@ namespace PPOProtocol
                     return false;
                 _movementTimeout.Set(Rand.Next(1000, 1500));
                 _battleTimeout.Set(Rand.Next(3100, 3600));
-                _startBattleEx = ExecutionPlan.Delay(2000, () => SendWildBattle(true));
+                SendWildBattle(true);
                 return true;
             }
             catch (Exception e)
@@ -2603,51 +2603,51 @@ namespace PPOProtocol
                 {
                     if (Rand.Next(1, 14) == 7)
                     {
-                        SendWildBattle();
+                        SendWildBattle(_moveType == "surf");
                     } // end if
                 }
                 else if (Team[0].AbilityNo == 35 || Team[0].AbilityNo == 71)
                 {
                     if (Rand.Next(1, 9) <= 2)
                     {
-                        SendWildBattle();
+                        SendWildBattle(_moveType == "surf");
                     } // end if
                 }
                 else if (Team[0].AbilityNo == 99)
                 {
                     if (Rand.Next(1, 90) <= 15)
                     {
-                        SendWildBattle();
+                        SendWildBattle(_moveType == "surf");
                     } // end if
                 }
                 else if (Rand.Next(1, 9) == 7)
                 {
-                    SendWildBattle();
+                    SendWildBattle(_moveType == "surf");
                 } // end else if
                 else if (Team[0].AbilityNo == 1 || Team[0].AbilityNo == 73 || Team[0].AbilityNo == 95)
                 {
                     if (Rand.Next(1, 27) == 7)
                     {
-                        SendWildBattle();
+                        SendWildBattle(_moveType == "surf");
                     } // end if
                 }
                 else if (Team[0].AbilityNo == 35 || Team[0].AbilityNo == 71)
                 {
                     if (Rand.Next(1, 9) == 7)
                     {
-                        SendWildBattle();
+                        SendWildBattle(_moveType == "surf");
                     } // end if
                 }
                 else if (Team[0].AbilityNo == 99)
                 {
                     if (Rand.Next(1, 180) <= 15)
                     {
-                        SendWildBattle();
+                        SendWildBattle(_moveType == "surf");
                     } // end if
                 }
                 else if (Rand.Next(1, 18) == 7)
                 {
-                    SendWildBattle();
+                    SendWildBattle(_moveType == "surf");
                 } // end else if
             }
         }

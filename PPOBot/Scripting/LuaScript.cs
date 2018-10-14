@@ -1345,11 +1345,6 @@ namespace PPOBot.Scripting
 			{
 				if (Bot.Game.IsFishing)
 					StopFishing();
-				if (Bot.Game.Battle)
-				{
-					Fatal("error: startBattle is only usable when you're not in battle.");
-					return false;
-				}
 				return ExecuteAction(Bot.Game.StartWildBattle());
 			}
 			catch (Exception e)
@@ -1459,11 +1454,6 @@ namespace PPOBot.Scripting
 			if (Bot.Game.IsFishing)
 			{
 				StopFishing();
-			}
-			if (Bot.Game.Battle)
-			{
-				Fatal("error: startSurfBattle is only usable when you're not in battle.");
-				return false;
 			}
 			return ExecuteAction(Bot.Game.StartSurfWildBattle());
 		}
