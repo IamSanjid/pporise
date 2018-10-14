@@ -627,6 +627,7 @@ namespace PPOProtocol
             {
                 MiningObjects.Find(r => r.X == x && r.Y == y).IsMined = true;
                 RockDepleted?.Invoke(MiningObjects.Find(r => r.X == x && r.Y == y));
+                _miningTimeout.Set();
             }
         }
         private void HandleMiningRockRestored(string[] resObj)
@@ -641,6 +642,7 @@ namespace PPOProtocol
                 MiningObjects.Find(r => r.X == x && r.Y == y).IsMined = false;
                 MiningObjects.Find(r => r.X == x && r.Y == y).IsGoldMember = resObj[5] == "1";
                 RockRestored?.Invoke(MiningObjects.Find(r => r.X == x && r.Y == y));
+                _miningTimeout.Set();
             }
         }
 
@@ -675,6 +677,8 @@ namespace PPOProtocol
                 packet.ToLowerInvariant().Contains("mine again yet") || RemoveUnknownSymbolsFromString(packet)
                     .ToLowerInvariant().Contains("you can't mine") || packet.ToLowerInvariant().Contains("you need a higher mining level to mine that"))
             {
+                _miningTimeout.Set(Rand.Next(2500, 3500));
+
                 if (MiningObjects.Count > 0 && _lastRock != null)
                 {
                     _lastRock.IsMined = true;
@@ -2233,9 +2237,9 @@ namespace PPOProtocol
         {
             //_finishingMiningTimeout.Set(Rand.Next(500, 1000));
             IsMinning = false;
-            _miningTimeout.Cancel();
+            //_miningTimeout.Cancel();
             //GetTimeStamp("sendStopMineAnimation");
-            return !IsFishing;
+            return !IsMinning;
         }
 
         public bool ChangePokemon(int changeTo)
@@ -2367,8 +2371,6 @@ namespace PPOProtocol
                 Shop = null;
                 OpenedShop = null;
 
-                _startBattleEx?.Abort();
-
                 _battleTimeout.Cancel();
                 _battleTimeout.Set(Rand.Next(4000, 6000));
                 if (Battle)
@@ -2386,7 +2388,6 @@ namespace PPOProtocol
                 Console.WriteLine(e);
             }
         }
-        private ExecutionPlan _startBattleEx;
 
         public bool StartWildBattle()
         {

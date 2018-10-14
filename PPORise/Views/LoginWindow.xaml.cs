@@ -322,6 +322,11 @@ namespace PPORise
                         ProxyPasswordTextBox.Password = account.Socks.Password;
                     }
 
+                    if (!string.IsNullOrEmpty(account.HttpProxy.Host) && account.HttpProxy.Port != -1)
+                        HttpProxyCheck.IsChecked = true;
+                    else
+                        HttpProxyCheck.IsChecked = false;
+
                     if (!string.IsNullOrEmpty(account.HttpProxy.Host))
                         HttpProxyHostTextBox.Text = account.HttpProxy.Host;
                     else
@@ -386,22 +391,23 @@ namespace PPORise
                 {
                     account.Socks.Password = ProxyPasswordTextBox.Password;
                 }
+            }
 
-                if (HasHttpProxy)
+            if (HasHttpProxy)
+            {
+                if (!string.IsNullOrEmpty(HttpProxyHostTextBox.Text))
                 {
-                    if (!string.IsNullOrEmpty(HttpProxyHostTextBox.Text))
+                    account.HttpProxy.Host = HttpProxyHostTextBox.Text.Trim();
+                }
+                if (!string.IsNullOrEmpty(HttpProxyPortTextBox.Text))
+                {
+                    if (int.TryParse(HttpProxyPortTextBox.Text.Trim(), out int httpport))
                     {
-                        account.HttpProxy.Host = HttpProxyHostTextBox.Text.Trim();
-                    }
-                    if (!string.IsNullOrEmpty(HttpProxyPortTextBox.Text))
-                    {
-                        if (int.TryParse(HttpProxyPortTextBox.Text.Trim(), out int httpport))
-                        {
-                            account.HttpProxy.Port = httpport;
-                        }
+                        account.HttpProxy.Port = httpport;
                     }
                 }
             }
+
             lock (_bot)
             {
                 _bot.AccountManager.Accounts[account.Name] = account;

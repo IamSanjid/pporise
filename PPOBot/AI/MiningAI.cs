@@ -67,7 +67,14 @@ namespace PPOBot
             _client = client;
             client.RockDepleted += _client_RockDepleted;
             client.RockRestored += _client_RockRestored;
+            client.MapUpdated += Client_MapUpdated;
         }
+
+        private void Client_MapUpdated()
+        {
+            _minedRocks.Clear();
+        }
+
         public bool Update()
         {
             _delayIfNoRockMineable.Update();
@@ -76,7 +83,7 @@ namespace PPOBot
         
         private IList<MiningObject> Rocks => _client.MiningObjects;
 
-        private readonly IList<MiningObject> _minedRocks = new List<MiningObject>();
+        private readonly List<MiningObject> _minedRocks = new List<MiningObject>();
 
         private void _client_RockRestored(MiningObject rock)
         {
@@ -87,8 +94,11 @@ namespace PPOBot
                 {
                     return;
                 }
-                if (_minedRocks.Contains(rock))
-                    _minedRocks.Remove(rock);
+                if (_minedRocks.Any(r => r.X == rock.X && r.Y == rock.Y))
+                {
+                    var foundRock = _minedRocks.Find(r => r.X == rock.X && r.Y == rock.Y);
+                    _minedRocks.Remove(foundRock);
+                }
             }
             catch (Exception e)
             {
@@ -108,7 +118,7 @@ namespace PPOBot
                     return;
                 }
 
-                if (!_minedRocks.Contains(rock))
+                if (!_minedRocks.Any(r => r.X == rock.X && r.Y == rock.Y))
                     _minedRocks.Add(rock);
             }
             catch (Exception e)
