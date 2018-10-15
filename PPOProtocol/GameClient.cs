@@ -25,7 +25,7 @@ namespace PPOProtocol
         private MiningObject _lastRock;
         private int _mapInstance = -1;
         public string _moveType = "";
-        private readonly string _url = @"http://pokemon-planet.com/game582.swf";
+        private readonly string _url = @"http://pokemon-planet.com/game626.swf";
         private bool movingForBattle;
 
         private List<Direction> _movements = new List<Direction>();
@@ -98,7 +98,7 @@ namespace PPOProtocol
             MiningObjects = new List<MiningObject>();
             EliteChests = new List<EliteChest>();
             Team = new List<Pokemon>();
-            WildPokemons = new List<Pokemon>();
+            WildPokemons = new List<WildPokemon>();
             TempMap = "";
             LoggedInToWebsite = false;
             PokemonCaught = new string[900];
@@ -107,7 +107,7 @@ namespace PPOProtocol
         public int PlayerY { get; private set; }
         public List<InventoryItem> Items { get; private set; }
         public List<Pokemon> Team { get; set; }
-        public IList<Pokemon> WildPokemons { get; }
+        public IList<WildPokemon> WildPokemons { get; }
         private int LastUpdateX { get; set; }
         private int LastUpdateY { get; set; }
         public string EncryptedTileX { get; private set; }
@@ -150,7 +150,7 @@ namespace PPOProtocol
         public event Action BattleStarted;
         public event Action BattleEnded;
         public event Action<string> BattleMessage;
-        public event Action<IList<Pokemon>, int> EnemyUpdated;
+        public event Action<IList<WildPokemon>, int> EnemyUpdated;
         public event Action Evolving;
         public event Action<string, int> LearningMove;
         public event Action<Exception> LoggingError;
@@ -627,7 +627,7 @@ namespace PPOProtocol
             {
                 MiningObjects.Find(r => r.X == x && r.Y == y).IsMined = true;
                 RockDepleted?.Invoke(MiningObjects.Find(r => r.X == x && r.Y == y));
-                _miningTimeout.Set();
+                _miningTimeout.Set(700);
             }
         }
         private void HandleMiningRockRestored(string[] resObj)
@@ -642,7 +642,7 @@ namespace PPOProtocol
                 MiningObjects.Find(r => r.X == x && r.Y == y).IsMined = false;
                 MiningObjects.Find(r => r.X == x && r.Y == y).IsGoldMember = resObj[5] == "1";
                 RockRestored?.Invoke(MiningObjects.Find(r => r.X == x && r.Y == y));
-                _miningTimeout.Set();
+                _miningTimeout.Set(700);
             }
         }
 
@@ -673,9 +673,12 @@ namespace PPOProtocol
                 _battleTimeout.Set(Rand.Next(1000, 1500));
             }
 
+            if (RemoveUnknownSymbolsFromString(packet)
+                    .ToLowerInvariant().Contains("you can't mine"))
+                _miningTimeout.Set(500);
+
             if (packet.ToLowerInvariant().Contains("rock has already been mined") || packet.ToLowerInvariant().Contains("you mined a") ||
-                packet.ToLowerInvariant().Contains("mine again yet") || RemoveUnknownSymbolsFromString(packet)
-                    .ToLowerInvariant().Contains("you can't mine") || packet.ToLowerInvariant().Contains("you need a higher mining level to mine that"))
+                packet.ToLowerInvariant().Contains("mine again yet") || packet.ToLowerInvariant().Contains("you need a higher mining level to mine that"))
             {
                 _miningTimeout.Set(Rand.Next(2500, 3500));
 
@@ -741,9 +744,6 @@ namespace PPOProtocol
                                     {
                                         case "learnMove":
                                             OnLearningMove(xml);
-                                            break;
-                                        case "choosePokemon":
-                                            UpdateTeamThroughXml(xml);
                                             break;
                                         case "updateMap":
                                             MapUpdate(packet);
@@ -1002,18 +1002,18 @@ namespace PPOProtocol
                 {
                     if (WildPokemons.Count > 0)
                     {
-                        var enemy = ActiveBattle.FullWildPokemon;
-                        if (!WildPokemons.Any(p =>
-                            p.Name == enemy.Name && p.Ability == enemy.Ability &&
-                            p.Stats == enemy.Stats && p.Level == enemy.Level && p.IV == enemy.IV))
+                        var enemy = ActiveBattle.WildPokemon;
+                        var lastPok = WildPokemons.LastOrDefault();
+                        if (lastPok != null && (
+                            lastPok.CurrentHealth != enemy.CurrentHealth 
+                            || lastPok.Name != enemy.Name 
+                            || lastPok.MaxHealth != enemy.MaxHealth))
                         {
                             WildPokemons.Add(enemy);
                         }
                     }
                     else
-                    {
-                        WildPokemons.Add(ActiveBattle.FullWildPokemon);
-                    }
+                        WildPokemons.Add(ActiveBattle.WildPokemon);
                     EnemyUpdated?.Invoke(WildPokemons, ActiveBattle.ActivePokemon);
                 }
 
@@ -1075,6 +1075,7 @@ namespace PPOProtocol
                 }
 
                 BattleMessage?.Invoke(battleText);
+                InventoryUpdated?.Invoke();
                 battleText = "";
                 loc2 = loc2 + 1;
             }
@@ -1329,7 +1330,7 @@ namespace PPOProtocol
             return null;
         }
 
-        private string[] ParseArray(string tempStr2)
+        public string[] ParseArray(string tempStr2)
         {
             if (tempStr2 != "[]" && tempStr2 != "")
             {
@@ -1883,17 +1884,6 @@ namespace PPOProtocol
                 loc8.Add(p1);
                 loc8.Add(p2);
                 _connection.SendXtMessage("PokemonPlanetExt", "b2", loc8, "str");
-            }
-            else if (type == "choosePokemon")
-            {
-                var loc8 = new ArrayList();
-                loc8.Add($"pokemon:{p1}");
-                var packetKey = Connection.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{Connection.CalcMd5(packetKey + kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
-                _connection.SendXtMessage("PokemonPlanetExt", "b7", loc8, "xml");
             }
             else if (type == "buyItem")
             {
@@ -2780,22 +2770,6 @@ namespace PPOProtocol
             }
 
             return false;
-        }
-
-        public bool GetStarter(string pokeName)
-        {
-            if (Team.Count <= 0)
-            {
-                SendGetStarter(pokeName.ToLowerInvariant());
-                return true;
-            }
-
-            return false;
-        }
-
-        private void SendGetStarter(string pokeName)
-        {
-            GetTimeStamp("choosePokemon", pokeName);
         }
 
         private void SendSwapPokemons(int pokemon1, int pokemon2)

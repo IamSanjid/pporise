@@ -227,7 +227,6 @@ namespace PPOBot.Scripting
 				_lua.Globals["isAlreadyCaught"] = new Func<bool>(IsAlreadyCaught);
 				_lua.Globals["isOpponentEffortValue"] = new Func<string, bool>(IsOpponentEffortValue);
 				_lua.Globals["getOpponentEffortValue"] = new Func<string, int>(GetOpponentEffortValue);
-				_lua.Globals["getOpponentIV"] = new Func<string, int>(GetOpponentIv);
 				_lua.Globals["getOpponentType"] = new Func<string[]>(GetOpponentType);
 				_lua.Globals["getOpponentName"] = new Func<string>(GetOpponentName);
 				_lua.Globals["getOpponentHealth"] = new Func<int>(GetOpponentHealth);
@@ -235,9 +234,6 @@ namespace PPOBot.Scripting
 				_lua.Globals["getOpponentHealthPercent"] = new Func<int>(GetOpponentHealthPercent);
 				_lua.Globals["getOpponentLevel"] = new Func<int>(GetOpponentLevel);
 				_lua.Globals["getActivePokemonNumber"] = new Func<int>(GetActivePokemonNumber);
-				_lua.Globals["getOpponentStatus"] = new Func<string>(GetOpponentStatus);
-				_lua.Globals["getOpponenetNature"] = new Func<string>(GetOpponenetNature);
-				_lua.Globals["getOpponenetAbility"] = new Func<string>(GetOpponenetAbility);
 				_lua.Globals["isOpponentRare"] = new Func<bool>(IsOpponentRare);
 				_lua.Globals["useMoveAt"] = new Func<DynValue, bool>(UseMoveAt); //lol1
 				_lua.Globals["useFirstMove"] = new Func<bool>(UseFirstMove); //lol2
@@ -276,7 +272,6 @@ namespace PPOBot.Scripting
 				_lua.Globals["useBike"] = new Func<bool>(UseBike);
 				_lua.Globals["openTreasure"] = new Func<int, int, bool>(OpenTreasure);
 				_lua.Globals["openAllTreasures"] = new Func<bool>(OpenAllTreasures);
-                _lua.Globals["getStarter"] = new Func<string, bool>(GetStarter);
 				//Pokemon
 				_lua.Globals["isTeamSortedByLevelAscending"] = new Func<bool>(IsTeamSortedByLevelAscending);
 				_lua.Globals["isTeamSortedByLevelDescending"] = new Func<bool>(IsTeamSortedByLevelDescending);
@@ -345,12 +340,7 @@ namespace PPOBot.Scripting
 			});
 		}
 
-        private bool GetStarter(string poke)
-        {
-            return ExecuteAction(Bot.Game.GetStarter(poke));
-        }
-
-        private bool OpenAllTreasures()
+		private bool OpenAllTreasures()
 		{
 			if (HasItem("Treasure Key"))
 			{
@@ -689,74 +679,12 @@ namespace PPOBot.Scripting
 			return Bot.Game.PlayerY;
 		}
 		private bool IsMining() => Bot.Game.IsMinning;
-		private string GetOpponenetNature()
-		{
-			if (!Bot.Game.IsInBattle)
-			{
-				Fatal("error: getOpponenetNature can only be used in battle.");
-				return "";
-			}
-			if (Bot.Game.ActiveBattle.FullWildPokemon is null || Bot.Game.ActiveBattle.FullWildPokemon.Name != Bot.Game.ActiveBattle.WildPokemon.Name)
-			{
-				Fatal("error: getOpponenetNature: You must have to use a move to get oppponent full data.");
-				return "";
-			}
-			if (!IsOppenentDataReceived())
-			{
-				Fatal("error: getOpponenetNature: You must have to use a move to get oppponent full data.");
-				return "";
-			}
-			return Bot.Game.ActiveBattle.FullWildPokemon.Nature;
-		}
-		private string GetOpponenetAbility()
-		{
-			if (!Bot.Game.IsInBattle)
-			{
-				Fatal("error: getOpponenetAbility can only be used in battle.");
-				return "";
-			}
-			if (Bot.Game.ActiveBattle.FullWildPokemon is null || Bot.Game.ActiveBattle.FullWildPokemon.Name != Bot.Game.ActiveBattle.WildPokemon.Name)
-			{
-				Fatal("error: getOpponenetAbility: You must have to use a move to get oppponent full data.");
-				return "";
-			}
-			if (!IsOppenentDataReceived())
-			{
-				Fatal("error: getOpponenetAbility: You must have to use a move to get oppponent full data.");
-				return "";
-			}
-			return Bot.Game.ActiveBattle.FullWildPokemon.Ability.Name;
-		}
+		
 		// API: Returns true when the opponent's full data is received.
 		private bool IsOppenentDataReceived() =>
 			Bot.Game.Battle
-			&& Bot.Game.ActiveBattle.WildPokemon != null
-			&& Bot.Game.ActiveBattle.FullWildPokemon != null;
-		private int GetOpponentIv(string statType)
-		{
-			if (!Bot.Game.IsInBattle)
-			{
-				Fatal("error: getOpponentIV can only be used in battle.");
-				return -1;
-			}
-			if (!_stats.ContainsKey(statType.ToUpperInvariant()))
-			{
-				Fatal("error: getOpponentIV: the stat '" + statType + "' does not exist.");
-				return -1;
-			}
-			if (Bot.Game.ActiveBattle.FullWildPokemon is null || Bot.Game.ActiveBattle.FullWildPokemon.Name != Bot.Game.ActiveBattle.WildPokemon.Name)
-			{
-				Fatal("error: getOpponentIV: You must have to use a move to get oppponent full data.");
-				return -1;
-			}
-			if (!IsOppenentDataReceived())
-			{
-				Fatal("error: getOpponentIV: You must have to use a move to get oppponent full data.");
-				return -1;
-			}
-			PokemonStats ivStats = Bot.Game.ActiveBattle.FullWildPokemon.IV;
-			return ivStats.GetStat(_stats[statType.ToUpperInvariant()]);
-		}
+			&& Bot.Game.ActiveBattle.WildPokemon != null;
+		
 		// API: Returns the percentage of remaining health of the specified pokémon in the team.
 		private int GetPokemonHealthPercent(int index)
 		{
@@ -990,11 +918,7 @@ namespace PPOBot.Scripting
 				return 0;
 			}
 			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
-			return (Bot.Game.ActiveBattle.FullWildPokemon != null
-					   ? Bot.Game.ActiveBattle.FullWildPokemon.CurrentHealth
-					   : Bot.Game.ActiveBattle.WildPokemon.CurrentHealth) * 100 / (Bot.Game.ActiveBattle.FullWildPokemon != null
-					   ? Bot.Game.ActiveBattle.FullWildPokemon.MaxHealth
-					   : Bot.Game.ActiveBattle.WildPokemon.MaxHealth);
+			return (Bot.Game.ActiveBattle.WildPokemon.CurrentHealth) * 100 / ( Bot.Game.ActiveBattle.WildPokemon.MaxHealth);
 		}
 		private int GetOpponentMaxHealth()
 		{
@@ -1004,7 +928,7 @@ namespace PPOBot.Scripting
 				return 0;
 			}
 			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
-			return Bot.Game.ActiveBattle.FullWildPokemon != null ? Bot.Game.ActiveBattle.FullWildPokemon.MaxHealth : Bot.Game.ActiveBattle.WildPokemon.MaxHealth;
+			return Bot.Game.ActiveBattle.WildPokemon.MaxHealth;
 		}
 		private int GetOpponentLevel()
 		{
@@ -1014,7 +938,7 @@ namespace PPOBot.Scripting
 				return 0;
 			}
 			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
-			return Bot.Game.ActiveBattle.FullWildPokemon != null ? Bot.Game.ActiveBattle.FullWildPokemon.Level : Bot.Game.ActiveBattle.WildPokemon.Level;
+			return Bot.Game.ActiveBattle.WildPokemon.Level;
 		}
 		private string[] GetOpponentType()
 		{
@@ -1024,7 +948,7 @@ namespace PPOBot.Scripting
 				return null;
 			}
 			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return null; }
-			int id = Bot.Game.ActiveBattle.FullWildPokemon != null ? Bot.Game.ActiveBattle.FullWildPokemon.Id : Bot.Game.ActiveBattle.WildPokemon.Id;
+			int id = Bot.Game.ActiveBattle.WildPokemon.Id;
 
 			if (id <= 0 || id >= TypesManager.Instance.Type1.Count())
 			{
@@ -1041,10 +965,7 @@ namespace PPOBot.Scripting
 				return null;
 			}
 			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return null; }
-			if (Bot.Game.ActiveBattle.FullWildPokemon != null)
-				return Bot.Game.ActiveBattle.FullWildPokemon.Status;
-			else
-				return Bot.Game.ActiveBattle.WildPokemon.Status;
+			return Bot.Game.ActiveBattle.WildPokemon.Status;
 		}
 		private static Dictionary<string, StatType> _stats = new Dictionary<string, StatType>()
 		{
@@ -1076,13 +997,12 @@ namespace PPOBot.Scripting
 				Fatal("error: getOpponentEffortValue: the stat '" + statType + "' does not exist.");
 				return -1;
 			}
-			if (!EffortValuesManager.Instance.BattleValues.ContainsKey(Bot.Game.ActiveBattle.FullWildPokemon?.Id ?? Bot.Game.ActiveBattle.WildPokemon.Id))
+			if (!EffortValuesManager.Instance.BattleValues.ContainsKey(Bot.Game.ActiveBattle.WildPokemon.Id))
 			{
 				return -1;
 			}
 
-			PokemonStats stats = EffortValuesManager.Instance.BattleValues[
-				Bot.Game.ActiveBattle.FullWildPokemon?.Id ?? Bot.Game.ActiveBattle.WildPokemon.Id];
+			PokemonStats stats = EffortValuesManager.Instance.BattleValues[Bot.Game.ActiveBattle.WildPokemon.Id];
 			return stats.GetStat(_stats[statType.ToUpperInvariant()]);
 		}
 		private bool IsOpponentEffortValue(string statType)
@@ -1098,12 +1018,12 @@ namespace PPOBot.Scripting
 				Fatal("error: isOpponentEffortValue: the stat '" + statType + "' does not exist.");
 				return false;
 			}
-			if (!EffortValuesManager.Instance.BattleValues.ContainsKey(Bot.Game.ActiveBattle.FullWildPokemon?.Id ?? Bot.Game.ActiveBattle.WildPokemon.Id))
+			if (!EffortValuesManager.Instance.BattleValues.ContainsKey(Bot.Game.ActiveBattle.WildPokemon.Id))
 			{
 				return false;
 			}
 
-			PokemonStats stats = EffortValuesManager.Instance.BattleValues[Bot.Game.ActiveBattle.FullWildPokemon?.Id ?? Bot.Game.ActiveBattle.WildPokemon.Id];
+			PokemonStats stats = EffortValuesManager.Instance.BattleValues[Bot.Game.ActiveBattle.WildPokemon.Id];
 			return stats.HasOnly(_stats[statType.ToUpperInvariant()]);
 		}
 		private bool IsPokemonShiny(int index)
@@ -1257,7 +1177,7 @@ namespace PPOBot.Scripting
 				return 0;
 			}
 			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
-			return Bot.Game.ActiveBattle.FullWildPokemon?.CurrentHealth ?? Bot.Game.ActiveBattle.WildPokemon.CurrentHealth;
+			return Bot.Game.ActiveBattle.WildPokemon.CurrentHealth;
 		}
 		private string GetOpponentName()
 		{

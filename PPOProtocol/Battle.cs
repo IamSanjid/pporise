@@ -34,7 +34,8 @@ namespace PPOProtocol
 
                 ActivePokemon = activePokemon;
                 var spl = data[3].Split(',');
-                WildPokemon = new WildPokemon(spl);
+                WildPokemon = new WildPokemon ();
+                WildPokemon.New(spl);
                 if (_client != null)
                 {
                     WildPokemon.IsRare = _client.HasEncounteredRarePokemon;
@@ -82,16 +83,16 @@ namespace PPOProtocol
             ActivePokemon = Convert.ToInt32(resObj[7]);
             if (IsWildBattle)
             {
-                FullWildPokemon = _client.ParseOnePokemon(resObj[12]);
-                FullWildPokemon.IsRare = _client.HasEncounteredRarePokemon;
-                if (FullWildPokemon.Ability.Id == 23 && _client?.Team[ActivePokemon].Type1 != PokemonType.Steel &&
+                WildPokemon.Update(_client.ParseArray(resObj[12]));
+                WildPokemon.IsRare = _client.HasEncounteredRarePokemon;
+                if (WildPokemon.Ability.Id == 23 && _client?.Team[ActivePokemon].Type1 != PokemonType.Steel &&
                     _client?.Team[ActivePokemon].Type2 != PokemonType.Steel &&
                     _client?.Team[ActivePokemon].Ability.Id != 23)
                 {
                     IsTrapped = true;
                 }
 
-                if (FullWildPokemon.Ability.Id == 42 && _client?.Team[ActivePokemon].Type1 != PokemonType.Fire &&
+                if (WildPokemon.Ability.Id == 42 && _client?.Team[ActivePokemon].Type1 != PokemonType.Fire &&
                     _client?.Team[ActivePokemon].Type2 != PokemonType.Fire &&
                     _client?.Team[ActivePokemon].Ability.Id != 23 &&
                     _client?.Team[ActivePokemon].Type1 != PokemonType.Steel &&
@@ -100,7 +101,7 @@ namespace PPOProtocol
                     IsTrapped = true;
                 }
 
-                IsAlreadyCaught = _client.PokemonCaught[FullWildPokemon.Id - 1] == "true";
+                IsAlreadyCaught = _client.PokemonCaught[WildPokemon.Id - 1] == "true";
             }
 
             ProcessBattleMessage(resObj[10]);
@@ -116,8 +117,7 @@ namespace PPOProtocol
         public int ActivePokemon { get; private set; }
         public bool ActivePokemonError { get; }
         public string BattleType { get; } = "";
-        public WildPokemon WildPokemon { get; }
-        public Pokemon FullWildPokemon { get; private set; }
+        public WildPokemon WildPokemon { get; private set; }
         public bool IsTrapped { get; private set; }
         public bool IsAlreadyCaught { get; private set; }
         public bool IsDungeonBattle { get; }

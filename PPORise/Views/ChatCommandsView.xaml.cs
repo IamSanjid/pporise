@@ -425,21 +425,7 @@ namespace PPORise.Views
                                 "/openShop\t--Opens the Pokemart shop.\n/buyItem ItemName,amount\t--Buys the specified item from the opened shop.\n/pokemon\t--Prints out the Pokemon names that can be found in your current map." +
                                 "\n/countColoredRocks rock_color\t--Counts all rocks which color is specific.\n/findClosestRock\t--Finds the closests rock and prints out the cell.\n/moveLeft\t--Moves the player left.\n/moveRight\t--Moves the player right." +
                                 "\n/moveDown\t--Moves the player down.\n/moveUp\t--Moves the player up.\n/version\t--Prints out the version of the current bot.\n/moveToCell X,Y\t--Moves the player to specific coordinate\n/getHM 1-5\t--Get specific HM without moving the player." +
-                                "\n/useBike\t--Will use bike while moving.\n/buyEliteTokens amount\t--Buys elite tokens.\n/getStarter starter_name\t--Gets specific starter.");
-                            break;
-                        case "getstarter":
-                            lock (_bot)
-                            {
-                                if (_bot.Game != null)
-                                {
-                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
-                                    {
-                                        command = command.Replace(commandArg[0] + " ", "");
-                                        var poke = command;
-                                        _bot.Game.GetTimeStamp("choosePokemon", poke.ToLowerInvariant());
-                                    }
-                                }
-                            }
+                                "\n/useBike\t--Will use bike while moving.\n/buyEliteTokens amount\t--Buys elite tokens.");
                             break;
                         case "buyelitetokens":
                             lock (_bot)

@@ -38,22 +38,16 @@ namespace PPOBot
         {
             if (move.Id == DragonRage)
             {
-                if (_client.ActiveBattle.FullWildPokemon != null)
-                    return _client.ActiveBattle.FullWildPokemon.CurrentHealth <= 40 ? 10000.0 : 1.0;
                 return _client.ActiveBattle.WildPokemon.CurrentHealth <= 40 ? 10000.0 : 1.0;
             }
 
             if (move.Id == SeismicToss || move.Id == NightShade)
             {
-                if (_client.ActiveBattle.FullWildPokemon != null)
-                    return _client.ActiveBattle.FullWildPokemon.CurrentHealth <= ActivePokemon.Level ? 10000.0 : 1.0;
                 return _client.ActiveBattle.WildPokemon.CurrentHealth <= ActivePokemon.Level ? 10000.0 : 1.0;
             }
 
             if (move.Id == Psywave)
             {
-                if (_client.ActiveBattle.FullWildPokemon != null)
-                    return _client.ActiveBattle.FullWildPokemon.CurrentHealth <= (ActivePokemon.Level / 2) ? 10000.0 : 1.0;
                 return _client.ActiveBattle.WildPokemon.CurrentHealth <= (ActivePokemon.Level / 2) ? 10000.0 : 1.0;
             }
 
@@ -213,12 +207,12 @@ namespace PPOBot
                 if (move.Name is null || move.Data is null) continue;
 
                 var moveData = MovesManager.Instance.GetMoveData(move.Id);
-                if (move.Id == DreamEater && (_client.ActiveBattle.FullWildPokemon != null ? _client.ActiveBattle.FullWildPokemon.Status.ToUpperInvariant() != "SLEEP" : _client.ActiveBattle.WildPokemon.Status.ToUpperInvariant() != "SLEEP"))
+                if (move.Id == DreamEater && (_client.ActiveBattle.WildPokemon.Status.ToUpperInvariant() != "SLEEP"))
                 {
                     continue;
                 }
                 if (move.Id == Explosion || move.Id == Selfdestruct ||
-                    (move.Id == DoubleEdge && ActivePokemon.CurrentHealth < (_client.ActiveBattle.FullWildPokemon?.MaxHealth / 3 ?? _client.ActiveBattle.WildPokemon.MaxHealth / 3)))
+                    (move.Id == DoubleEdge && ActivePokemon.CurrentHealth < (_client.ActiveBattle.WildPokemon.MaxHealth / 3)))
                 {
                     continue;
                 }

@@ -8,22 +8,37 @@ namespace PPOProtocol
 {
     public class WildPokemon
     {
-        //xt`w`-1`121,121,Geodude,74,false,56,4eae937ca1af28ccfcddb004ece3f0b2,,default``403,337,53,257`-1`0`0`15,15,15,10`
+        //[77,,45,false,Pidgeot,18,false,default,136,0]
+        //or
+        //`136,136,Pidgeot,18,false,45,a454d1b7848e11c45ab07ca2f49a63a3,,default,false`
         public string Name => PokemonNamesManager.Instance.Names[Id];
-        public string Form { get; }
+        public string Form { get; private set; }
         public string Health => CurrentHealth + "/" + MaxHealth;
-        public int Id { get; }
-        public int Level { get; }
-        public bool IsShiny { get; }
+        public int Id { get; private set; }
+        public int Level { get; private set; }
+        public bool IsShiny { get; private set; }
         public int MaxHealth { get; private set; }
         public int CurrentHealth { get; private set; }
-        public PokemonType Type1 { get; }
-        public PokemonType Type2 { get; }
-        public string Ailment { get; }
-        public string EncryptedAbility { get; }
+        public PokemonType Type1 { get; private set; }
+        public PokemonType Type2 { get; private set; }
+        public string Ailment { get; private set; }
+        public string EncryptedAbility { get; private set; }
         public bool IsRare { get; set; }
+        public bool IsElite { get; private set; }
 
-        public string Status = "None";
+        private string _status;
+        public string Status
+        {
+            get
+            {
+                return CurrentHealth == 0 ? "KO" : _status;
+            }
+            set
+            {
+                _status = value;
+            }
+        }
+        public PokemonAbility Ability { get; private set; }
         public string Types
         {
             get
@@ -34,7 +49,7 @@ namespace PPOProtocol
                     return Type1.ToString() + "/" + Type2.ToString();
             }
         }
-        internal WildPokemon(string[] data)
+        public void New(string[] data)
         {
             CurrentHealth = Convert.ToInt32(data[0]);
             MaxHealth = Convert.ToInt32(data[1]);
@@ -44,6 +59,20 @@ namespace PPOProtocol
             EncryptedAbility = data[6];
             Ailment = data[7];
             Form = data[8];
+        }
+
+        public void Update(string[] data)
+        {
+            Ability = new PokemonAbility(Convert.ToInt32(data[0]));
+            Ailment = data[1];
+            Level = Convert.ToInt32(data[2]);
+            IsElite = data[3].ToLowerInvariant() == "true";
+            IsRare = IsElite;
+            Id = Convert.ToInt32(data[5]);
+            IsShiny = (data[6].ToLowerInvariant() == "true");
+            Form = data[7];
+            MaxHealth = Convert.ToInt32(data[8]);
+            CurrentHealth = Convert.ToInt32(data[9]);
         }
     }
 }

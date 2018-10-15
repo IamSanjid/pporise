@@ -656,7 +656,7 @@ namespace PPORise
             });
         }
 
-        private void Battle_EnemyUpdated(IList<Pokemon> opponents, int selectedPokemon)
+        private void Battle_EnemyUpdated(IList<WildPokemon> opponents, int selectedPokemon)
         {
             Dispatcher.InvokeAsync(delegate
             {
