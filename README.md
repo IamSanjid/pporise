@@ -4,8 +4,7 @@ A free, open-source and advanced bot for Pokémon Planet.
 # TODO
 1) Add NPC(s) features.
 2) Add map feature.
-3) Add pathfinding api.
-4) Add PC Features.
+3) Add PC Features.
 
 
 ## Libraries
