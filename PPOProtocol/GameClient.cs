@@ -742,6 +742,9 @@ namespace PPOProtocol
                                         case "learnMove":
                                             OnLearningMove(xml);
                                             break;
+                                        case "choosePokemon":
+                                            UpdateTeamThroughXml(xml);
+                                            break;
                                         case "updateMap":
                                             MapUpdate(packet);
                                             break;
@@ -1881,6 +1884,17 @@ namespace PPOProtocol
                 loc8.Add(p2);
                 _connection.SendXtMessage("PokemonPlanetExt", "b2", loc8, "str");
             }
+            else if (type == "choosePokemon")
+            {
+                var loc8 = new ArrayList();
+                loc8.Add($"pokemon:{p1}");
+                var packetKey = Connection.GenerateRandomString(Rand.Next(5, 20));
+                loc8.Add(
+                    $"pke:{Connection.CalcMd5(packetKey + kg2 + GetTimer())}");
+                loc8.Add($"pk:{packetKey}");
+                loc8.Add($"te:{GetTimer()}");
+                _connection.SendXtMessage("PokemonPlanetExt", "b7", loc8, "xml");
+            }
             else if (type == "buyItem")
             {
                 var loc8 = new ArrayList();
@@ -2766,6 +2780,22 @@ namespace PPOProtocol
             }
 
             return false;
+        }
+
+        public bool GetStarter(string pokeName)
+        {
+            if (Team.Count <= 0)
+            {
+                SendGetStarter(pokeName.ToLowerInvariant());
+                return true;
+            }
+
+            return false;
+        }
+
+        private void SendGetStarter(string pokeName)
+        {
+            GetTimeStamp("choosePokemon", pokeName);
         }
 
         private void SendSwapPokemons(int pokemon1, int pokemon2)

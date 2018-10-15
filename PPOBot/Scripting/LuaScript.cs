@@ -276,6 +276,7 @@ namespace PPOBot.Scripting
 				_lua.Globals["useBike"] = new Func<bool>(UseBike);
 				_lua.Globals["openTreasure"] = new Func<int, int, bool>(OpenTreasure);
 				_lua.Globals["openAllTreasures"] = new Func<bool>(OpenAllTreasures);
+                _lua.Globals["getStarter"] = new Func<string, bool>(GetStarter);
 				//Pokemon
 				_lua.Globals["isTeamSortedByLevelAscending"] = new Func<bool>(IsTeamSortedByLevelAscending);
 				_lua.Globals["isTeamSortedByLevelDescending"] = new Func<bool>(IsTeamSortedByLevelDescending);
@@ -344,7 +345,12 @@ namespace PPOBot.Scripting
 			});
 		}
 
-		private bool OpenAllTreasures()
+        private bool GetStarter(string poke)
+        {
+            return ExecuteAction(Bot.Game.GetStarter(poke));
+        }
+
+        private bool OpenAllTreasures()
 		{
 			if (HasItem("Treasure Key"))
 			{
