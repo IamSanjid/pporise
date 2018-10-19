@@ -68,8 +68,26 @@ namespace PPOBot
             public bool AutoReconnect;
             public bool AutoEvolve = true;
             public string LastScript;
-            public string Versions = "game598.swf:163"; //Default value...
-            public string ProtocolKeys = "iasdhgfoiusdfgaswdo89uifgasdilfgvs9231gfoiugbv390agf9a3gfa0983fba:1678yr9e32yfd321o8dfg23d02138d32iu1dgikasjgvbasdkfuvg4893i23f"; // I actually don't know what to call it but it is needed for protocol stuff...
+            public string Versions = "game628.swf:163"; //Default value...
+            // lilililililililllililililililliilillliliililiiiiiilllliililil;
+            private string kg1
+            {
+                get { return "25basdhgfoiusdfgasdfdo89uifgasdilfgvs9231gfoiugbv3dsfh4"; }
+            }
+
+            private string kg2(string FirstLi, string SecondLi)
+            {
+                return "25h678yr9e32yfdsdhfgf8d32iu1dgikasjgvbasdkfuvh34w" + FirstLi + SecondLi;
+            }
+
+            public string ProtocolKeys
+            {
+                get
+                {
+                    return kg1 + ":" + kg2("lilililililililllililililililliilillliliililiiiiiilllliililil",
+                               "illililililillililililililliiiiilililililillililililillilililililiililililililililililililililili");
+                }
+            }// I actually don't know what to call it but it is needed for protocol stuff...
             public void Save()
             {
                 var json = JsonConvert.SerializeObject(this, new JsonSerializerSettings
