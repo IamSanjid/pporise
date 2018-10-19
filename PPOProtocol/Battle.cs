@@ -34,7 +34,7 @@ namespace PPOProtocol
 
                 ActivePokemon = activePokemon;
                 var spl = data[3].Split(',');
-                WildPokemon = new WildPokemon ();
+                WildPokemon = new WildPokemon();
                 WildPokemon.New(spl);
                 if (_client != null)
                 {
