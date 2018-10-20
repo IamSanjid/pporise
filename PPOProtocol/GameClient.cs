@@ -1606,6 +1606,7 @@ namespace PPOProtocol
         {
             if (data.Contains(")()(09a0jd")) return;
             var n = data.Split(',');
+            if (n[0].StartsWith("0")) return; //To remove null item. Not tested.
             if (n.Length > 2)
             {
                 var item = new InventoryItem(n[0], Convert.ToInt32(data[1]), n[2]);
@@ -2438,7 +2439,7 @@ namespace PPOProtocol
                 if (Battle)
                 {
                     _battleTimeout.Set(Rand.Next(1000, 2000));
-                    GetTimeStamp("battleMove", "0", "i", (item.Uid - 1).ToString());
+                    GetTimeStamp("battleMove", "0", "i", item.Uid.ToString());
                     return true;
                 }
                 if (pokeId > 0)
