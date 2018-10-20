@@ -1606,7 +1606,7 @@ namespace PPOProtocol
         {
             if (data.Contains(")()(09a0jd")) return;
             var n = data.Split(',');
-            if (n[0].StartsWith("0")) return; //To remove null item. Not tested.
+            if (Regex.IsMatch(n[0], @"^\d+$")) return;  //To remove null item. Not tested.
             if (n.Length > 2)
             {
                 var item = new InventoryItem(n[0], Convert.ToInt32(data[1]), n[2]);
