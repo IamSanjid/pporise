@@ -1606,6 +1606,7 @@ namespace PPOProtocol
         {
             if (data.Contains(")()(09a0jd")) return;
             var n = data.Split(',');
+            if (Regex.IsMatch(n[0], @"^\d+$")) return; // Check if first item's name is all numeric
             if (n.Length > 2)
             {
                 var item = new InventoryItem(n[0], Convert.ToInt32(data[1]), n[2]);
