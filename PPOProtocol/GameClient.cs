@@ -2439,7 +2439,7 @@ namespace PPOProtocol
                 if (Battle)
                 {
                     _battleTimeout.Set(Rand.Next(1000, 2000));
-                    GetTimeStamp("battleMove", "0", "i", (item.Uid).ToString());
+                    GetTimeStamp("battleMove", "0", "i", item.Uid.ToString());
                     return true;
                 }
                 if (pokeId > 0)
