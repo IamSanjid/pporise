@@ -69,25 +69,9 @@ namespace PPOBot
             public bool AutoEvolve = true;
             public string LastScript;
             public string Versions = "game628.swf:163"; //Default value...
-            // lilililililililllililililililliilillliliililiiiiiilllliililil;
-            private string kg1
-            {
-                get { return "25basdhgfoiusdfgasdfdo89uifgasdilfgvs9231gfoiugbv3dsfh4"; }
-            }
-
-            private string kg2(string FirstLi, string SecondLi)
-            {
-                return "25h678yr9e32yfdsdhfgf8d32iu1dgikasjgvbasdkfuvh34w" + FirstLi + SecondLi;
-            }
-
-            public string ProtocolKeys
-            {
-                get
-                {
-                    return kg1 + ":" + kg2("lilililililililllililililililliilillliliililiiiiiilllliililil",
-                               "illililililillililililililliiiiilililililillililililillilililililiililililililililililililililili");
-                }
-            }// I actually don't know what to call it but it is needed for protocol stuff...
+            // kg1:kg2 from Pokemon Planet Source code you can search for function kg1 or function kg2 to get these values.
+            public string ProtocolKeys => "25basdhgfoiusdfgasdfdo89uifgasdilfgvs9231gfoiugbv3dsfh4:25h678yr9e32yfdsdhfgf8d32iu1dgikasjgvbasdkfuvh34w" + 
+                "lilililililililllililililililliilillliliililiiiiiilllliilililillililililillililililililliiiiilililililillililililillilililililiililililililililililililililili";
             public void Save()
             {
                 var json = JsonConvert.SerializeObject(this, new JsonSerializerSettings
