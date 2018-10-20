@@ -207,7 +207,7 @@ namespace PPOBot
                 if (move.Name is null || move.Data is null) continue;
 
                 var moveData = MovesManager.Instance.GetMoveData(move.Id);
-                if (move.Id == DreamEater && (_client.ActiveBattle.WildPokemon.Status.ToUpperInvariant() != "SLEEP"))
+                if (move.Id == DreamEater && (_client.ActiveBattle.WildPokemon.Status?.ToUpperInvariant() != "SLEEP"))
                 {
                     continue;
                 }

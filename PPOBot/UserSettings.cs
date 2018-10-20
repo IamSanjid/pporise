@@ -68,8 +68,10 @@ namespace PPOBot
             public bool AutoReconnect;
             public bool AutoEvolve = true;
             public string LastScript;
-            public string Versions = "game598.swf:163"; //Default value...
-            public string ProtocolKeys = "iasdhgfoiusdfgaswdo89uifgasdilfgvs9231gfoiugbv390agf9a3gfa0983fba:1678yr9e32yfd321o8dfg23d02138d32iu1dgikasjgvbasdkfuvg4893i23f"; // I actually don't know what to call it but it is needed for protocol stuff...
+            public string Versions = "game628.swf:163"; //Default value...
+            // kg1:kg2 from Pokemon Planet Source code you can search for function kg1 or function kg2 to get these values.
+            public string ProtocolKeys => "25basdhgfoiusdfgasdfdo89uifgasdilfgvs9231gfoiugbv3dsfh4:25h678yr9e32yfdsdhfgf8d32iu1dgikasjgvbasdkfuvh34w" + 
+                "lilililililililllililililililliilillliliililiiiiiilllliilililillililililillililililililliiiiilililililillililililillilililililiililililililililililililililili";
             public void Save()
             {
                 var json = JsonConvert.SerializeObject(this, new JsonSerializerSettings

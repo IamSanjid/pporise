@@ -25,7 +25,7 @@ namespace PPOProtocol
         private MiningObject _lastRock;
         private int _mapInstance = -1;
         public string _moveType = "";
-        private readonly string _url = @"http://pokemon-planet.com/game626.swf";
+        private readonly string _url = @"http://pokemon-planet.com/game628.swf";
         private bool movingForBattle;
 
         private List<Direction> _movements = new List<Direction>();
@@ -124,7 +124,7 @@ namespace PPOProtocol
         public bool IsConnected => _connection.IsConnected && _connection != null;
 
         public bool IsInactive =>
-            _movements.Count == 0 
+            _movements.Count == 0
             && !_loadingTimeout.IsActive
             && !_movementTimeout.IsActive
             && !_battleTimeout.IsActive
@@ -512,7 +512,7 @@ namespace PPOProtocol
                                         break;
                                     case "b187":
                                         HandleRemoveEliteChest(data);
-                                        break;                                   
+                                        break;
                                     case "b5":
                                         MapUpdate(data);
                                         break;
@@ -1005,8 +1005,8 @@ namespace PPOProtocol
                         var enemy = ActiveBattle.WildPokemon;
                         var lastPok = WildPokemons.LastOrDefault();
                         if (lastPok != null && (
-                            lastPok.CurrentHealth != enemy.CurrentHealth 
-                            || lastPok.Name != enemy.Name 
+                            lastPok.CurrentHealth != enemy.CurrentHealth
+                            || lastPok.Name != enemy.Name
                             || lastPok.MaxHealth != enemy.MaxHealth))
                         {
                             WildPokemons.Add(enemy);
@@ -1406,7 +1406,7 @@ namespace PPOProtocol
                     if (resObj[_loc7] != ")()(09a0jc")
                     {
                         continue;
-                    } 
+                    }
                     loopNum = _loc7;
                     break;
                 }
@@ -1426,7 +1426,7 @@ namespace PPOProtocol
             Team.Clear();
             await Task.Run(() =>
             {
-                for (var loc7 = loopNum + 19; loc7 < 99999; ++ loc7)
+                for (var loc7 = loopNum + 19; loc7 < 99999; ++loc7)
                 {
                     if (resObj[loc7] != ")()(09a0jb")
                     {
@@ -1442,7 +1442,7 @@ namespace PPOProtocol
             TeamUpdated?.Invoke(true);
             if (Team is null is false && Team.Count > 0)
                 GetTimeStamp("updateFollowPokemon");
-            
+
             await Task.Run(() =>
             {
                 for (var loc7 = loopNum + 1; loc7 < 99999; ++loc7)
@@ -1606,7 +1606,7 @@ namespace PPOProtocol
         {
             if (data.Contains(")()(09a0jd")) return;
             var n = data.Split(',');
-            if (Regex.IsMatch(n[0], @"^\d+$")) return;  //To remove null item. Not tested.
+            if (Regex.IsMatch(n[0], @"^\d+$")) return; // Check if first item's name is all numeric
             if (n.Length > 2)
             {
                 var item = new InventoryItem(n[0], Convert.ToInt32(data[1]), n[2]);
