@@ -501,8 +501,7 @@ namespace PPOProtocol
                                         _checkForLoggingTimeout = null;
                                         break;
                                     case "b179":
-                                        ExecutionPlan.Delay(Rand.Next(2000, 5000),
-                                                    () => GetTimeStamp("declineBattle"));
+                                        HandleBattleRequests(data);
                                         break;
                                     case "b182":
                                         HandleEliteBuy(data);
@@ -537,6 +536,28 @@ namespace PPOProtocol
             catch (Exception)
             {
                 //ignore
+            }
+        }
+
+        // xt`b179`-1`Username`Level`??`Wager
+        private void HandleBattleRequests(string[] data)
+        {
+            CanMove = false;
+            if (data[6] != null && data[6] != "")
+            {
+                SystemMessage?.Invoke(data[3] + " would like to start a $" + Int32.Parse(data[6]) + " wager battle with you.");
+                ExecutionPlan.Delay(Rand.Next(2000, 5000),
+                    () => GetTimeStamp("declineBattle"));
+                LogMessage?.Invoke("Declined wager battle request");
+                CanMove = true;
+            }
+            else
+            {
+                SystemMessage?.Invoke(data[3] + " would like to battle you.");
+                ExecutionPlan.Delay(Rand.Next(2000, 5000),
+                    () => GetTimeStamp("declineBattle"));
+                LogMessage?.Invoke("Declined battle request");
+                CanMove = true;
             }
         }
 
