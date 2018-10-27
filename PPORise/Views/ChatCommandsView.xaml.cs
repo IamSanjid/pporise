@@ -106,6 +106,25 @@ namespace PPORise.Views
                     return;
                 }
 
+                if (!Equals(TabControl.SelectedItem as TabItem, _commandsTab) && InputChatBox.Text.Contains("/"))
+                {
+                    var result =
+                        MessageBox.Show("Your message contains a command prefix and this message is here to make sure you are not posting a command in one of the general chats.\n" +
+                                        "Are you sure you want to proceed?",
+                            "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Exclamation);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        SendChatMessage(InputChatBox?.Text);
+                        InputChatBox?.Clear();
+                    }
+                    else
+                    {
+                        InputChatBox?.Clear();
+                        return;
+                    }
+                }
+
                 if (_bot.Game != null && _bot.Game.IsMapLoaded)
                 {
                     if (InputChatBox != null && InputChatBox.Text.StartsWith("@"))
@@ -894,7 +913,7 @@ namespace PPORise.Views
                                     {
                                         if (_bot.Game.OpenedShop == null)
                                         {
-                                            if (_bot.Game.MapName.ToLowerInvariant().Contains("mart"))
+                                            if (_bot.Game.MapName.ToLowerInvariant().Contains("mart") || _bot.Game.MapName.ToLowerInvariant().Contains("plateau"))
                                             {
                                                 _bot.Game.OpenShop();
                                             }
