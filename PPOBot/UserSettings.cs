@@ -70,7 +70,7 @@ namespace PPOBot
             public string LastScript;
             public string Versions = "game629.swf:163"; //Default value...
             // kg1:kg2 from Pokemon Planet Source code you can search for function kg1 or function kg2 to get these values.
-            public string ProtocolKeys = "25basdhgfoiusdfgasdasdfasdfdilfgvs9231gfoiugbv3dsfh4:sad98fg7sda798asdfaifgsdaf907asdgfsdaifgsdag2346h2g364f364125632l532k347j63746kj" +
+            public string ProtocolKeys = "25basdhgfoiusdfgasdasdfasdfdilfgvs9231gfoiugbv3dsfhGTa:sad98fg7sda798asdfaifgsdaf907asdgfsdaifgsdag23gk46h2g364f364125632l532k347j63746kj" +
                                          "illililililillililililililliililililililililililililililililililillililililillililililililliiiiilililililillililililiililililililiililililililililililililililili";
             public void Save()
             {
