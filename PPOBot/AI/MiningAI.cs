@@ -147,7 +147,7 @@ namespace PPOBot
             _minedRocks.Add(rock);
             return MineRockAt(rock.X, rock.Y, axe);
         }
-        public bool MineMultipleColoredRocks(string axe, string[] colors)
+        public bool MineMultipleColoredRocks(string axe, string[] colors, bool waitForRocks = false)
         {
             try
             {
@@ -218,7 +218,7 @@ namespace PPOBot
                             _delayIfNoRockMineable.Set(180000);
                             delay = 180000;
                         }
-                        BotClient.Instance.PrintLogMessage($"There is no specific colored mine able rocks. Waiting for {StringExtention.FormatTimeString(TimeSpan.FromMilliseconds(delay))}");
+                        BotClient.Instance.PrintLogMessage($"There is no specific colored mine able rocks. Waiting for {TimeSpan.FromMilliseconds(delay).FormatTimeString()}");
                     }
 #if DEBUG
                     Rocks.ToList().FindAll(r => colors.Contains(r.Color)).ForEach(r =>
@@ -227,7 +227,8 @@ namespace PPOBot
                         Console.WriteLine($"Is Mineable {r.Color}({r.X}, {r.Y}): {IsRockMineAble(r)}"));
 #endif
                 }
-                
+                if (_client.HasItemName(axe) && waitForRocks)
+                    return true;
             }
             catch (Exception e)
             {
@@ -359,7 +360,7 @@ namespace PPOBot
         }
     }
 
-    public static class StringExtention
+    public static class TimeSpanExtention
     {
         public static string FormatTimeString(this TimeSpan obj)
         {

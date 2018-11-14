@@ -348,7 +348,7 @@ namespace PPOBot
             }
             return result;
         }
-        public bool MoveLeftRight(int startX, int startY, int destX, int destY, string movingReason = "")
+        public bool MoveLeftRight(int startX, int startY, int destX, int destY, string movingReason)
         {
             bool result;
 

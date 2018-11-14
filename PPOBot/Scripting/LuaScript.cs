@@ -252,7 +252,7 @@ namespace PPOBot.Scripting
 				_lua.Globals["startFishing"] = new Func<DynValue, bool>(StartFishing);
 				_lua.Globals["stopFishing"] = new Func<bool>(StopFishing);
 				_lua.Globals["startAnyColorRockMining"] = new Func<DynValue, bool>(StartAnyColorRockMining);
-				_lua.Globals["startColoredRockMining"] = new Func<DynValue, DynValue[], bool>(StartColoredRockMining);
+				_lua.Globals["startColoredRockMining"] = new Func<DynValue, bool, DynValue[], bool>(StartColoredRockMining);
 				_lua.Globals["stopMining"] = new Func<bool>(StopMining);
 				_lua.Globals["startSurfBattle"] = new Func<bool>(StartSurfBattle);
 				_lua.Globals["teleportTo"] = new Func<DynValue[], bool>(TeleportTo);
@@ -314,7 +314,8 @@ namespace PPOBot.Scripting
 				//move learning
 				_lua.Globals["forgetMove"] = new Func<string, bool>(ForgetMove);
 				_lua.Globals["forgetAnyMoveExcept"] = new Func<DynValue[], bool>(ForgetAnyMoveExcept);
-				//miscs
+                //miscs
+                _lua.Globals["getStarter"] = new Func<string, bool>(GetStarter);
 				_lua.Globals["getMiningLevel"] = new Func<int>(GetMiningLevel);
 				_lua.Globals["getMiningTotalExperience"] = new Func<int>(GetMiningTotalExperience);
 				_lua.Globals["getMiningCurrentExperience"] = new Func<int>(GetMiningCurrentExperience);
@@ -340,7 +341,15 @@ namespace PPOBot.Scripting
 			});
 		}
 
-		private bool OpenAllTreasures()
+
+        // API: Get's specific starter if haven't received one...
+        private bool GetStarter(string name)
+        {
+            if (!ValidateAction("getStarter", false)) return false;
+            return ExecuteAction(Bot.Game.ChoosePokemon(name));
+        }
+
+        private bool OpenAllTreasures()
 		{
 			if (HasItem("Treasure Key"))
 			{
@@ -1291,9 +1300,9 @@ namespace PPOBot.Scripting
 		}
 		private bool StartFishing(DynValue value)
 		{
-			if (Bot.Game.Battle || Bot.Game.IsFishing)
+			if (Bot.Game.Battle)
 			{
-				Fatal("error: startFishing is only usable when you're not in battle and not fishing.");
+				Fatal("error: startFishing is only usable when you're not in battle.");
 				return false;
 			}
 
@@ -1334,7 +1343,7 @@ namespace PPOBot.Scripting
 			}
 			return ExecuteAction(Bot.Game.StopMining());
 		}
-		private bool StartColoredRockMining(DynValue axe, params DynValue[] values)
+		private bool StartColoredRockMining(DynValue axe, bool waitForRocks, params DynValue[] values)
 		{
 			if (!HasItem(axe.String))
 			{
@@ -1360,8 +1369,9 @@ namespace PPOBot.Scripting
 			}
 
 			var colors = values.Select(s => s.String).ToArray();			
-			return ExecuteAction(Bot.MiningAI.MineMultipleColoredRocks(axe.String, colors));
+			return ExecuteAction(Bot.MiningAI.MineMultipleColoredRocks(axe.String, colors, waitForRocks));
 		}
+
 		// API: Checks if battling or not
 		private bool IsInBattle() => Bot.Game.Battle;
 		// API: Stops fishing.

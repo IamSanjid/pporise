@@ -47,16 +47,6 @@ namespace PPOBot
 
         public bool MoveTo(int destinationX, int destinationY, string reason)
         {
-            bool movingForBattle = false;
-            bool movingForSurf = false;
-
-            if (!string.IsNullOrEmpty(reason))
-                if (reason.ToLowerInvariant().Contains("battle"))
-                    movingForBattle = true;
-            if (!string.IsNullOrEmpty(reason))
-                if (reason.ToLowerInvariant().Contains("surf"))
-                    movingForSurf = true;
-
             var node = FindPath(_client.PlayerX, _client.PlayerY, destinationX, destinationY);
 
             if (node != null)
@@ -74,7 +64,7 @@ namespace PPOBot
 
                 while (directions.Count > 0)
                 {
-                    _client.Move(directions.Pop(), movingForBattle, movingForSurf);
+                    _client.Move(directions.Pop(), reason);
                 }
                 return true;
             }
@@ -94,19 +84,8 @@ namespace PPOBot
 
                 direction.ApplyToCoordinates(ref destinationX, ref destinationY);
 
-                bool movingForBattle = false;
-                bool movingForSurf = false;
-
-                if (!string.IsNullOrEmpty(reason))
-                    if (reason.ToLowerInvariant().Contains("battle"))
-                        movingForBattle = true;
-                if (!string.IsNullOrEmpty(reason))
-                    if (reason.ToLowerInvariant().Contains("surf"))
-                        movingForSurf = true;
-
-
-                _client.Move(direction, movingForBattle, movingForSurf);
-                _client.Move(direction.GetOpposite(), movingForBattle);
+                _client.Move(direction, reason);
+                _client.Move(direction.GetOpposite(), reason);
             }
             return true;
         }

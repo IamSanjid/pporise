@@ -810,6 +810,9 @@ namespace PPOProtocol
                                             UpdateTeamThroughXml(xml);
                                             UsedItemMsg(xml);
                                             break;
+                                        case "choosePokemon":
+                                            UpdateTeamThroughXml(xml);
+                                            break;
                                     }
                                     break;
                             }
@@ -2249,6 +2252,17 @@ namespace PPOProtocol
                 loc8.Add(p2);
                 _connection.SendXtMessage("PokemonPlanetExt", "b186", loc8, "str");
             }
+            else if (type == "choosePokemon")
+            {
+                var loc8 = new ArrayList();
+                var packetKey = Connection.GenerateRandomString(Rand.Next(5, 20));
+                loc8.Add(
+                    $"pke:{Connection.CalcMd5(packetKey + kg2 + GetTimer())}");
+                loc8.Add($"pk:{packetKey}");
+                loc8.Add($"te:{GetTimer()}");
+                loc8.Add($"pokemon:{p1}");
+                _connection.SendXtMessage("PokemonPlanetExt", "b7", loc8, "xml");
+            }
         }
         private const int _shinyDifference = 721;
         public bool StopFishing()
@@ -2699,10 +2713,10 @@ namespace PPOProtocol
             return false;
         }
 
-        public void Move(Direction direction, bool isMovingForBattle = false, bool surfBattle = true)
+        public void Move(Direction direction, string reason)
         {
-            movingForBattle = isMovingForBattle;
-            _moveType = surfBattle ? "surf" : _moveType;
+            movingForBattle = reason == "battle";
+            _moveType = reason.Contains("surf") ? "surf" : _moveType;
             _movements.Add(direction);
         }
         public void ClearPath()
@@ -2753,10 +2767,7 @@ namespace PPOProtocol
             _swapTimeout?.Update();
             _itemTimeout?.Update();
             _miningTimeout?.Update();
-            if (!(bool)_fishingTimeout?.Update())
-            {
-                IsFishing = false;
-            }
+            _fishingTimeout?.Update();
 
             UpdateMovement();
         }
@@ -2770,7 +2781,7 @@ namespace PPOProtocol
                 var dir = _movements[0];
                 _movements.RemoveAt(0);
                 SendMovement(dir.AsString());
-                _movementTimeout.Set(250);
+                _movementTimeout.Set(_moveType == "bike" ? 125 : 250);
             }
         }
 
@@ -2833,6 +2844,14 @@ namespace PPOProtocol
             LogMessage?.Invoke($"Trying to mine the rock at (X:{x}, Y:{y})");
             _miningTimeout.Set(Rand.Next(2500, 3000));
             //GetTimeStamp("sendMineAnimation");
+        }
+
+        public bool ChoosePokemon(string name)
+        {
+            if (Team.Count > 0)
+                return false;
+            GetTimeStamp("choosePokemon", name.ToLowerInvariant());
+            return true;
         }
     }
 }
