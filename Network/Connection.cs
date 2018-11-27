@@ -11,12 +11,17 @@ namespace Network
 {
     public class Connection
     {
+#if DEBUG
+        public int TimeoutDelay = 60000;
+#else
+		public int TimeoutDelay = 30000;
+#endif
+
         private Exception _closingException;
-        private int _countForServerDisconnections; //Wondering why we needed? It's just an easy simple beginner way to solve the disconnection and reconnection thing....
+        private int _countForServerDisconnections; //Wondering why we needed? It's just an easy simple beginner way to do disconnection at the first connection and then do reconnection thing after that lol....
         private IPEndPoint _endPoint;
         private bool _isClosed;
         private bool _isConnected;
-        private ExecutionPlan _waitForReconnect;
         public int Port { get; set; }
         public string Host { get; set; }
 
@@ -338,7 +343,6 @@ namespace Network
                             var _loc3_ = "tsys";
                             var loc2 = $"<ver v=\'{Version}\' />";
                             Send(_loc3_, "verChk", 0, loc2);
-                            _waitForReconnect?.Abort();
                         }
                     }
                     else if (packet.ToLowerInvariant().Contains("apiok"))
@@ -347,7 +351,10 @@ namespace Network
                         Connected?.Invoke();
                         LogMessage?.Invoke("Sending authentication to the server....");
                         // Auto loggs in...
-                        Login(Zone, Username, HashPassword);
+                        TaskUtils.CallActionWithTimeout(() => Login(Zone, Username, HashPassword), delegate
+                        {
+                            Close(new Exception("Authentication timedout. This happened because either your account is already logged in a browser or either your account got banned."));
+                        }, TimeoutDelay);
                     }
                     else if (packet.Contains("rmList"))
                     {

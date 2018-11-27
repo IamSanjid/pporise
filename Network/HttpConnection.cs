@@ -33,10 +33,7 @@ namespace Network
             Client = new HttpClient(new HttpClientHandler
             {
                 CookieContainer = _cookieContainer
-            })
-            {
-                Timeout = new TimeSpan(0, 0, 0, 5)
-            };
+            });
         }
 
         public HttpConnection(string host, int port)
@@ -47,10 +44,7 @@ namespace Network
                 UseProxy = true,
                 Proxy = new WebProxy($"{host}:{port}"),
                 CookieContainer = _cookieContainer
-            })
-            {
-                Timeout = new TimeSpan(0, 0, 0, 5)
-            };
+            });
         }
 
         public async Task PostLogin(string user, string pass)
@@ -130,7 +124,7 @@ namespace Network
             message.Headers.Add("Accept-Language", "en-US;q=0.5,en;q=0.3");
             message.Headers.Add("Referer", "http://pokemon-planet.com/"); // default base url is http://pokemon-planet.com/ you can change according to your need...
             message.Headers.Add("Proxy-Authorization", "Basic SEZhNjQ2NjQyZTJlMDZjYjM0NWZkYzAyOGU3YTM0YjYwMS5oNzgzb2hhdzA5amRmMDpIRmE2NDY2NDJlMmUwNmNiMzQ1ZmRjMDI4ZTdhMzRiNjAxLmg3ODIzOWhk");
-            message.Headers.Add("Connection", "keep-alive");
+            //message.Headers.Add("Connection", "keep-alive");
             message.Headers.Add("Cookie", "__cfduid=d72c26c761f3d8c0bc799ea6816ad62661543274330; cf_clearance=5802ba46b8530fdcb66ffecd27c90e3cc6610c94-1543274508-86400-250");
             message.Headers.Add("Upgrade-Insecure-Requests", "1");
 
@@ -169,7 +163,7 @@ namespace Network
             message.Headers.Add("Accept-Language", "en-US;q=0.5,en;q=0.3");
             message.Headers.Add("Referer", "http://pokemon-planet.com/"); // default base url is http://pokemon-planet.com/ you can change according to your need...
             message.Headers.Add("Proxy-Authorization", "Basic SEZhNjQ2NjQyZTJlMDZjYjM0NWZkYzAyOGU3YTM0YjYwMS5oNzgzb2hhdzA5amRmMDpIRmE2NDY2NDJlMmUwNmNiMzQ1ZmRjMDI4ZTdhMzRiNjAxLmg3ODIzOWhk");
-            message.Headers.Add("Connection", "keep-alive");
+            //message.Headers.Add("Connection", "keep-alive");
             message.Headers.Add("Cookie", "__cfduid=d72c26c761f3d8c0bc799ea6816ad62661543274330; cf_clearance=5802ba46b8530fdcb66ffecd27c90e3cc6610c94-1543274508-86400-250");
             message.Headers.Add("Upgrade-Insecure-Requests", "1");
 

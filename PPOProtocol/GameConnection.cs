@@ -15,7 +15,7 @@ namespace PPOProtocol
         public bool IsLoggedInToWebsite { get; private set; }
         public string Id { get; private set; }
 
-        public event Action LoggedIn;
+        //public event Action LoggedIn;
         public event Action<Exception> LoggingError;
 
         public readonly HttpConnection _httpConnection;
@@ -37,7 +37,6 @@ namespace PPOProtocol
             else
                 _httpConnection = new HttpConnection();
 
-            _httpConnection.LoggedIn += HttpConnection_LoggedIn;
             _httpConnection.LoggingError += HttpConnection_LoggingError;
 
             Username = username;
@@ -51,7 +50,6 @@ namespace PPOProtocol
         public GameConnection(string username, string httphost, int httpport)
         {
             _httpConnection = new HttpConnection(httphost, httpport);
-            _httpConnection.LoggedIn += HttpConnection_LoggedIn;
             _httpConnection.LoggingError += HttpConnection_LoggingError;
 
             Username = username;
@@ -65,7 +63,6 @@ namespace PPOProtocol
         public GameConnection(string username)
         {
             _httpConnection = new HttpConnection();
-            _httpConnection.LoggedIn += HttpConnection_LoggedIn;
             _httpConnection.LoggingError += HttpConnection_LoggingError;
             Username = username;
 
@@ -73,15 +70,6 @@ namespace PPOProtocol
 
             Port = 9339;
             Host = "167.114.159.20";
-        }
-
-        private void HttpConnection_LoggedIn(string arg1, string arg2, string arg3)
-        {
-            Id = arg1;
-            Username = arg2;
-            HashPassword = arg3;
-            IsLoggedInToWebsite = true;
-            LoggedIn?.Invoke();
         }
 
         private void HttpConnection_LoggingError(Exception obj)

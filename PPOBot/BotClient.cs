@@ -27,7 +27,7 @@ namespace PPOBot
         public event Action ClientChanged;
         public event Action<string, Brush> ColoredLogMessage;
 
-        private bool _loginUpdate;
+        //private bool _loginUpdate;
         public GameClient Game { get; private set; }
         // ReSharper disable once InconsistentNaming
         public BattleAI AI { get; private set; }
