@@ -11,7 +11,6 @@ namespace Network
 {
     public class HttpConnection
     {
-        public event Action<string, string, string> LoggedIn;
         public event Action<Exception> LoggingError;
 
         public readonly HttpClient Client;
@@ -60,8 +59,8 @@ namespace Network
             {
                 var values = new Dictionary<string, string>
                 {
-                    { "user", "Iambetter" },
-                    { "passwrd", "Iambetter" },
+                    { "user", user },
+                    { "passwrd", pass },
                     { "cookielength", "-1" }
                 };
 
