@@ -1,10 +1,14 @@
 # PPORise
 A free, open-source and advanced bot for Pokémon Planet.
 
+# Binaries
+
+Latest Builds: [![Build status](https://ci.appveyor.com/api/projects/status/ia8yxsiub9hyjqfv?svg=true)](http://tmearn.com/Kc8zlI)
+
 # TODO
-1) Add NPC(s) features.
-2) Add map feature.
-3) Add PC Features.
+1) Add PC Features.
+2) Add NPC(s) features.
+3) Add map feature.
 
 
 ## Libraries
