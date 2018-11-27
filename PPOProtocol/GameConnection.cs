@@ -18,7 +18,7 @@ namespace PPOProtocol
         public event Action LoggedIn;
         public event Action<Exception> LoggingError;
 
-        private HttpConnection _httpConnection;
+        public readonly HttpConnection _httpConnection;
 
         public string GameVersion;
         public string KG2Value;
@@ -90,6 +90,11 @@ namespace PPOProtocol
         }
         public async Task Connect()
         {
+
+            base.Username = _httpConnection.Username;
+            Id = _httpConnection.Id;
+            base.HashPassword = _httpConnection.HashPassword;
+
             if (!_useSocks)
             {
                 Connect(Host, Port);

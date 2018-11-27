@@ -346,6 +346,7 @@ namespace Network
                         WasConnected = true;
                         Connected?.Invoke();
                         LogMessage?.Invoke("Sending authentication to the server....");
+                        // Auto loggs in...
                         Login(Zone, Username, HashPassword);
                     }
                     else if (packet.Contains("rmList"))

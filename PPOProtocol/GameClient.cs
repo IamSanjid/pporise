@@ -86,7 +86,6 @@ namespace PPOProtocol
             _connection = connection;
             _gameConnection = connection;
             _connection.PacketReceived += Connection_PacketReceived;
-            connection.LoggedIn += HttpConnection_LoggedIn;
             connection.LoggingError += HttpConnection_LoggingError;
 
             _connection.LogMessage += Connection_LogMessage;
@@ -179,6 +178,7 @@ namespace PPOProtocol
         }
         private void Connection_SuccessfullyAuthenticated()
         {
+            SetUserInfos();
             SuccessfullyAuthenticated?.Invoke();
             _checkForLoggingTimeout = ExecutionPlan.Delay(20000, () => CheckForLoggingIn());
         }
@@ -192,6 +192,16 @@ namespace PPOProtocol
         {
             var time = DateTime.Now - Timer;
             return (int)time.TotalMilliseconds;
+        }
+
+        public void SetUserInfos()
+        {
+            Username = _gameConnection.Username; //Username is needed coz of some stupid encryption string.
+            Id = _gameConnection.Id;
+            HashPassword = _gameConnection.HashPassword;
+            LoggedInToWebsite = true;
+            EncryptedPacketCount = Connection.CalcMd5(EncryptedPacketCount + kg1 + Username);
+            EncryptedstepsWalked = Connection.CalcMd5(_stepsWalked + kg1 + Username);
         }
 
         private void Connection_JoinedRoom()
@@ -218,16 +228,6 @@ namespace PPOProtocol
         private void Connection_LogMessage(string obj)
         {
             LogMessage?.Invoke(obj);
-        }
-
-        private void HttpConnection_LoggedIn()
-        {
-            Username = _gameConnection.Username; //Username is needed coz of some stupid encryption string.
-            Id = _gameConnection.Id;
-            HashPassword = _gameConnection.HashPassword;
-            LoggedInToWebsite = true;
-            EncryptedPacketCount = Connection.CalcMd5(EncryptedPacketCount + kg1 + Username);
-            EncryptedstepsWalked = Connection.CalcMd5(_stepsWalked + kg1 + Username);
         }
 
         private void UpdatePosition()

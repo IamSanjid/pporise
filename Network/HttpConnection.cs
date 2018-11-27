@@ -13,29 +13,45 @@ namespace Network
     {
         public event Action<string, string, string> LoggedIn;
         public event Action<Exception> LoggingError;
-        public HttpClient Client;
-        private string _username;
-        private string _passwrod;
-        private string _id;
-        public string Id => _id;
+
+        public readonly HttpClient Client;
+
+        public string Id { get; private set; }
+        public string Username { get; private set; }
+        public string HashPassword { get; private set; }
+
 
         private const string LoginWebUrl = "http://pokemon-planet.com/forums/index.php?action=login2";
         private const string UserInfoUrl = "http://www.pokemon-planet.com/getUserInfo.php";
 
-        private CookieContainer _cookieContainer;
+        private CookieContainer _cookieContainer { get; set; }
+
+        public bool IsLoggedIn { get; set; }
 
         public HttpConnection()
         {
             _cookieContainer = new CookieContainer();
-            Client = new HttpClient(new HttpClientHandler { CookieContainer = _cookieContainer })
-            { Timeout = new TimeSpan(0, 0, 0, 5) };
+            Client = new HttpClient(new HttpClientHandler
+            {
+                CookieContainer = _cookieContainer
+            })
+            {
+                Timeout = new TimeSpan(0, 0, 0, 5)
+            };
         }
 
         public HttpConnection(string host, int port)
         {
             _cookieContainer = new CookieContainer();
-            Client = new HttpClient(new HttpClientHandler { UseProxy = true, Proxy = new WebProxy($"{host}:{port}"), CookieContainer = _cookieContainer })
-            { Timeout = new TimeSpan(0, 0, 0, 5) };
+            Client = new HttpClient(new HttpClientHandler
+            {
+                UseProxy = true,
+                Proxy = new WebProxy($"{host}:{port}"),
+                CookieContainer = _cookieContainer
+            })
+            {
+                Timeout = new TimeSpan(0, 0, 0, 5)
+            };
         }
 
         public async Task PostLogin(string user, string pass)
@@ -57,7 +73,7 @@ namespace Network
 
                 if (response is null is false)
                 {
-                    if (response != null && (response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.OK))
+                    if (response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.OK)
                     {
                         var getResponse = await response.Content.ReadAsStringAsync();
                         if (!string.IsNullOrEmpty(getResponse))
@@ -71,21 +87,23 @@ namespace Network
                                 var data3 = responsePars[2].Split('=');
                                 if (data1.Length > 0 && data2.Length > 0 && data3.Length > 0)
                                 {
-                                    _id = data1[1];
-                                    _username = data2[1];
-                                    _passwrod = data3[1];
-                                    Console.WriteLine(_id + "-" + _username + "-" + _passwrod);
-                                    LoggedIn?.Invoke(_id, _username, _passwrod);
+                                    Id = data1[1];
+                                    Username = data2[1];
+                                    HashPassword = data3[1];
+                                    Console.WriteLine(Id + "-" + Username + "-" + HashPassword);
+                                    IsLoggedIn = true;
                                     return;
                                 }
                             }
                         }
                     }
+                    IsLoggedIn = false;
                     LoggingError?.Invoke(null);
                 }
             }
             catch (Exception ex)
             {
+                IsLoggedIn = false;
                 LoggingError?.Invoke(ex);
             }
         }

@@ -126,11 +126,6 @@ namespace PPOBot
             {
                 return;
             }
-            if (_loginUpdate && _gameConnection.IsLoggedInToWebsite)
-            {
-                _loginUpdate = false;
-                LoginUpdate();
-            }
 
             if (Running != State.Started)
             {
@@ -406,8 +401,11 @@ namespace PPOBot
                 }
 
                 SetClient(new GameClient(_gameConnection));
+
                 await _gameConnection.PostLogin(Account.Name, Account.Password);
-                _loginUpdate = true;
+
+                if (_gameConnection._httpConnection.IsLoggedIn)
+                    LoginUpdate();
             }
             catch (Exception e)
             {
