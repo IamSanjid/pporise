@@ -269,7 +269,9 @@ namespace PPOBot.Scripting
 				_lua.Globals["moveToCell"] = new Func<int, int, string, bool>(MoveToCell);
 				_lua.Globals["moveLinearX"] = new Func<int, int, int, string, bool>(MoveLinearX);
 				_lua.Globals["moveLinearY"] = new Func<int, int, int, string, bool>(MoveLinearY);
-				_lua.Globals["useBike"] = new Func<bool>(UseBike);
+                _lua.Globals["moveToRectangle"] = new Func<DynValue[], bool>(MoveToRectangle);
+                _lua.Globals["moveToRectangleSurf"] = new Func<DynValue[], bool>(MoveToRectangleSurf);
+                _lua.Globals["useBike"] = new Func<bool>(UseBike);
 				_lua.Globals["openTreasure"] = new Func<int, int, bool>(OpenTreasure);
 				_lua.Globals["openAllTreasures"] = new Func<bool>(OpenAllTreasures);
 				//Pokemon
@@ -407,8 +409,69 @@ namespace PPOBot.Scripting
 			return ExecuteAction(Bot.MoveLeftRight(x, y1, x, y2, forWhat));
 		}
 
-		// API: Counts specific colored rocks.
-		private int CountColoredRocks(DynValue value)
+        // API: Moves to a random accessible cell of the specified rectangle.
+        private bool MoveToRectangle(params DynValue[] values)
+        {
+            if (values.Length != 1 && values.Length != 4 ||
+                (values.Length == 1 && values[0].Type != DataType.Table) ||
+                (values.Length == 4
+                    && (values[0].Type != DataType.Number || values[1].Type != DataType.Number
+                    || values[2].Type != DataType.Number || values[3].Type != DataType.Number)))
+            {
+                Fatal("error: moveToRectangle: must receive either a table or four numbers.");
+                return false;
+            }
+            if (values.Length == 1)
+            {
+                values = values[0].Table.Values.ToArray();
+            }
+            return MoveToRectangle((int)values[0].Number, (int)values[1].Number, (int)values[2].Number, (int)values[3].Number, "battle");
+        }
+
+        private bool MoveToRectangleSurf(params DynValue[] values)
+        {
+            if (values.Length != 1 && values.Length != 4 ||
+                (values.Length == 1 && values[0].Type != DataType.Table) ||
+                (values.Length == 4
+                    && (values[0].Type != DataType.Number || values[1].Type != DataType.Number
+                    || values[2].Type != DataType.Number || values[3].Type != DataType.Number)))
+            {
+                Fatal("error: moveToRectangle: must receive either a table or four numbers.");
+                return false;
+            }
+            if (values.Length == 1)
+            {
+                values = values[0].Table.Values.ToArray();
+            }
+            return MoveToRectangle((int)values[0].Number, (int)values[1].Number, (int)values[2].Number, (int)values[3].Number, "surf");
+        }
+
+        // API: Moves to a random accessible cell of the specified rectangle.
+        private bool MoveToRectangle(int minX, int minY, int maxX, int maxY, string reason)
+        {
+            if (!ValidateAction("moveToRectangle", false)) return false;
+
+            if (minX > maxX || minY > maxY)
+            {
+                Fatal("error: moveToRectangle: the maximum cell cannot be less than the minimum cell.");
+                return false;
+            }
+
+            int x;
+            int y;
+            int tries = 0;
+            do
+            {
+                if (++tries > 100) return false;
+                x = Bot.Game.Rand.Next(minX, maxX + 1);
+                y = Bot.Game.Rand.Next(minY, maxY + 1);
+            } while (x == Bot.Game.PlayerX && y == Bot.Game.PlayerY);
+
+            return ExecuteAction(Bot.MoveToCell(x, y, reason));
+        }
+
+        // API: Counts specific colored rocks.
+        private int CountColoredRocks(DynValue value)
 		{
 			if (Bot.Game.MiningObjects is null || Bot.Game.MiningObjects.Count > 0 is false)
 				return -1;

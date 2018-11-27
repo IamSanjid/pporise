@@ -27,13 +27,15 @@ namespace Network
         public HttpConnection()
         {
             _cookieContainer = new CookieContainer();
-            Client = new HttpClient(new HttpClientHandler { CookieContainer = _cookieContainer }, true);
+            Client = new HttpClient(new HttpClientHandler { CookieContainer = _cookieContainer })
+            { Timeout = new TimeSpan(0, 0, 0, 5) };
         }
 
         public HttpConnection(string host, int port)
         {
             _cookieContainer = new CookieContainer();
-            Client = new HttpClient(new HttpClientHandler { UseProxy = true, Proxy = new WebProxy($"{host}:{port}"), CookieContainer = _cookieContainer }, true);
+            Client = new HttpClient(new HttpClientHandler { UseProxy = true, Proxy = new WebProxy($"{host}:{port}"), CookieContainer = _cookieContainer })
+            { Timeout = new TimeSpan(0, 0, 0, 5) };
         }
 
         public async Task PostLogin(string user, string pass)

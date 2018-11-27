@@ -21,8 +21,8 @@
         <Label Content="https://discord.gg/akxSZ9X" HorizontalAlignment="Left" Margin="61,30,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
         <Label Content="Scripts:" HorizontalAlignment="Left" Margin="10,50,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5"/>
         <Label Content="https://github.com/IamSanjid/pporise-scripts" HorizontalAlignment="Left" Margin="61,50,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
-        <Label Content="Website:" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5"/>
-        <Label Content="https://pporise-bot.ml/" HorizontalAlignment="Left" Margin="61,70,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
+        <Label Content="Donate:" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5"/>
+        <Label Content="https://www.paypal.me/purpleP1" HorizontalAlignment="Left" Margin="61,70,0,0" VerticalAlignment="Top" MouseDown="UIElement_OnMouseDown" Foreground="#FF009BFF" Cursor="Hand"/>
         <Label Content="PPORise is a free, open-source and advanced bot for" HorizontalAlignment="Left" Margin="14,96,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5" Width="293" Height="23"/>
         <Label Content="Pokemon Planet powered by Lua scripts." HorizontalAlignment="Left" Margin="40,112,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5" Width="224"/>
         <Label Content="This was created by following PROShine." HorizontalAlignment="Left" Margin="39,128,0,0" VerticalAlignment="Top" Foreground="#FF99AAB5" Width="225"/>
