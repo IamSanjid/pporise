@@ -61,7 +61,6 @@
     <Compile Include="Connection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SocksConnection.cs" />
-    <Compile Include="TaskUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

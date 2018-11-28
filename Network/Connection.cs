@@ -25,6 +25,9 @@ namespace Network
         public int Port { get; set; }
         public string Host { get; set; }
 
+        private bool _isLoggedIn = false;
+        private ExecutionPlan _checkForLogin;
+
         private readonly Queue<string> _pendingPackets = new Queue<string>();
         private readonly byte[] _receiveBuffer;
 
@@ -269,6 +272,7 @@ namespace Network
                 }
 
                 _wasDisconnected = true;
+                _isLoggedIn = false;
             }
         }
 
@@ -351,10 +355,14 @@ namespace Network
                         Connected?.Invoke();
                         LogMessage?.Invoke("Sending authentication to the server....");
                         // Auto loggs in...
-                        TaskUtils.CallActionWithTimeout(() => Login(Zone, Username, HashPassword), delegate
+                        Login(Zone, Username, HashPassword);
+                        _checkForLogin = ExecutionPlan.Delay(TimeoutDelay, delegate
                         {
-                            Close(new Exception("Authentication timedout. This happened because either your account is already logged in a browser or either your account got banned."));
-                        }, TimeoutDelay);
+                            if (!_isLoggedIn)
+                            {
+                                Close(new Exception("Authentication timedout. This happened because either your account is already logged in a browser or either your account got banned."));
+                            }
+                        });
                     }
                     else if (packet.Contains("rmList"))
                     {
@@ -370,6 +378,7 @@ namespace Network
                                     packet.Contains("l") &&
                                     packet.Contains("-1"))
                 {
+                    _isLoggedIn = true;
                     SuccessfullyAuthenticated?.Invoke();
                     GetRoomList();
                 }
