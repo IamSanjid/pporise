@@ -19,6 +19,7 @@ namespace Network
         public string Username { get; private set; }
         public string HashPassword { get; private set; }
 
+        private bool _usingProxy;
 
         private const string LoginWebUrl = "http://pokemon-planet.com/forums/index.php?action=login2";
         private const string UserInfoUrl = "http://www.pokemon-planet.com/getUserInfo.php";
@@ -34,6 +35,7 @@ namespace Network
             {
                 CookieContainer = _cookieContainer
             });
+            _usingProxy = false;
         }
 
         public HttpConnection(string host, int port)
@@ -45,6 +47,7 @@ namespace Network
                 Proxy = new WebProxy($"{host}:{port}"),
                 CookieContainer = _cookieContainer
             });
+            _usingProxy = true;
         }
 
         public async Task PostLogin(string user, string pass)
@@ -124,7 +127,8 @@ namespace Network
             message.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
             message.Headers.Add("Accept-Language", "en-US;q=0.5,en;q=0.3");
             message.Headers.Add("Referer", "http://pokemon-planet.com/"); // default base url is http://pokemon-planet.com/ you can change according to your need...
-            //message.Headers.Add("Proxy-Authorization", "Basic SEZhNjQ2NjQyZTJlMDZjYjM0NWZkYzAyOGU3YTM0YjYwMS5oNzgzb2hhdzA5amRmMDpIRmE2NDY2NDJlMmUwNmNiMzQ1ZmRjMDI4ZTdhMzRiNjAxLmg3ODIzOWhk");
+            if (_usingProxy)
+                message.Headers.Add("Proxy-Authorization", "Basic SEZhNjQ2NjQyZTJlMDZjYjM0NWZkYzAyOGU3YTM0YjYwMS5oNzgzb2hhdzA5amRmMDpIRmE2NDY2NDJlMmUwNmNiMzQ1ZmRjMDI4ZTdhMzRiNjAxLmg3ODIzOWhk");
             message.Headers.Add("Connection", "keep-alive");
             message.Headers.Add("Cookie", "__cfduid=ddd337116e0d3d4b2a99eaf16a1a79bcf1543416280; cf_clearance=848dcd25e7e484dd9bb7fe5425e1bb5f29264654-1543416304-604800-250");
             message.Headers.Add("Upgrade-Insecure-Requests", "1");
@@ -169,7 +173,8 @@ namespace Network
             message.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
             message.Headers.Add("Accept-Language", "en-US;q=0.5,en;q=0.3");
             message.Headers.Add("Referer", "http://pokemon-planet.com/"); // default base url is http://pokemon-planet.com/ you can change according to your need...
-            //message.Headers.Add("Proxy-Authorization", "Basic SEZhNjQ2NjQyZTJlMDZjYjM0NWZkYzAyOGU3YTM0YjYwMS5oNzgzb2hhdzA5amRmMDpIRmE2NDY2NDJlMmUwNmNiMzQ1ZmRjMDI4ZTdhMzRiNjAxLmg3ODIzOWhk");
+            if (_usingProxy)
+                message.Headers.Add("Proxy-Authorization", "Basic SEZhNjQ2NjQyZTJlMDZjYjM0NWZkYzAyOGU3YTM0YjYwMS5oNzgzb2hhdzA5amRmMDpIRmE2NDY2NDJlMmUwNmNiMzQ1ZmRjMDI4ZTdhMzRiNjAxLmg3ODIzOWhk");
             message.Headers.Add("Connection", "keep-alive");
             message.Headers.Add("Cookie", "__cfduid=ddd337116e0d3d4b2a99eaf16a1a79bcf1543416280; cf_clearance=848dcd25e7e484dd9bb7fe5425e1bb5f29264654-1543416304-604800-250");
             message.Headers.Add("Upgrade-Insecure-Requests", "1");
