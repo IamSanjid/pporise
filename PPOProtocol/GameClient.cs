@@ -25,7 +25,7 @@ namespace PPOProtocol
         private MiningObject _lastRock;
         private int _mapInstance = -1;
         public string _moveType = "";
-        private readonly string _url = @"http://pokemon-planet.com/game628.swf";
+        private readonly string _url = @"http://pokemon-planet.com/game639.swf";
         private bool movingForBattle;
 
         private List<Direction> _movements = new List<Direction>();
