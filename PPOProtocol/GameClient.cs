@@ -48,6 +48,7 @@ namespace PPOProtocol
         private readonly ProtocolTimeout _battleTimeout = new ProtocolTimeout();
         private readonly ProtocolTimeout _movementTimeout = new ProtocolTimeout();
         private readonly ProtocolTimeout _miningTimeout = new ProtocolTimeout();
+        private readonly ProtocolTimeout _dialogTimeout = new ProtocolTimeout();
 
         private bool _updatedMap { get; set; } = false;
 
@@ -69,6 +70,8 @@ namespace PPOProtocol
         public List<EliteChest> EliteChests { get; }
         public Battle ActiveBattle { get; private set; }
         public int Money { get; private set; }
+
+        public bool IsCreatingNewCharacter { get; private set; }
 
         public int PacketCount = -1;
         public Random Rand = new Random();
@@ -130,7 +133,9 @@ namespace PPOProtocol
             && !_swapTimeout.IsActive
             && !_fishingTimeout.IsActive
             && !_itemTimeout.IsActive
-            && !_miningTimeout.IsActive;
+            && !_miningTimeout.IsActive
+            && !_dialogTimeout.IsActive
+            && !IsCreatingNewCharacter;
 
         public bool IsMapLoaded => _isMapLoaded();
 
@@ -240,13 +245,22 @@ namespace PPOProtocol
             }
         }
 
+        public void CreateCharacter()
+        {
+            if (!IsCreatingNewCharacter) return;
+            IsCreatingNewCharacter = false;
+            _characterCreation = new CharacterCreation(Rand);
+            GetTimeStamp("createCharacter");
+            _dialogTimeout.Set();
+        }
+
         private async void Connection_PacketReceived(string obj)
         {
             try
             {
                 if (obj.Length > 1)
                 {
-                    if (obj.StartsWith("`"))
+                    if (obj.StartsWith("`", StringComparison.Ordinal))
                     {
                         obj = obj.Substring(1);
                         var data = obj.Split('`');
@@ -520,7 +534,7 @@ namespace PPOProtocol
                                 break;
                         }
                     }
-                    else if (obj.StartsWith("<"))
+                    else if (obj.StartsWith("<", StringComparison.Ordinal))
                     {
                         //XML packets....
                         //if (!obj.EndsWith("\0")) return;
@@ -575,7 +589,7 @@ namespace PPOProtocol
         private void HandleOpenEliteChest(string[] data)
         {
             var items = ParseArray(data[3]);
-            var key = Items.Find(x => x.Name.ToLowerInvariant() == "treasure key");
+            var key = Items.Find(x => string.Equals(x.Name, "treasure key", StringComparison.InvariantCultureIgnoreCase));
             if (key != null)
             {
                 if (key.Quntity > 1)
@@ -588,8 +602,10 @@ namespace PPOProtocol
                     Items.Remove(key);
                 }
             }
-            var newItm = new InventoryItem(items[0]);
-            newItm.Uid = Items.LastOrDefault().Uid + 1;
+            var newItm = new InventoryItem(items[0])
+            {
+                Uid = (int)(Items.LastOrDefault()?.Uid + 1)
+            };
             Items.Add(newItm);
 
             SystemMessage?.Invoke("You opened the Elite Chest and found " + items[1] + " " + items[0] + ".");
@@ -671,17 +687,17 @@ namespace PPOProtocol
         {
             //-----------------Stupid way to check chat messages xD------------------------//
 
-            HasEncounteredRarePokemon = (packet.ToLowerInvariant().Contains(RareLengendaryPattern.ToLowerInvariant()) &&
-                packet.ToLowerInvariant().Contains(Username.ToLowerInvariant())) || (packet.ToLowerInvariant().Contains("you have encountered a"));
+            HasEncounteredRarePokemon = (packet.IndexOf(RareLengendaryPattern, StringComparison.InvariantCultureIgnoreCase) >= 0 &&
+                packet.IndexOf(Username, StringComparison.InvariantCultureIgnoreCase) >= 0) || (packet.IndexOf("you have encountered a", StringComparison.InvariantCultureIgnoreCase) >= 0);
 
-            if (packet.ToLowerInvariant().Contains("error with fishing rod location in inventory") ||
+            if (packet.IndexOf("error with fishing rod location in inventory", StringComparison.InvariantCultureIgnoreCase) >= 0 ||
                 packet.ToLowerInvariant().Contains("can't fish again yet"))
             {
                 IsFishing = false;
                 StopFishing();
             }
 
-            if (packet.ToLowerInvariant().Contains("you need at least") &&
+            if (packet.IndexOf("you need at least", StringComparison.InvariantCultureIgnoreCase) >= 0 &&
                 packet.ToLowerInvariant().Contains("to fish in these waters."))
             {
                 IsFishing = false;
@@ -944,7 +960,7 @@ namespace PPOProtocol
                     uid = -1;
                 if (element.GetAttribute("o") != "" && result)
                     ParsePokemonFromXml(element.ChildNodes, uid >= 0 ? uid : -1);
-                else if (element.GetAttribute("o").ToLowerInvariant() == "moves")
+                else if (string.Equals(element.GetAttribute("o"), "moves", StringComparison.InvariantCultureIgnoreCase))
                     ParsePokemonFromXml(element.ChildNodes, uid >= 0 ? uid : -1);
 #if DEBUG
                 if (uid >= 0)
@@ -1065,11 +1081,11 @@ namespace PPOProtocol
         {
             var battleTexts = str.Split('|');
             var loc2 = 0;
-            var battleText = "";
             _battleTimeout.Set(Rand.Next(2000, 4000));
             while (loc2 < battleTexts.Length)
             {
                 var battleOtherText = battleTexts[loc2].Split(',');
+                var builder = new System.Text.StringBuilder();
 
                 foreach (var text in battleOtherText)
                 {
@@ -1087,21 +1103,20 @@ namespace PPOProtocol
                     }
 
                     if (st.IndexOf(".", StringComparison.Ordinal) != -1)
-                        battleText += st;
+                        builder.Append(st);
                     else if (st.IndexOf("!", StringComparison.Ordinal) != -1)
-                        battleText += st.Replace("&#44", "");
-                    if ((st.ToLowerInvariant().Contains("out of usable pokemon") ||
-                         st.ToLowerInvariant().Contains("opponent won the battle")) && TempMap != "")
+                        builder.Append(st.Replace("&#44", ""));
+                    if ((st.IndexOf("out of usable pokemon", StringComparison.InvariantCultureIgnoreCase) >= 0 ||
+                         st.IndexOf("opponent won the battle", StringComparison.InvariantCultureIgnoreCase) >= 0) && TempMap != "")
                     {
                         EndBattle(true);
                         LoadMap(false, TempMap, 19, 18, false, MapName);
                     }
                 }
 
-                BattleMessage?.Invoke(battleText);
+                BattleMessage?.Invoke(builder.ToString());
                 InventoryUpdated?.Invoke();
-                battleText = "";
-                loc2 = loc2 + 1;
+                loc2++;
             }
         }
 
@@ -1354,7 +1369,7 @@ namespace PPOProtocol
             return null;
         }
 
-        public string[] ParseArray(string tempStr2)
+        public static string[] ParseArray(string tempStr2)
         {
             if (tempStr2 != "[]" && tempStr2 != "")
             {
@@ -1436,11 +1451,7 @@ namespace PPOProtocol
                 }
             });
             _avatarType = Convert.ToInt32(resObj[loopNum + 3]);
-            if (_avatarType == 0)
-            {
-                _characterCreation = new CharacterCreation(Rand);
-                ExecutionPlan.Delay(1000, () => GetTimeStamp("createCharacter"));
-            }
+            IsCreatingNewCharacter = _avatarType == 0;
             MemberType = resObj[loopNum + 4];
             int.TryParse(resObj[loopNum + 5], out var time);
             MemberTime = time;
@@ -1461,7 +1472,7 @@ namespace PPOProtocol
                     loopNum = loc7;
                     break;
                 }
-            });
+            }).ConfigureAwait(false);
             if (_swapTimeout.IsActive) _swapTimeout.Set(Rand.Next(500, 1000));
             TeamUpdated?.Invoke(true);
             if (Team is null is false && Team.Count > 0)
@@ -1478,7 +1489,7 @@ namespace PPOProtocol
                     loopNum = loc7;
                     break;
                 }
-            });
+            }).ConfigureAwait(false);
             await Task.Run(() =>
             {
                 for (var loc7 = loopNum + 1; loc7 < 99999; ++loc7)
@@ -1490,7 +1501,7 @@ namespace PPOProtocol
                     loopNum = loc7;
                     break;
                 }
-            });
+            }).ConfigureAwait(false);
 
             _pingToServer = ExecutionPlan.Repeat(30000, () => PingServer());
             _saveData = ExecutionPlan.Repeat(1800000, () => GetTimeStamp("saveData"));
@@ -1508,7 +1519,7 @@ namespace PPOProtocol
                     loopNum = loc7;
                     break;
                 }
-            });
+            }).ConfigureAwait(false);
 
             _movementSpeedMod = 1;
 
@@ -1518,7 +1529,7 @@ namespace PPOProtocol
                 {
                     _movementSpeedMod = 2;
                 }
-                else if (Convert.ToInt32(resObj[loopNum + 9]) == 0.500000)
+                else if (Convert.ToDouble(resObj[loopNum + 9]) == 0.500000)
                     _movementSpeedMod = 0.500000;
             }
 
@@ -2768,6 +2779,7 @@ namespace PPOProtocol
             _itemTimeout?.Update();
             _miningTimeout?.Update();
             _fishingTimeout?.Update();
+            _dialogTimeout?.Update();
 
             UpdateMovement();
         }
@@ -2808,32 +2820,6 @@ namespace PPOProtocol
         private void SendSwapPokemons(int pokemon1, int pokemon2)
         {
             GetTimeStamp("reorderPokemon", pokemon1.ToString(), pokemon2.ToString());
-        }
-        private bool MovedLeft { get; set; } = false;
-        private bool MovedRight { get; set; } = false;
-        private bool MoveLeftAndRight()
-        {
-            _movementTimeout.Set(Rand.Next(1000, 1500));
-            if (MovedLeft)
-            {
-                MovedLeft = false;
-                SendMovement("right");
-                MovedRight = true;
-                return true;
-            }
-
-            if (MovedRight)
-            {
-                MovedLeft = true;
-                SendMovement("left");
-                MovedRight = false;
-                return true;
-            }
-
-            MovedLeft = true;
-            SendMovement("left");
-            MovedRight = false;
-            return true;
         }
 
         public void MineRock(int x, int y, string axe)

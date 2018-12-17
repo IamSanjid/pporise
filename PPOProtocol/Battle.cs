@@ -44,8 +44,8 @@ namespace PPOProtocol
                         BattleType = "wild";
                     }
 
-                    if (_client?.Team != null && (WildPokemon.EncryptedAbility ==
-                                                  Connection.CalcMd5(
+                    if (_client?.Team != null && (WildPokemon.EncryptedAbility
+                                                  == Connection.CalcMd5(
                                                       new char[23] + "asion1asfonapsfobq1n12iofrasnfra") &&
                                                   _client?.Team[activePokemon].Type1 != PokemonType.Steel &&
                                                   _client?.Team[activePokemon].Type2 != PokemonType.Steel))
@@ -83,37 +83,30 @@ namespace PPOProtocol
             ActivePokemon = Convert.ToInt32(resObj[7]);
             if (IsWildBattle)
             {
-                WildPokemon.Update(_client.ParseArray(resObj[12]));
+                WildPokemon.Update(GameClient.ParseArray(resObj[12]));
                 WildPokemon.IsRare = _client.HasEncounteredRarePokemon;
-                if (WildPokemon.Ability.Id == 23 && _client?.Team[ActivePokemon].Type1 != PokemonType.Steel &&
-                    _client?.Team[ActivePokemon].Type2 != PokemonType.Steel &&
-                    _client?.Team[ActivePokemon].Ability.Id != 23)
-                {
-                    IsTrapped = true;
-                }
+                IsTrapped |= (WildPokemon.Ability.Id == 23 && _client?.Team[ActivePokemon].Type1 != PokemonType.Steel
+                    && _client?.Team[ActivePokemon].Type2 != PokemonType.Steel
+                    && _client?.Team[ActivePokemon].Ability.Id != 23);
 
-                if (WildPokemon.Ability.Id == 42 && _client?.Team[ActivePokemon].Type1 != PokemonType.Fire &&
-                    _client?.Team[ActivePokemon].Type2 != PokemonType.Fire &&
-                    _client?.Team[ActivePokemon].Ability.Id != 23 &&
-                    _client?.Team[ActivePokemon].Type1 != PokemonType.Steel &&
-                    _client?.Team[ActivePokemon].Type2 != PokemonType.Steel)
-                {
-                    IsTrapped = true;
-                }
+                IsTrapped |= (WildPokemon.Ability.Id == 42 && _client?.Team[ActivePokemon].Type1 != PokemonType.Fire
+                    && _client?.Team[ActivePokemon].Type2 != PokemonType.Fire
+                    && _client?.Team[ActivePokemon].Ability.Id != 23
+                    && _client?.Team[ActivePokemon].Type1 != PokemonType.Steel
+                    && _client?.Team[ActivePokemon].Type2 != PokemonType.Steel);
 
                 IsAlreadyCaught = _client.PokemonCaught[WildPokemon.Id - 1] == "true";
             }
 
             ProcessBattleMessage(resObj[10]);
         }
+
         private void ProcessBattleMessage(string str)
         {
-            if (str.ToLowerInvariant().Contains("can not run away") ||
-                str.ToLowerInvariant().Contains("can not switch"))
-                IsTrapped = true;
-            else
-                IsTrapped = false;
+            IsTrapped = str.IndexOf("can not run away", StringComparison.InvariantCultureIgnoreCase) >= 0
+                || str.IndexOf("can not switch", StringComparison.InvariantCultureIgnoreCase) >= 0 ? true : false;
         }
+
         public int ActivePokemon { get; private set; }
         public bool ActivePokemonError { get; }
         public string BattleType { get; } = "";

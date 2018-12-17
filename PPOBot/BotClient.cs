@@ -127,6 +127,13 @@ namespace PPOBot
                 return;
             }
 
+            if (Game.IsCreatingNewCharacter)
+            {
+                C_LogMessage("Creating a new character with a random skin...", Brushes.OrangeRed);
+                Game.CreateCharacter();
+                return;
+            }
+
             if (Running != State.Started)
             {
                 return;

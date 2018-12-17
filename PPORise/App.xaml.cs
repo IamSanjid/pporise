@@ -16,8 +16,8 @@ namespace PPORise
 
         public static void InitializeVersion()
         {
-            Assembly assembly = typeof(App).Assembly;
-            AssemblyName assemblyName = assembly.GetName();
+            var assembly = typeof(App).Assembly;
+            var assemblyName = assembly.GetName();
             Name = assemblyName.Name;
             Version = assemblyName.Version.ToString();
             Author = ((AssemblyCompanyAttribute)Attribute.GetCustomAttribute(assembly, typeof(AssemblyCompanyAttribute), false)).Company;

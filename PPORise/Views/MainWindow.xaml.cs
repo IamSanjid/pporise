@@ -330,8 +330,10 @@ namespace PPORise
         }
         private void LogMessage(string message, Brush color)
         {
-            var test = new TextRange(MessageTextBox.Document.ContentEnd, MessageTextBox.Document.ContentEnd);
-            test.Text = "[" + DateTime.Now.ToLongTimeString() + "] " + message + '\r';
+            var test = new TextRange(MessageTextBox.Document.ContentEnd, MessageTextBox.Document.ContentEnd)
+            {
+                Text = "[" + DateTime.Now.ToLongTimeString() + "] " + message + '\r'
+            };
 
             // Coloring there.
             test.ApplyPropertyValue(TextElement.ForegroundProperty, color);
@@ -679,9 +681,9 @@ namespace PPORise
                     if (obj != "")
                         LogMessage(FirstCharToUpper(obj), Brushes.Aqua);
                     var isMessageContainsUserPokemon = Bot.Game.Team.Count(p => obj.Contains(p.Name)) > 0;
-                    if (obj.ToLowerInvariant().Contains("has fainted") && !isMessageContainsUserPokemon)
+                    if (obj.IndexOf("has fainted", StringComparison.InvariantCultureIgnoreCase) >= 0 && !isMessageContainsUserPokemon)
                     {
-                        LogMessage("You have won the battle!", Brushes.Aqua); //Stupid Swf file of Pokemon Planet.
+                        LogMessage("You have won the battle!", Brushes.Aqua); //Stupid Pokemon Planet.
                     }
                 }
             });
