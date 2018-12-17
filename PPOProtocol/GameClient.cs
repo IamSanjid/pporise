@@ -2853,5 +2853,12 @@ namespace PPOProtocol
             GetTimeStamp("choosePokemon", name.ToLowerInvariant());
             return true;
         }
+		 public bool CreateCharacter()
+        {
+            if (Team.Count > 0)
+                return false;
+            GetTimeStamp("createCharacter");
+            return true;
+        }
     }
 }

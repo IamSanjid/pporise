@@ -317,6 +317,7 @@ namespace PPOBot.Scripting
 				_lua.Globals["forgetMove"] = new Func<string, bool>(ForgetMove);
 				_lua.Globals["forgetAnyMoveExcept"] = new Func<DynValue[], bool>(ForgetAnyMoveExcept);
                 //miscs
+				 _lua.Globals["createCharacter"] = new Func<bool>(CreateCharacter);	
                 _lua.Globals["getStarter"] = new Func<string, bool>(GetStarter);
 				_lua.Globals["getMiningLevel"] = new Func<int>(GetMiningLevel);
 				_lua.Globals["getMiningTotalExperience"] = new Func<int>(GetMiningTotalExperience);
@@ -350,6 +351,13 @@ namespace PPOBot.Scripting
             if (!ValidateAction("getStarter", false)) return false;
             return ExecuteAction(Bot.Game.ChoosePokemon(name));
         }
+		
+	 private bool CreateCharacter()
+        {
+            if (!ValidateAction("getStarter", false)) return false;
+            return ExecuteAction(Bot.Game.CreateCharacter());
+        }
+
 
         private bool OpenAllTreasures()
 		{
