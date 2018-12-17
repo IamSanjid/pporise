@@ -24,7 +24,7 @@ namespace PPOProtocol
     internal class CharacterCreation
     {
         private Random _rand;
-        public string Body => Gender.ToString() + BodyColor.ToString();
+        public string Body => BodyColor.ToString() + Gender.ToString() ;
         public Gender Gender => _rand.Next(0, 1) == 1 ? Gender.Female : Gender.Male;
         public readonly BodyColor BodyColor = BodyColor.Tan;
         public int HairColorR => _rand.Next(35, 135);
