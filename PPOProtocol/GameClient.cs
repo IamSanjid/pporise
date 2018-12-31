@@ -49,6 +49,7 @@ namespace PPOProtocol
         private readonly ProtocolTimeout _movementTimeout = new ProtocolTimeout();
         private readonly ProtocolTimeout _miningTimeout = new ProtocolTimeout();
         private readonly ProtocolTimeout _dialogTimeout = new ProtocolTimeout();
+        private readonly ProtocolTimeout _refreshPCTimeout = new ProtocolTimeout();
 
         private bool _updatedMap { get; set; } = false;
 
@@ -100,6 +101,7 @@ namespace PPOProtocol
             MiningObjects = new List<MiningObject>();
             EliteChests = new List<EliteChest>();
             Team = new List<Pokemon>();
+            PCPokemon = new Dictionary<int, List<Pokemon>>();
             WildPokemons = new List<WildPokemon>();
             TempMap = "";
             LoggedInToWebsite = false;
@@ -109,6 +111,7 @@ namespace PPOProtocol
         public int PlayerY { get; private set; }
         public List<InventoryItem> Items { get; private set; }
         public List<Pokemon> Team { get; set; }
+        public Dictionary<int, List<Pokemon>> PCPokemon { get; private set; } 
         public IList<WildPokemon> WildPokemons { get; }
         private int LastUpdateX { get; set; }
         private int LastUpdateY { get; set; }
@@ -135,6 +138,7 @@ namespace PPOProtocol
             && !_itemTimeout.IsActive
             && !_miningTimeout.IsActive
             && !_dialogTimeout.IsActive
+            && !_refreshPCTimeout.IsActive
             && !IsCreatingNewCharacter;
 
         public bool IsMapLoaded => _isMapLoaded();
@@ -142,7 +146,7 @@ namespace PPOProtocol
         public event Action Connected;
         public event Action<Exception> Disconnected;
         public event Action<string> LogMessage;
-        public event Action<string> ChatMessage;
+        public event Action<string, bool> ChatMessage;
         public event Action<string, int, int> TeleportationOccuring;
         public event Action PlayerDataUpdated;
         public event Action InventoryUpdated;
@@ -280,6 +284,9 @@ namespace PPOProtocol
                                         break;
                                     case "r17":
                                         ProcessChatMessage(obj);
+                                        break;
+                                    case "r59":
+                                        ProcessChatMessage(obj, true);
                                         break;
                                     case "r36":
                                         PrivateChat?.Invoke(data);
@@ -683,7 +690,7 @@ namespace PPOProtocol
             }
         }
 
-        private void ProcessChatMessage(string packet)
+        private void ProcessChatMessage(string packet, bool isClan = false)
         {
             //-----------------Stupid way to check chat messages xD------------------------//
 
@@ -754,7 +761,7 @@ namespace PPOProtocol
                 }
             }
             //-----------------Stupid way to check chat messages xD------------------------//
-            ChatMessage?.Invoke(packet);
+            ChatMessage?.Invoke(packet, isClan);
         }
         public void WaitWhileInBattle()
         {
@@ -827,6 +834,9 @@ namespace PPOProtocol
                                             UsedItemMsg(xml);
                                             break;
                                         case "choosePokemon":
+                                            UpdateTeamThroughXml(xml);
+                                            break;
+                                        case "reorderStoragePokemon":
                                             UpdateTeamThroughXml(xml);
                                             break;
                                     }
@@ -1480,15 +1490,18 @@ namespace PPOProtocol
 
             await Task.Run(() =>
             {
+                var pokes = new List<Pokemon>();
                 for (var loc7 = loopNum + 1; loc7 < 99999; ++loc7)
                 {
                     if (resObj[loc7] != ")()(09a0ja")
                     {
+                        pokes.Add(ParseOnePokemon(resObj[loc7]));
                         continue;
                     }
                     loopNum = loc7;
                     break;
                 }
+                PCPokemon[1] = pokes;
             }).ConfigureAwait(false);
             await Task.Run(() =>
             {
@@ -1540,6 +1553,12 @@ namespace PPOProtocol
             PokemonCaught = ParseStringArray(resObj[loopNum + 36]);
             Mining = new MiningExtentions(resObj[loopNum + 48], resObj[loopNum + 49], resObj[loopNum + 50]);
 
+            PCPokemon[2] = ParseMultiPokemonToList(resObj[loopNum + 25]);
+            PCPokemon[3] = ParseMultiPokemonToList(resObj[loopNum + 26]);
+            PCPokemon[4] = ParseMultiPokemonToList(resObj[loopNum + 27]);
+            PCPokemon[5] = ParseMultiPokemonToList(resObj[loopNum + 28]);
+            PCPokemon[6] = ParseMultiPokemonToList(resObj[loopNum + 29]);
+
             LoggedIn?.Invoke();
             _checkForLoggingTimeout?.Abort();
             _checkForLoggingTimeout = null;
@@ -1567,7 +1586,7 @@ namespace PPOProtocol
             {
                 // ReSharper disable once StringIndexOfIsCultureSpecific.1
                 // ReSharper disable once ConstantConditionalAccessQualifier
-                if (str.IndexOf("[") == 0 && str?.IndexOf("]") != -1)
+                if (str?.IndexOf("[") == 0 && str?.IndexOf("]") != -1)
                 {
                     str = str.Substring(2, str.Length - 4);
                     str = str.Replace("],[", "#");
@@ -1578,7 +1597,7 @@ namespace PPOProtocol
                     {
                         loc2[loc1] = "[" + loc2[loc1] + "]";
                         ParsePokemon(loc2[loc1]);
-                        loc1 = loc1 + 1;
+                        loc1++;
                     }
 
                     if (_swapTimeout.IsActive) _swapTimeout.Set(Rand.Next(500, 1000));
@@ -1591,6 +1610,37 @@ namespace PPOProtocol
                 Console.WriteLine("ParseMultiPokemon bracket error");
 #endif
             }
+        }
+
+        private List<Pokemon> ParseMultiPokemonToList(string str)
+        {
+            if (str != "[]" && str != "")
+            {
+                // ReSharper disable once StringIndexOfIsCultureSpecific.1
+                // ReSharper disable once ConstantConditionalAccessQualifier
+                if (str?.IndexOf("[") == 0 && str?.IndexOf("]") != -1)
+                {
+                    str = str.Substring(2, str.Length - 4);
+                    str = str.Replace("],[", "#");
+                    var loc2 = str.Split('#');
+                    var loc1 = 0;
+                    var pokes = new List<Pokemon>();
+                    while (loc1 < loc2.Length)
+                    {
+                        loc2[loc1] = "[" + loc2[loc1] + "]";
+                        pokes.Add(ParseOnePokemon(loc2[loc1]));
+                        loc1++;
+                    }
+
+#if DEBUG
+                    return pokes;
+#endif
+                }
+#if DEBUG
+                Console.WriteLine("ParseMultiPokemon bracket error");
+#endif
+            }
+            return new List<Pokemon>();
         }
 
         public bool LoadMap(bool switchingMap, string tempMap, int x = int.MinValue, int y = int.MinValue,
@@ -2274,6 +2324,19 @@ namespace PPOProtocol
                 loc8.Add($"pokemon:{p1}");
                 _connection.SendXtMessage("PokemonPlanetExt", "b7", loc8, "xml");
             }
+            else if (type == "reorderStoragePokemon")
+            {
+                var loc8 = new ArrayList();
+                var packetKey = Connection.GenerateRandomString(Rand.Next(5, 20));
+                loc8.Add(
+                    $"pke:{Connection.CalcMd5(packetKey + kg2 + GetTimer())}");
+                loc8.Add($"pk:{packetKey}");
+                loc8.Add($"te:{GetTimer()}");
+                loc8.Add($"t:{p3}");
+                loc8.Add($"num2:{p2}");
+                loc8.Add($"num1:{p1}");
+                _connection.SendXtMessage("PokemonPlanetExt", "b6", loc8, "xml");
+            }
         }
         private const int _shinyDifference = 721;
         public bool StopFishing()
@@ -2780,6 +2843,7 @@ namespace PPOProtocol
             _miningTimeout?.Update();
             _fishingTimeout?.Update();
             _dialogTimeout?.Update();
+            _refreshPCTimeout?.Update();
 
             UpdateMovement();
         }
@@ -2837,6 +2901,27 @@ namespace PPOProtocol
             if (Team.Count > 0)
                 return false;
             GetTimeStamp("choosePokemon", name.ToLowerInvariant());
+            return true;
+        }
+
+        public bool WithdrawPokemonFromPC(int box, int boxId)
+        {
+            if (PCPokemon[box].Count <= 0 || boxId < 1 || boxId > PCPokemon.Count)
+                return false;
+            PCPokemon[box].RemoveAt(boxId - 1);
+            GetTimeStamp("reorderStoragePokemon", "-1", boxId.ToString(), box.ToString());
+            _refreshPCTimeout?.Set();
+            return true;
+        }
+
+        public bool DepositePokemonToPC(int box, int index)
+        {
+            if (index < 1 || index > Team.Count)
+                return false;
+            if (Team[index - 1] != null)
+                PCPokemon[box].Add(Team[index - 1]);
+            GetTimeStamp("reorderStoragePokemon", (index - 1).ToString(), "0", box.ToString());
+            _refreshPCTimeout.Set();
             return true;
         }
     }

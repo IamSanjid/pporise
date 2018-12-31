@@ -83,8 +83,10 @@ namespace PPORise.Views
                 Foreground = (Brush) bc.ConvertFrom("#FF99AAB5")
             };
             var richTextBox = (_commandsTab.Content as ChatPanel)?.ChatBox;
-            var test = new TextRange(richTextBox?.Document.ContentEnd, richTextBox?.Document.ContentEnd);
-            test.Text = "Type \"/commands\" to know about commands.\n> ";
+            var test = new TextRange(richTextBox?.Document.ContentEnd, richTextBox?.Document.ContentEnd)
+            {
+                Text = "Type \"/commands\" to know about commands.\n> "
+            };
             test.ApplyPropertyValue(ForegroundProperty, Brushes.Aqua);
             TabControl.Items.Add(_commandsTab);
 
@@ -127,7 +129,7 @@ namespace PPORise.Views
 
                 if (_bot.Game != null && _bot.Game.IsMapLoaded)
                 {
-                    if (InputChatBox != null && InputChatBox.Text.StartsWith("@"))
+                    if (InputChatBox != null && InputChatBox.Text.StartsWith("@", StringComparison.Ordinal))
                     {
                         SendPrivateMessage(InputChatBox.Text);
                         InputChatBox?.Clear();
@@ -259,7 +261,7 @@ namespace PPORise.Views
             else if (matches.Count > 0)
                 colorCode = matches[0].Value;
 
-            if (!string.IsNullOrEmpty(colorCode) && !colorCode.StartsWith("#"))
+            if (!string.IsNullOrEmpty(colorCode) && !colorCode.StartsWith("#", StringComparison.Ordinal))
                 colorCode = "#" + colorCode;
             rmsg = Regex.Replace(rmsg, @"\<(.*?)\>", "");
             if (msgObj.Contains("<font color='#00FF00'>"))
@@ -314,7 +316,7 @@ namespace PPORise.Views
                 }
             }
         }
-        public void ChatMessage_Receieved(string msgObj)
+        public void ChatMessage_Receieved(string msgObj, bool isClan)
         {
             var data = msgObj.Split('`');
 
@@ -345,8 +347,13 @@ namespace PPORise.Views
 
                 msg = msg.Replace(fromMap, "").Replace("<", "").Replace(">", "");
             }
+
+            if (isClan)
+                type = "<cl>";
+
             UpdateChatMessage(type, userName, msg, fromMap);
         }
+
         private void UpdateChatMessage(string type, string tempUsername, string msg, string fromMap)
         {
             Dispatcher.InvokeAsync(delegate
@@ -411,8 +418,10 @@ namespace PPORise.Views
 
             if (Equals(richTextBox, ((ChatPanel) _commandsTab.Content).ChatBox))
             {
-                var test2 = new TextRange(richTextBox.Document.ContentEnd, richTextBox.Document.ContentEnd);
-                test2.Text = "> ";
+                var test2 = new TextRange(richTextBox.Document.ContentEnd, richTextBox.Document.ContentEnd)
+                {
+                    Text = "> "
+                };
                 test2.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.Aqua);
                 if (richTextBox.Selection.IsEmpty)
                 {
@@ -444,7 +453,43 @@ namespace PPORise.Views
                                 "/openShop\t--Opens the Pokemart shop.\n/buyItem ItemName,amount\t--Buys the specified item from the opened shop.\n/pokemon\t--Prints out the Pokemon names that can be found in your current map." +
                                 "\n/countColoredRocks rock_color\t--Counts all rocks which color is specific.\n/findClosestRock\t--Finds the closests rock and prints out the cell.\n/moveLeft\t--Moves the player left.\n/moveRight\t--Moves the player right." +
                                 "\n/moveDown\t--Moves the player down.\n/moveUp\t--Moves the player up.\n/version\t--Prints out the version of the current bot.\n/moveToCell X,Y\t--Moves the player to specific coordinate\n/getHM 1-5\t--Get specific HM without moving the player." +
-                                "\n/useBike\t--Will use bike while moving.\n/buyEliteTokens amount\t--Buys elite tokens.\n/getStarter starter_name\t--Gets a starter.");
+                                "\n/useBike\t--Will use bike while moving.\n/buyEliteTokens amount\t--Buys elite tokens.\n/getStarter starter_name\t--Gets a starter.\n/withdrawPokemonFromPC box_index,pokemonBox_index\t--Withdraws a pokemon from the PC.\n/depositePokemonToPC box_index,team_index\t--Deposites a pokemon to PC");
+                            break;
+                        case "withdrawpokemonfrompc":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        if (!command.Contains(","))
+                                            return;
+                                        var checkbox = int.TryParse(command.Split(',')[0], out var box);
+                                        var check = int.TryParse(command.Split(',')[1], out var index);
+                                        if (check && checkbox)
+                                            _bot.Game.WithdrawPokemonFromPC(box, index);
+                                    }
+                                }
+                            }
+                            break;
+                        case "depositepokemontopc":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        if (!command.Contains(","))
+                                            return;
+                                        var checkbox = int.TryParse(command.Split(',')[0], out var box);
+                                        var check = int.TryParse(command.Split(',')[1], out var index);
+                                        if (check && checkbox)
+                                            _bot.Game.DepositePokemonToPC(box, index);
+                                    }
+                                }
+                            }
                             break;
                         case "getstarter":
                             lock (_bot)

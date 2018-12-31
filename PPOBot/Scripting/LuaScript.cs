@@ -330,9 +330,29 @@ namespace PPOBot.Scripting
 				_lua.Globals["startScript"] = new Func<bool>(StartScript);
 				_lua.Globals["invoke"] = new Action<DynValue, float, DynValue[]>(Invoke);
 				_lua.Globals["cancelInvokes"] = new Action(CancelInvokes);
+                //pc
+                _lua.Globals["withdrawPokemonFromPC"] = new Func<int, int, bool>(WithdrawPokemonFromPC);
+                _lua.Globals["depositePokemonToPC"] = new Func<int, int, bool>(DepositePokemonToPC);
 
-				// ReSharper disable once InvertIf
-				if (_libsContent.Count > 0)
+                _lua.Globals["getPCBoxCount"] = new Func<int>(GetPCBoxCount);
+                _lua.Globals["getPCPokemonCount"] = new Func<int, int>(GetPCPokemonCount);
+                _lua.Globals["getLastBoxIndexWithPokemon"] = new Func<int>(GetLastBoxIndexWithPokemon);
+                _lua.Globals["getFirstBoxIndexWithPokemon"] = new Func<int>(GetFirstBoxIndexWithPokemon);
+
+                _lua.Globals["getPokemonHealthFromPC"] = new Func<int, int, int>(GetPokemonHealthFromPC);
+                _lua.Globals["getPokemonStatusFromPC"] = new Func<int, int, string>(GetPokemonStatusFromPC);
+                _lua.Globals["getPokemonLevelFromPC"] = new Func<int, int, int>(GetPokemonLevelFromPC);
+                _lua.Globals["getPokemonNameFromPC"] = new Func<int, int, string>(GetPokemonNameFromPC);
+                _lua.Globals["getPokemonHeldItemFromPC"] = new Func<int, int, string>(GetPokemonHeldItemFromPC);
+                _lua.Globals["isPokemonFromPCShiny"] = new Func<int, int, bool>(IsPokemonFromPCShiny);
+                _lua.Globals["getPokemonIVFromPC"] = new Func<int, int, string, int>(GetPokemonIndividualValueFromPC);
+                _lua.Globals["getPokemonEVFromPC"] = new Func<int, int, string, int>(GetPokemonEffortValueFromPC);
+                _lua.Globals["getPokemonHealthPercentFromPC"] = new Func<int, int, int>(GetPokemonHealthPercentFromPC);
+                _lua.Globals["getPokemonMaxHealthFromPC"] = new Func<int, int, int>(GetPokemonMaxHealthFromPC);
+                _lua.Globals["getPokemonAbilityFromPC"] = new Func<int, int, string>(GetPokemonAbilityFromPC);
+
+                // ReSharper disable once InvertIf
+                if (_libsContent.Count > 0)
 				{
 					foreach (var content in _libsContent)
 					{
@@ -958,8 +978,8 @@ namespace PPOBot.Scripting
 				movesInvariantNames.Add(value.CastToString().ToUpperInvariant());
 			}
 
-			Pokemon pokemon = Bot.Game.Team[Bot.MoveTeacher.PokemonUid];
-			PokemonMove move = pokemon.Moves.FirstOrDefault(m => !movesInvariantNames.Contains(m?.Name.ToUpperInvariant()));
+			var pokemon = Bot.Game.Team[Bot.MoveTeacher.PokemonUid];
+			var move = pokemon.Moves.FirstOrDefault(m => !movesInvariantNames.Contains(m?.Name.ToUpperInvariant()));
 
 			if (move != null)
 			{
@@ -1074,7 +1094,7 @@ namespace PPOBot.Scripting
 				return -1;
 			}
 
-			PokemonStats stats = EffortValuesManager.Instance.BattleValues[Bot.Game.ActiveBattle.WildPokemon.Id];
+			var stats = EffortValuesManager.Instance.BattleValues[Bot.Game.ActiveBattle.WildPokemon.Id];
 			return stats.GetStat(_stats[statType.ToUpperInvariant()]);
 		}
 		private bool IsOpponentEffortValue(string statType)
@@ -1095,7 +1115,7 @@ namespace PPOBot.Scripting
 				return false;
 			}
 
-			PokemonStats stats = EffortValuesManager.Instance.BattleValues[Bot.Game.ActiveBattle.WildPokemon.Id];
+			var stats = EffortValuesManager.Instance.BattleValues[Bot.Game.ActiveBattle.WildPokemon.Id];
 			return stats.HasOnly(_stats[statType.ToUpperInvariant()]);
 		}
 		private bool IsPokemonShiny(int index)
@@ -1105,7 +1125,7 @@ namespace PPOBot.Scripting
 				Fatal("error: isPokemonShiny: tried to retrieve the non-existing pokemon " + index + ".");
 				return false;
 			}
-			Pokemon pokemon = Bot.Game.Team[index - 1];
+			var pokemon = Bot.Game.Team[index - 1];
 			return pokemon.IsShiny;
 		}
 		private bool IsPokemonUsable(int index)
@@ -1296,7 +1316,7 @@ namespace PPOBot.Scripting
 			Bot.Stop();
 			Bot.Game.Logout();
 		}
-		// API: Teleports to a map. 
+		// API: Teleports to a map.
 		private bool TeleportTo(params DynValue[] values)
 		{
 			if (values.Length != 2 && values.Length != 3 ||
@@ -1431,7 +1451,7 @@ namespace PPOBot.Scripting
 				return false;
 			}
 
-			var colors = values.Select(s => s.String).ToArray();			
+			var colors = values.Select(s => s.String).ToArray();
 			return ExecuteAction(Bot.MiningAI.MineMultipleColoredRocks(axe.String, colors, waitForRocks));
 		}
 
@@ -1491,7 +1511,7 @@ namespace PPOBot.Scripting
 		// API: Returns true if the string contains the specified part, ignoring the case.
 		private bool StringContains(string haystack, string needle)
 		{
-			return haystack.ToUpperInvariant().Contains(needle.ToUpperInvariant());
+			return haystack.IndexOf(needle, StringComparison.InvariantCultureIgnoreCase) >= 0;
 		}
 		private void Login(string accountName, string password, int socks = 0, string host = "", int port = 0, string socksUser = "", string socksPass = "")
 		{
@@ -1502,7 +1522,7 @@ namespace PPOBot.Scripting
 			}
 
 			LogMessage("Connecting to the server...");
-			Account account = new Account(accountName);
+			var account = new Account(accountName);
 			account.Password = password;
 
 			if (socks == 4 || socks == 5)
@@ -1550,16 +1570,16 @@ namespace PPOBot.Scripting
 		public override void Relog(float seconds, string message, bool autoReconnect)
 		{
 
-			DynValue name = DynValue.NewString(Bot.Account.Name);
-			DynValue password = DynValue.NewString(Bot.Account.Password);
+			var name = DynValue.NewString(Bot.Account.Name);
+            var password = DynValue.NewString(Bot.Account.Password);
 
 			if (Bot.Account.Socks.Version != SocksVersion.None)
 			{
-				DynValue socks = DynValue.NewNumber((int)Bot.Account.Socks.Version);
-				DynValue host = DynValue.NewString(Bot.Account.Socks.Host);
-				DynValue port = DynValue.NewNumber(Bot.Account.Socks.Port);
-				DynValue socksUser = DynValue.NewString(Bot.Account.Socks.Username);
-				DynValue socksPass = DynValue.NewString(Bot.Account.Socks.Password);
+                var socks = DynValue.NewNumber((int)Bot.Account.Socks.Version);
+                var host = DynValue.NewString(Bot.Account.Socks.Host);
+                var port = DynValue.NewNumber(Bot.Account.Socks.Port);
+                var socksUser = DynValue.NewString(Bot.Account.Socks.Username);
+                var socksPass = DynValue.NewString(Bot.Account.Socks.Password);
 				Invoke(_lua.Globals.Get("login"), seconds, name, password, socks, host, port, socksUser, socksPass);
 			}
 			else
@@ -1620,7 +1640,7 @@ namespace PPOBot.Scripting
 				return;
 			}
 
-			Invoker invoker = new Invoker()
+			var invoker = new Invoker()
 			{
 				Function = function,
 				Time = DateTime.UtcNow.AddSeconds(seconds),
@@ -1628,7 +1648,7 @@ namespace PPOBot.Scripting
 				Args = args
 			};
 
-			Invokes.Add(invoker);
+            Invokes.Add(invoker);
 		}
 		// API for Relog API
 		private void LogoutApi(string message, bool allowAutoReconnector)
@@ -1642,7 +1662,120 @@ namespace PPOBot.Scripting
 		{
 			Bot.CancelInvokes();
 		}
-	}
+
+        private int GetPCBoxCount() => Bot.Game.PCPokemon.Count;
+
+        // API: Return the number of pokemon in the PC
+        private int GetPCPokemonCount(int box)
+        {
+            return Bot.Game.PCPokemon[box].Count;
+        }
+
+        private string GetPokemonAbilityFromPC(int box, int boxId)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return null;
+            return Bot.Game.PCPokemon[box][boxId - 1].Ability.Name;
+        }
+
+        private int GetPokemonMaxHealthFromPC(int box, int boxId)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return -1;
+            return Bot.Game.PCPokemon[box][boxId - 1].MaxHealth;
+        }
+
+        private int GetPokemonHealthPercentFromPC(int box, int boxId)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return -1;
+            return Bot.Game.PCPokemon[box][boxId - 1].CurrentHealth * 100 / Bot.Game.PCPokemon[box][boxId - 1].MaxHealth;
+        }
+
+        private int GetPokemonEffortValueFromPC(int box, int boxId, string statType)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return -1;
+            if (!_stats.ContainsKey(statType.ToUpperInvariant()))
+            {
+                Fatal("error: getPokemonEVFromPC: the stat '" + statType + "' does not exist.");
+                return 0;
+            }
+            return Bot.Game.PCPokemon[box][boxId - 1].EV.GetStat(_stats[statType.ToUpperInvariant()]);
+        }
+
+        private int GetPokemonIndividualValueFromPC(int box, int boxId, string statType)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return -1;
+            if (!_stats.ContainsKey(statType.ToUpperInvariant()))
+            {
+                Fatal("error: getPokemonIVFromPC: the stat '" + statType + "' does not exist.");
+                return 0;
+            }
+            return Bot.Game.PCPokemon[box][boxId - 1].IV.GetStat(_stats[statType.ToUpperInvariant()]);
+        }
+
+        private bool IsPokemonFromPCShiny(int box, int boxId)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return false;
+            return Bot.Game.PCPokemon[box][boxId - 1].IsShiny;
+        }
+
+        private string GetPokemonHeldItemFromPC(int box, int boxId)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return null;
+            return Bot.Game.PCPokemon[box][boxId - 1].ItemHeld;
+        }
+
+        private string GetPokemonNameFromPC(int box, int boxId)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return null;
+            return Bot.Game.PCPokemon[box][boxId - 1].Name;
+        }
+
+        private int GetPokemonLevelFromPC(int box, int boxId)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return -1;
+            return Bot.Game.PCPokemon[box][boxId - 1].Level;
+        }
+
+        private string GetPokemonStatusFromPC(int box, int boxId)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return null;
+            return Bot.Game.PCPokemon[box][boxId - 1].Status;
+        }
+
+        private int GetPokemonHealthFromPC(int box, int boxId)
+        {
+            if (Bot.Game.PCPokemon.Count <= 0)
+                return -1;
+            return Bot.Game.PCPokemon[box][boxId - 1].CurrentHealth;
+        }
+
+        private int GetLastBoxIndexWithPokemon() => Bot.Game.PCPokemon.LastOrDefault(p => p.Value.Count > 0).Key;
+
+        private int GetFirstBoxIndexWithPokemon() => Bot.Game.PCPokemon.FirstOrDefault(p => p.Value.Count > 0).Key;
+
+        private bool WithdrawPokemonFromPC(int box, int index)
+        {
+            if (!ValidateAction("withdrawPokemonFromPC", false))
+                return false;
+            return ExecuteAction(Bot.Game.WithdrawPokemonFromPC(box, index));
+        }
+
+        private bool DepositePokemonToPC(int box, int index)
+        {
+            if (!ValidateAction("depositePokemonToPC", false))
+                return false;
+            return ExecuteAction(Bot.Game.DepositePokemonToPC(box, index));
+        }
+    }
 	public class Invoker
 	{
 		public DynValue Function;
