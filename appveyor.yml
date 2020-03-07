@@ -27,4 +27,4 @@ after_build:
     echo Discord Link: https://discord.gg/akxSZ9X >> pporise/bin/Release/ReadMe.txt
 artifacts:
 - path: pporise\bin\Release
-  name: "PPORise-{version}"
+  name: "PPORise-Release"
