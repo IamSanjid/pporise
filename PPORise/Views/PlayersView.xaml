@@ -1,10 +1,9 @@
-﻿<UserControl x:Class="PPORise.BattleStatView"
+﻿<UserControl x:Class="PPORise.PlayersView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PPORise"
-             xmlns:fa="http://schemas.fontawesome.io/icons/"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
@@ -169,45 +168,45 @@
     </UserControl.Resources>
     <Grid Background="#FF1F2225">
         <Border BorderThickness="1,0,1,1" BorderBrush="#FF1F2225" Background="#FF1F2225">
-            <ListView SourceUpdated="ListViewTargetUpdated" TargetUpdated="ListViewTargetUpdated" Name="EnemiesListView" BorderThickness="0" FontSize="13.333" Background="#FF1F2225" Foreground="#99aab5"
-                        AllowDrop="True" PreviewMouseDown="EnemiesListView_OnPreviewMouseDown"
+            <ListView Name="PlayerListView" BorderThickness="0" FontSize="13.333" Background="#FFDFE4EE" Foreground="#99aab5" PreviewMouseDown="PlayerListView_PreviewMouseDown"
+                        AllowDrop="True"
                         Width="Auto"
                         Height="Auto">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn DisplayMemberBinding="{Binding Id}" Width="Auto">
+                        <GridViewColumn DisplayMemberBinding="{Binding Distance}" Width="auto">
                             <GridViewColumn.Header>
-                                <GridViewColumnHeader Content="Id" />
+                                <GridViewColumnHeader Content="Distance" Click="GridViewHeader_Click"/>
                             </GridViewColumn.Header>
                         </GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding Name}">
+                        <GridViewColumn DisplayMemberBinding="{Binding Name}" Width="auto">
                             <GridViewColumn.Header>
-                                <GridViewColumnHeader Content="Name" Click="ItemHeader_OnClick"/>
+                                <GridViewColumnHeader Content="Name" Click="GridViewHeader_Click"/>
                             </GridViewColumn.Header>
                         </GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding Level}" Width="Auto">
+                        <GridViewColumn DisplayMemberBinding="{Binding Position}" Width="auto">
                             <GridViewColumn.Header>
-                                <GridViewColumnHeader Content="Level" Click="ItemHeader_OnClick" />
+                                <GridViewColumnHeader Content="Position" Click="GridViewHeader_Click"/>
                             </GridViewColumn.Header>
                         </GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding Status}" Width="Auto">
+                        <!--<GridViewColumn DisplayMemberBinding="{Binding Status}">
                             <GridViewColumn.Header>
-                                <GridViewColumnHeader Content="Status" Click="ItemHeader_OnClick"/>
+                                <GridViewColumnHeader Click="GridViewHeader_Click">Status</GridViewColumnHeader>
+                            </GridViewColumn.Header>
+                        </GridViewColumn>-->
+                        <GridViewColumn DisplayMemberBinding="{Binding Follower}" Width="auto">
+                            <GridViewColumn.Header>
+                                <GridViewColumnHeader Content="Follower" Click="GridViewHeader_Click"/>
                             </GridViewColumn.Header>
                         </GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding IsShiny}" Width="Auto">
+                        <!--<GridViewColumn DisplayMemberBinding="{Binding Guild}">
                             <GridViewColumn.Header>
-                                <GridViewColumnHeader Content="Is Shiny" Click="ItemHeader_OnClick"/>
+                                <GridViewColumnHeader Click="GridViewHeader_Click">Guild ID</GridViewColumnHeader>
                             </GridViewColumn.Header>
-                        </GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding IsElite}" Width="Auto">
+                        </GridViewColumn>-->
+                        <GridViewColumn DisplayMemberBinding="{Binding LastSeen}" Width="auto">
                             <GridViewColumn.Header>
-                                <GridViewColumnHeader Content="Is Elite" Click="ItemHeader_OnClick"/>
-                            </GridViewColumn.Header>
-                        </GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding Health}" Width="Auto">
-                            <GridViewColumn.Header>
-                                <GridViewColumnHeader Content="HP" Click="ItemHeader_OnClick"/>
+                                <GridViewColumnHeader Content="Last Seen" Click="GridViewHeader_Click"/>
                             </GridViewColumn.Header>
                         </GridViewColumn>
                     </GridView>

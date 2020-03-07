@@ -10,32 +10,14 @@ namespace PPOProtocol
 {
     public class InventoryItem
     {
-        public string Name { get; }
-        public int Quntity { get; set; } = -1;
-        public string Scope { get; }
+        public string Name { get; set; }
+        public int Quantity { get; set; } = -1;
         public int Uid { get; set; }
-        public InventoryItem(string name, int qu = 1, string scope = "")
+        public InventoryItem(string name, int qu = 1, int uid = -1)
         {
             Name = name;
-            Quntity = qu;
-            Scope = scope;
-        }
-        public InventoryItem(XElement sXElement)
-        {
-            Uid = Convert.ToInt32(sXElement.Attribute("o")?.Value);
-            XmlDocument xml = new XmlDocument();
-            xml.LoadXml(sXElement.ToString());
-            var node = xml.GetElementsByTagName("var");
-            foreach (XmlElement el in node)
-                switch (el.GetAttribute("n"))
-                {
-                    case "0":
-                        Name = el.InnerText;
-                        break;
-                    case "1":
-                        Quntity = Convert.ToInt32(el.InnerText);
-                        break;
-                }
+            Quantity = qu;
+            Uid = uid;
         }
 
         public bool IsEquipAble(string pokeName = "")
@@ -90,14 +72,23 @@ namespace PPOProtocol
                 case "Thick Club" when pokeName == "Cubone" || pokeName == "Marowak":
                 case "Quick Powder" when pokeName == "Ditto":
                 case "Metal Powder" when pokeName == "Ditto":
-                    return true;
                 case "Deep Sea Scale" when pokeName == "Clamperl":
-                    return true;
                 case "Deep Sea Tooth" when pokeName == "Clamperl":
                     return true;
             }
             //----------------I promise I am not mad or stupid, Pokemon Planet checks like above lol-----------------//
             return false;
+        }
+
+        public bool IsUsableInBattle()
+        {
+            return Name.Contains("Ball") || Name.Contains("Potion") || Name == "Halloween Candy" || Name == "Soda Pop" || Name == "Lemonade";
+        }
+
+        public bool IsNormallyUsable()
+        {
+            return !IsUsableInBattle() && !IsEquipAble() || Name.Contains("Potion") || Name.Contains("Candy")
+                || Name == "Halloween Candy" || Name == "Soda Pop" || Name == "Lemonade";
         }
     }
 }

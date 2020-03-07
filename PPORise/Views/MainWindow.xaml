@@ -356,7 +356,7 @@
             </TextBlock>
             <TextBlock Name="PlayerPositionText" Text="(?,?)" Margin="2,2,2,2" VerticalAlignment="Center" Foreground="#99aab5"/>
             <TextBlock Name="MoneyIcon" Foreground="#FF101020" FontSize="15" Margin="8,4,2,2" VerticalAlignment="Center">
-                     <iconPacks:PackIconMaterial Kind="CurrencyBtc" VerticalAlignment="Center"
+                     <iconPacks:PackIconMaterial Kind="CurrencyUsd" VerticalAlignment="Center"
                                                 HorizontalAlignment="Center" Foreground="#99aab5">
                          <iconPacks:PackIconMaterial.ToolTip>
                              <ToolTip Background="#2c2f33">
@@ -390,25 +390,12 @@
                 </TextBlock.ToolTip>
                     </TextBlock>
         </DockPanel>
-        <Grid Name="GridMenu" Grid.Column="0" VerticalAlignment="Stretch" Background="#2c2f33" Grid.RowSpan="4" HorizontalAlignment="Left" Width="180">
+        <Grid Name="GridMenu" Grid.Column="0" VerticalAlignment="Stretch" Background="#2c2f33" Grid.RowSpan="4" HorizontalAlignment="Left" Width="190">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <Image Source="/PPORise;component/HeaderMask.png" HorizontalAlignment="Left" VerticalAlignment="Top" Width="232" RenderTransformOrigin="0.5,0.5" Margin="-31,-35,-21,0" Grid.RowSpan="3">
-                <Image.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform/>
-                        <SkewTransform/>
-                        <RotateTransform Angle="12.564"/>
-                        <TranslateTransform/>
-                    </TransformGroup>
-                </Image.RenderTransform>
-                <Image.OpacityMask>
-                    <ImageBrush ImageSource="/PPORise;component/HeaderMask.png"/>
-                </Image.OpacityMask>
-            </Image>
             <Grid Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="35" Margin="0 1 0 0">
                 <Button FontWeight="Regular" FontSize="13.333" Visibility="Collapsed" Click="ButtonOpenMenu_OnClick" x:Name="ButtonOpenMenu" Height="30" Width="50" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}">
                     <Button.Content>
@@ -499,7 +486,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <iconPacks:PackIconMaterial Kind="Pokeball" Foreground="#99aab5" FontSize="35"
                                                     Height="20" Width="38" VerticalAlignment="Center"/>
-                        <TextBlock Text="Team" VerticalAlignment="Center" TextAlignment="Center"
+                        <TextBlock Text="Team" VerticalAlignment="Center" Margin="8 0 0 0" TextAlignment="Center"
                                    Foreground="#99aab5" FontSize="17"/>
                     </StackPanel>
                 </ListViewItem>
@@ -507,7 +494,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <iconPacks:PackIconMaterial Kind="Wechat" Foreground="#99aab5" FontSize="35"
                                                     Height="20" Width="38" VerticalAlignment="Center"/>
-                        <TextBlock Text="Chat/Commands" VerticalAlignment="Center" TextAlignment="Center"
+                        <TextBlock Text="Chat/Commands" VerticalAlignment="Center" Margin="8 0 0 0" TextAlignment="Center"
                                    Foreground="#99aab5" FontSize="17"/>
                     </StackPanel>
                 </ListViewItem>
@@ -515,7 +502,15 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <fa:FontAwesome Icon="Suitcase" Foreground="#99aab5" FontSize="20.333"
                                                     Height="20" Width="38" VerticalAlignment="Center"/>
-                        <TextBlock Text="Inventory" VerticalAlignment="Center" TextAlignment="Center"
+                        <TextBlock Text="Inventory" VerticalAlignment="Center" Margin="8 0 0 0" TextAlignment="Center"
+                                   Foreground="#99aab5" FontSize="17"/>
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem Height="60" Name="PlayersTab">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <iconPacks:PackIconMaterial Kind="AccountGroup" Foreground="#99aab5" FontSize="35"
+                                                    Height="20" Width="38" VerticalAlignment="Center"/>
+                        <TextBlock Text="Players" VerticalAlignment="Center" Margin="8 0 0 0" TextAlignment="Center"
                                    Foreground="#99aab5" FontSize="17"/>
                     </StackPanel>
                 </ListViewItem>
@@ -523,7 +518,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <iconPacks:PackIconMaterial Kind="Paw" Foreground="#99aab5" FontSize="35"
                                                     Height="20" Width="38" VerticalAlignment="Center"/>
-                        <TextBlock Text="Opponents" VerticalAlignment="Center" TextAlignment="Center"
+                        <TextBlock Text="Opponents" VerticalAlignment="Center" Margin="8 0 0 0" TextAlignment="Center"
                                    Foreground="#99aab5" FontSize="17"/>
                     </StackPanel>
                 </ListViewItem>
@@ -534,6 +529,7 @@
             <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="ChatCommandsContent"/>
             <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="InventoryContent"/>
             <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="BattleStatsContent"/>
+            <ContentControl MouseDown="PPORiseWindow_MouseDown" Name="PlayersContent"/>
         </Grid>
         <Grid Grid.Row="3" Grid.Column="1">
             <RichTextBox Grid.Column="1" Name="MessageTextBox"

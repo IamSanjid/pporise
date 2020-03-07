@@ -17,11 +17,12 @@ namespace PPORise
         private readonly BotClient _bot;
         private Point _startPoint;
         private Pokemon _selectedPokemon;
-        public MainWindow MainWindow { get; set; }
-        public TeamView(BotClient bot)
+        public MainWindow MainWindow { get; }
+        public TeamView(BotClient bot, MainWindow mWin)
         {
             InitializeComponent();
             _bot = bot;
+            MainWindow = mWin;
         }
 
         private void List_MouseMove(object sender, MouseEventArgs e)

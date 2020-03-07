@@ -27,7 +27,7 @@ namespace PPOBot.Modules
         }
 
         private readonly BotClient _bot;
-        public bool Reconnecting;
+        public bool _reconnecting;
         private DateTime _autoReconnectTimeout;
 
         public AutoReconnector(BotClient bot)
@@ -39,14 +39,15 @@ namespace PPOBot.Modules
         private void Bot_ClientChanged()
         {
             if (_bot.Game is null) return;
-            _bot.Game.Disconnected += Client_ConnectionClosed;
-            _bot.Game.LoggingError += Client_ConnectionClosed;
-            _bot.Game.Connected += Client_LoggedIn;
+            _bot.Game.ConnectionClosed += Client_ConnectionClosed;
+            _bot.Game.ConnectionFailed += Client_ConnectionClosed;
+            _bot.Game.LoggedIn += Client_LoggedIn;
+            _bot.Game.AuthenticationFailed += Client_AuthenticationFailed;
         }
 
         public void Update()
         {
-            if (IsEnabled != true || !Reconnecting || (_bot.Game != null && _bot.Game.IsConnected))
+            if (IsEnabled != true || !_reconnecting || (_bot.Game != null && _bot.Game.IsConnected))
             {
                 return;
             }
@@ -64,7 +65,7 @@ namespace PPOBot.Modules
         private void Client_ConnectionClosed(Exception ex)
         {
             if (!IsEnabled) return;
-            Reconnecting = true;
+            _reconnecting = true;
             var seconds = _bot.Rand.Next(MinDelay, MaxDelay + 1);
             _autoReconnectTimeout = DateTime.UtcNow.AddSeconds(seconds);
             _bot.PrintLogMessage("Reconnecting in " + seconds + " seconds.");
@@ -72,9 +73,15 @@ namespace PPOBot.Modules
 
         private void Client_LoggedIn()
         {
-            if (!Reconnecting) return;
+            if (!_reconnecting) return;
             _bot.Start();
-            Reconnecting = false;
+            _reconnecting = false;
+        }
+
+        private void Client_AuthenticationFailed()
+        {
+            IsEnabled = false;
+            _reconnecting = false;
         }
     }
 }

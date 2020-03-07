@@ -34,11 +34,10 @@ namespace PPOBot.Scripting
 			_content = content;
 			_libsContent = libsContent;
 		}
-		//Asynchronous
-		public override async Task Initialize()
+
+		public override void Initialize()
 		{
-			//Asynchronous
-			await CreateLuaInstance();
+			CreateLuaInstance();
 			Name = _lua.Globals.Get("name").CastToString();
 			Author = _lua.Globals.Get("author").CastToString();
 			Description = _lua.Globals.Get("description").CastToString();
@@ -46,35 +45,22 @@ namespace PPOBot.Scripting
 
 		public override void Start()
 		{
-			//CallFunctionSafe("onStart");
-			DynValue function = _lua.Globals.Get("onStart");
-			if (function.Type == DataType.Function && function.Type != DataType.Nil)
-				_lua.Call(function);
-
+			CallFunctionSafe("onStart");
 		}
 
 		public override void Stop()
 		{
-			//CallFunctionSafe("onStop");
-			DynValue function = _lua.Globals.Get("onStop");
-			if (function.Type == DataType.Function && function.Type != DataType.Nil)
-				_lua.Call(function);
+			CallFunctionSafe("onStop");
 		}
 
 		public override void Pause()
 		{
-			//CallFunctionSafe("onPause");
-			DynValue function = _lua.Globals.Get("onPause");
-			if (function.Type == DataType.Function && function.Type != DataType.Nil)
-				_lua.Call(function);
+			CallFunctionSafe("onPause");
 		}
 
 		public override void Resume()
 		{
-			//CallFunctionSafe("onResume");
-			DynValue function = _lua.Globals.Get("onResume");
-			if (function.Type == DataType.Function && function.Type != DataType.Nil)
-				_lua.Call(function);
+			CallFunctionSafe("onResume");
 		}
 
 		public override void OnBattleMessage(string message)
@@ -94,7 +80,7 @@ namespace PPOBot.Scripting
 
 		public override bool ExecuteNextAction()
 		{
-			var functionName = Bot.Game.Battle ? "onBattleAction" : "onPathAction";
+			var functionName = Bot.Game.IsInBattle ? "onBattleAction" : "onPathAction";
 			_actionExecuted = false;
 			try
 			{
@@ -174,7 +160,7 @@ namespace PPOBot.Scripting
 				return false;
 			}
 
-			if (Bot.Game.Battle != inBattle)
+			if (Bot.Game.IsInBattle != inBattle)
 			{
 				if (inBattle)
 				{
@@ -201,167 +187,166 @@ namespace PPOBot.Scripting
 			return result;
 		}
 
-		private async Task CreateLuaInstance()
+		private void CreateLuaInstance()
 		{
-			//Asynchronous
-			await Task.Run(() =>
-			{
-				_hookedFunctions = new Dictionary<string, IList<DynValue>>();
-				_lua = new Script(CoreModules.Preset_SoftSandbox | CoreModules.LoadMethods)
-				{
-					Options =
-					{
-						ScriptLoader = new CustomScriptLoader(_path) {ModulePaths = new[] {"?.lua"}},
-						CheckThreadAccess = false
-					}
-				};
-				_lua.Globals["stringContains"] = new Func<string, string, bool>(StringContains);
-				_lua.Globals["log"] = new Action<string>(Log);
-				_lua.Globals["fatal"] = new Action<string>(Fatal);
-				_lua.Globals["logout"] = new Action<string>(Logout);
-				_lua.Globals["playSound"] = new Action<string>(PlaySound);
-				_lua.Globals["registerHook"] = new Action<string, DynValue>(RegisterHook);
-				_lua.Globals["flashWindow"] = new Action(FlashBotWindow);
-				//battle
-				_lua.Globals["isOpponentShiny"] = new Func<bool>(IsOpponentShiny);
-				_lua.Globals["isAlreadyCaught"] = new Func<bool>(IsAlreadyCaught);
-				_lua.Globals["isOpponentEffortValue"] = new Func<string, bool>(IsOpponentEffortValue);
-				_lua.Globals["getOpponentEffortValue"] = new Func<string, int>(GetOpponentEffortValue);
-				_lua.Globals["getOpponentType"] = new Func<string[]>(GetOpponentType);
-				_lua.Globals["getOpponentName"] = new Func<string>(GetOpponentName);
-				_lua.Globals["getOpponentHealth"] = new Func<int>(GetOpponentHealth);
-				_lua.Globals["getOpponentMaxHealth"] = new Func<int>(GetOpponentMaxHealth);
-				_lua.Globals["getOpponentHealthPercent"] = new Func<int>(GetOpponentHealthPercent);
-				_lua.Globals["getOpponentLevel"] = new Func<int>(GetOpponentLevel);
-				_lua.Globals["getActivePokemonNumber"] = new Func<int>(GetActivePokemonNumber);
-				_lua.Globals["isOpponentRare"] = new Func<bool>(IsOpponentRare);
-				_lua.Globals["useMoveAt"] = new Func<DynValue, bool>(UseMoveAt); //lol1
-				_lua.Globals["useFirstMove"] = new Func<bool>(UseFirstMove); //lol2
-				_lua.Globals["useMove"] = new Func<string, bool>(UseMove);
-				_lua.Globals["isInBattle"] = new Func<bool>(IsInBattle);
-				_lua.Globals["run"] = new Func<bool>(Run);
-				_lua.Globals["sendAnyPokemon"] = new Func<bool>(SendAnyPokemon);
-				_lua.Globals["sendUsablePokemon"] = new Func<bool>(SendUsablePokemon);
-				_lua.Globals["sendPokemon"] = new Func<int, bool>(SendPokemon);
-				_lua.Globals["attack"] = new Func<bool>(Attack);
-				_lua.Globals["weakAttack"] = new Func<bool>(WeakAttack);
-				_lua.Globals["isOppenentDataReceived"] = new Func<bool>(IsOppenentDataReceived);
-				_lua.Globals["isWildBattle"] = new Func<bool>(IsWildBattle);
-				//path
-				_lua.Globals["startBattle"] = new Func<bool>(StartBattle);
-				_lua.Globals["startFishing"] = new Func<DynValue, bool>(StartFishing);
-				_lua.Globals["stopFishing"] = new Func<bool>(StopFishing);
-				_lua.Globals["startAnyColorRockMining"] = new Func<DynValue, bool>(StartAnyColorRockMining);
-				_lua.Globals["startColoredRockMining"] = new Func<DynValue, bool, DynValue[], bool>(StartColoredRockMining);
-				_lua.Globals["stopMining"] = new Func<bool>(StopMining);
-				_lua.Globals["startSurfBattle"] = new Func<bool>(StartSurfBattle);
-				_lua.Globals["teleportTo"] = new Func<DynValue[], bool>(TeleportTo);
-				_lua.Globals["getMapName"] = new Func<string>(GetMapName);
-				_lua.Globals["isFishing"] = new Func<bool>(IsFishing);
-				_lua.Globals["isMining"] = new Func<bool>(IsMining);
-				_lua.Globals["isAutoEvolve"] = new Func<bool>(IsAutoEvolve);
-				_lua.Globals["enableAutoEvolve"] = new Func<bool>(EnableAutoEvolve);
-				_lua.Globals["disableAutoEvolve"] = new Func<bool>(DisableAutoEvolve);
-				_lua.Globals["getPlayerX"] = new Func<int>(GetPlayerX);
-				_lua.Globals["getPlayerY"] = new Func<int>(GetPlayerY);
-				_lua.Globals["isAnyRockMinable"] = new Func<bool>(IsAnyRockMinable);
-				_lua.Globals["isRockAtMinable"] = new Func<int, int, bool>(IsRockAtMinable);
-				_lua.Globals["moveToCell"] = new Func<int, int, string, bool>(MoveToCell);
-				_lua.Globals["moveLinearX"] = new Func<int, int, int, string, bool>(MoveLinearX);
-				_lua.Globals["moveLinearY"] = new Func<int, int, int, string, bool>(MoveLinearY);
-                _lua.Globals["moveToRectangle"] = new Func<DynValue[], bool>(MoveToRectangle);
-                _lua.Globals["moveToRectangleSurf"] = new Func<DynValue[], bool>(MoveToRectangleSurf);
-                _lua.Globals["useBike"] = new Func<bool>(UseBike);
-				_lua.Globals["openTreasure"] = new Func<int, int, bool>(OpenTreasure);
-				_lua.Globals["openAllTreasures"] = new Func<bool>(OpenAllTreasures);
-				//Pokemon
-				_lua.Globals["isTeamSortedByLevelAscending"] = new Func<bool>(IsTeamSortedByLevelAscending);
-				_lua.Globals["isTeamSortedByLevelDescending"] = new Func<bool>(IsTeamSortedByLevelDescending);
-				_lua.Globals["isTeamRangeSortedByLevelAscending"] = new Func<int, int, bool>(IsTeamRangeSortedByLevelAscending);
-				_lua.Globals["isTeamRangeSortedByLevelDescending"] = new Func<int, int, bool>(IsTeamRangeSortedByLevelDescending);
-				_lua.Globals["swapPokemon"] = new Func<int, int, bool>(SwapPokemon);
-				_lua.Globals["swapPokemonWithLeader"] = new Func<string, bool>(SwapPokemonWithLeader);
-				_lua.Globals["sortTeamByLevelAscending"] = new Func<bool>(SortTeamByLevelAscending);
-				_lua.Globals["sortTeamByLevelDescending"] = new Func<bool>(SortTeamByLevelDescending);
-				_lua.Globals["sortTeamRangeByLevelAscending"] = new Func<int, int, bool>(SortTeamRangeByLevelAscending);
-				_lua.Globals["sortTeamRangeByLevelDescending"] = new Func<int, int, bool>(SortTeamRangeByLevelDescending);
-				_lua.Globals["getTeamSize"] = new Func<int>(GetTeamSize);
-				_lua.Globals["getPokemonHealth"] = new Func<int, int>(GetPokemonHealth);
-				_lua.Globals["getPokemonStatus"] = new Func<int, string>(GetPokemonStatus);
-				_lua.Globals["getPokemonLevel"] = new Func<int, int>(GetPokemonLevel);
-				_lua.Globals["getPokemonName"] = new Func<int, string>(GetPokemonName);
-				_lua.Globals["getPokemonHeldItem"] = new Func<int, string>(GetPokemonHeldItem);
-				_lua.Globals["isPokemonUsable"] = new Func<int, bool>(IsPokemonUsable);
-				_lua.Globals["getUsablePokemonCount"] = new Func<int>(GetUsablePokemonCount);
-				_lua.Globals["isPokemonShiny"] = new Func<int, bool>(IsPokemonShiny);
-				_lua.Globals["getPokemonIV"] = new Func<int, string, int>(GetPokemonIndividualValue);
-				_lua.Globals["getPokemonEV"] = new Func<int, string, int>(GetPokemonEffortValue);
-				_lua.Globals["getPokemonHealthPercent"] = new Func<int, int>(GetPokemonHealthPercent);
-				_lua.Globals["getPokemonMaxHealth"] = new Func<int, int>(GetPokemonMaxHealth);
-				_lua.Globals["getPokemonAbility"] = new Func<int, string>(GetPokemonAbility);
-				_lua.Globals["hasMove"] = new Func<int, string, bool>(HasMove);
-				_lua.Globals["hasPokemonInTeam"] = new Func<string, bool>(HasPokemonInTeam);
-				//Item/Shop
-				_lua.Globals["hasItem"] = new Func<string, bool>(HasItem);
-				_lua.Globals["getItemQuantity"] = new Func<string, int>(GetItemQuantity);
-				_lua.Globals["isShopOpen"] = new Func<bool>(IsShopOpen);
-				_lua.Globals["openShop"] = new Func<bool>(OpenShop);
-				_lua.Globals["buyItem"] = new Func<string, int, bool>(BuyItem);
-				_lua.Globals["getMoney"] = new Func<int>(GetMoney);
-				_lua.Globals["giveItemToPokemon"] = new Func<string, int, bool>(GiveItemToPokemon);
-				_lua.Globals["takeItemFromPokemon"] = new Func<int, bool>(TakeItemFromPokemon);
-				_lua.Globals["useItem"] = new Func<string, bool>(UseItem); //lol1
-				_lua.Globals["useItemOnPokemon"] = new Func<string, int, bool>(UseItemOnPokemon);
-				_lua.Globals["useFirstItem"] = new Func<bool>(UseFirstItem); //lol2
-				//move learning
-				_lua.Globals["forgetMove"] = new Func<string, bool>(ForgetMove);
-				_lua.Globals["forgetAnyMoveExcept"] = new Func<DynValue[], bool>(ForgetAnyMoveExcept);
-                //miscs
-                _lua.Globals["getStarter"] = new Func<string, bool>(GetStarter);
-				_lua.Globals["getMiningLevel"] = new Func<int>(GetMiningLevel);
-				_lua.Globals["getMiningTotalExperience"] = new Func<int>(GetMiningTotalExperience);
-				_lua.Globals["getMiningCurrentExperience"] = new Func<int>(GetMiningCurrentExperience);
-				_lua.Globals["getFishingLevel"] = new Func<int>(GetFishingLevel);
-				_lua.Globals["getFishingCurrentExperience"] = new Func<int>(GetFishingCurrentExperience);
-				_lua.Globals["getFishingTotalExperience"] = new Func<int>(GetFishingTotalExperience);
-				_lua.Globals["countColoredRocks"] = new Func<DynValue, int>(CountColoredRocks);
-				_lua.Globals["login"] = new Action<string, string, int, string, int, string, string>(Login);
-				_lua.Globals["relog"] = new Action<DynValue[]>(Relog);
-				_lua.Globals["startScript"] = new Func<bool>(StartScript);
-				_lua.Globals["invoke"] = new Action<DynValue, float, DynValue[]>(Invoke);
-				_lua.Globals["cancelInvokes"] = new Action(CancelInvokes);
-                //pc
-                _lua.Globals["withdrawPokemonFromPC"] = new Func<int, int, bool>(WithdrawPokemonFromPC);
-                _lua.Globals["depositePokemonToPC"] = new Func<int, int, bool>(DepositePokemonToPC);
+            _hookedFunctions = new Dictionary<string, IList<DynValue>>();
+            _lua = new Script(CoreModules.Preset_SoftSandbox | CoreModules.LoadMethods)
+            {
+                Options =
+                    {
+                        ScriptLoader = new CustomScriptLoader(_path) {ModulePaths = new[] {"?.lua"}},
+                        CheckThreadAccess = false
+                    }
+            };
+            _lua.Globals["stringContains"] = new Func<string, string, bool>(StringContains);
+            _lua.Globals["log"] = new Action<string>(Log);
+            _lua.Globals["fatal"] = new Action<string>(Fatal);
+            _lua.Globals["logout"] = new Action<string>(Logout);
+            _lua.Globals["playSound"] = new Action<string>(PlaySound);
+            _lua.Globals["registerHook"] = new Action<string, DynValue>(RegisterHook);
+            _lua.Globals["flashWindow"] = new Action(FlashBotWindow);
+            //battle
+            _lua.Globals["isOpponentShiny"] = new Func<bool>(IsOpponentShiny);
+            _lua.Globals["isAlreadyCaught"] = new Func<bool>(IsAlreadyCaught);
+            _lua.Globals["isOpponentEffortValue"] = new Func<string, bool>(IsOpponentEffortValue);
+            _lua.Globals["getOpponentEffortValue"] = new Func<string, int>(GetOpponentEffortValue);
+            _lua.Globals["getOpponentType"] = new Func<string[]>(GetOpponentType);
+            _lua.Globals["getOpponentName"] = new Func<string>(GetOpponentName);
+            _lua.Globals["getOpponentHealth"] = new Func<int>(GetOpponentHealth);
+            _lua.Globals["getOpponentMaxHealth"] = new Func<int>(GetOpponentMaxHealth);
+            _lua.Globals["getOpponentHealthPercent"] = new Func<int>(GetOpponentHealthPercent);
+            _lua.Globals["getOpponentLevel"] = new Func<int>(GetOpponentLevel);
+            _lua.Globals["getActivePokemonNumber"] = new Func<int>(GetActivePokemonNumber);
+            _lua.Globals["isOpponentRare"] = new Func<bool>(IsOpponentRare);
+            _lua.Globals["useMoveAt"] = new Func<DynValue, bool>(UseMoveAt); //lol1
+            _lua.Globals["useFirstMove"] = new Func<bool>(UseFirstMove); //lol2
+            _lua.Globals["useMove"] = new Func<string, bool>(UseMove);
+            _lua.Globals["isInBattle"] = new Func<bool>(IsInBattle);
+            _lua.Globals["run"] = new Func<bool>(Run);
+            _lua.Globals["sendAnyPokemon"] = new Func<bool>(SendAnyPokemon);
+            _lua.Globals["sendUsablePokemon"] = new Func<bool>(SendUsablePokemon);
+            _lua.Globals["sendPokemon"] = new Func<int, bool>(SendPokemon);
+            _lua.Globals["attack"] = new Func<bool>(Attack);
+            _lua.Globals["weakAttack"] = new Func<bool>(WeakAttack);
+            _lua.Globals["isOppenentDataReceived"] = new Func<bool>(IsOppenentDataReceived);
+            _lua.Globals["isWildBattle"] = new Func<bool>(IsWildBattle);
+            //path
+            _lua.Globals["startBattle"] = new Func<bool>(StartBattle);
+            _lua.Globals["startFishing"] = new Func<DynValue, bool>(StartFishing);
+            _lua.Globals["startTrainerBattle"] = new Func<DynValue, string, bool>(StartTrainerBattle);
+            _lua.Globals["stopFishing"] = new Func<bool>(StopFishing);
+            _lua.Globals["startAnyColorRockMining"] = new Func<DynValue, bool>(StartAnyColorRockMining);
+            _lua.Globals["startColoredRockMining"] = new Func<DynValue, bool, DynValue[], bool>(StartColoredRockMining);
+            _lua.Globals["stopMining"] = new Func<bool>(StopMining);
+            _lua.Globals["startSurfBattle"] = new Func<bool>(StartSurfBattle);
+            _lua.Globals["teleportTo"] = new Func<DynValue[], bool>(TeleportTo);
+            _lua.Globals["getMapName"] = new Func<string>(GetMapName);
+            _lua.Globals["isFishing"] = new Func<bool>(IsFishing);
+            _lua.Globals["isMining"] = new Func<bool>(IsMining);
+            _lua.Globals["isAutoEvolve"] = new Func<bool>(IsAutoEvolve);
+            _lua.Globals["enableAutoEvolve"] = new Func<bool>(EnableAutoEvolve);
+            _lua.Globals["disableAutoEvolve"] = new Func<bool>(DisableAutoEvolve);
+            _lua.Globals["getPlayerX"] = new Func<int>(GetPlayerX);
+            _lua.Globals["getPlayerY"] = new Func<int>(GetPlayerY);
+            _lua.Globals["isAnyRockMinable"] = new Func<bool>(IsAnyRockMinable);
+            _lua.Globals["isRockAtMinable"] = new Func<int, int, bool>(IsRockAtMinable);
+            _lua.Globals["moveToCell"] = new Func<int, int, string, bool>(MoveToCell);
+            _lua.Globals["moveLinearX"] = new Func<int, int, int, string, bool>(MoveLinearX);
+            _lua.Globals["moveLinearY"] = new Func<int, int, int, string, bool>(MoveLinearY);
+            _lua.Globals["moveToRectangle"] = new Func<DynValue[], bool>(MoveToRectangle);
+            _lua.Globals["moveToRectangleSurf"] = new Func<DynValue[], bool>(MoveToRectangleSurf);
+            _lua.Globals["useBike"] = new Func<bool>(UseBike);
+            _lua.Globals["openTreasure"] = new Func<int, int, bool>(OpenTreasure);
+            _lua.Globals["openAllTreasures"] = new Func<bool>(OpenAllTreasures);
+            //Pokemon
+            _lua.Globals["isTeamSortedByLevelAscending"] = new Func<bool>(IsTeamSortedByLevelAscending);
+            _lua.Globals["isTeamSortedByLevelDescending"] = new Func<bool>(IsTeamSortedByLevelDescending);
+            _lua.Globals["isTeamRangeSortedByLevelAscending"] = new Func<int, int, bool>(IsTeamRangeSortedByLevelAscending);
+            _lua.Globals["isTeamRangeSortedByLevelDescending"] = new Func<int, int, bool>(IsTeamRangeSortedByLevelDescending);
+            _lua.Globals["swapPokemon"] = new Func<int, int, bool>(SwapPokemon);
+            _lua.Globals["swapPokemonWithLeader"] = new Func<string, bool>(SwapPokemonWithLeader);
+            _lua.Globals["sortTeamByLevelAscending"] = new Func<bool>(SortTeamByLevelAscending);
+            _lua.Globals["sortTeamByLevelDescending"] = new Func<bool>(SortTeamByLevelDescending);
+            _lua.Globals["sortTeamRangeByLevelAscending"] = new Func<int, int, bool>(SortTeamRangeByLevelAscending);
+            _lua.Globals["sortTeamRangeByLevelDescending"] = new Func<int, int, bool>(SortTeamRangeByLevelDescending);
+            _lua.Globals["getTeamSize"] = new Func<int>(GetTeamSize);
+            _lua.Globals["getPokemonHealth"] = new Func<int, int>(GetPokemonHealth);
+            _lua.Globals["getPokemonStatus"] = new Func<int, string>(GetPokemonStatus);
+            _lua.Globals["getPokemonLevel"] = new Func<int, int>(GetPokemonLevel);
+            _lua.Globals["getPokemonName"] = new Func<int, string>(GetPokemonName);
+            _lua.Globals["getPokemonHeldItem"] = new Func<int, string>(GetPokemonHeldItem);
+            _lua.Globals["isPokemonUsable"] = new Func<int, bool>(IsPokemonUsable);
+            _lua.Globals["getUsablePokemonCount"] = new Func<int>(GetUsablePokemonCount);
+            _lua.Globals["isPokemonShiny"] = new Func<int, bool>(IsPokemonShiny);
+            _lua.Globals["getPokemonIV"] = new Func<int, string, int>(GetPokemonIndividualValue);
+            _lua.Globals["getPokemonEV"] = new Func<int, string, int>(GetPokemonEffortValue);
+            _lua.Globals["getPokemonHealthPercent"] = new Func<int, int>(GetPokemonHealthPercent);
+            _lua.Globals["getPokemonMaxHealth"] = new Func<int, int>(GetPokemonMaxHealth);
+            _lua.Globals["getPokemonAbility"] = new Func<int, string>(GetPokemonAbility);
+            _lua.Globals["hasMove"] = new Func<int, string, bool>(HasMove);
+            _lua.Globals["hasPokemonInTeam"] = new Func<string, bool>(HasPokemonInTeam);
+            //Item/Shop
+            _lua.Globals["hasItem"] = new Func<string, bool>(HasItem);
+            _lua.Globals["getItemQuantity"] = new Func<string, int>(GetItemQuantity);
+            _lua.Globals["isShopOpen"] = new Func<bool>(IsShopOpen);
+            _lua.Globals["openShop"] = new Func<bool>(OpenShop);
+            _lua.Globals["buyItem"] = new Func<string, int, bool>(BuyItem);
+            _lua.Globals["getMoney"] = new Func<int>(GetMoney);
+            _lua.Globals["giveItemToPokemon"] = new Func<string, int, bool>(GiveItemToPokemon);
+            _lua.Globals["takeItemFromPokemon"] = new Func<int, bool>(TakeItemFromPokemon);
+            _lua.Globals["useItem"] = new Func<string, bool>(UseItem); //lol1
+            _lua.Globals["useItemOnPokemon"] = new Func<string, int, bool>(UseItemOnPokemon);
+            _lua.Globals["useFirstItem"] = new Func<bool>(UseFirstItem); //lol2
+            _lua.Globals["hasBadge"] = new Func<string, bool>(HasBadge);
+            _lua.Globals["getBadges"] = new Func<string[]>(GetBadges);
+            //move learning
+            _lua.Globals["forgetMove"] = new Func<string, bool>(ForgetMove);
+            _lua.Globals["forgetAnyMoveExcept"] = new Func<DynValue[], bool>(ForgetAnyMoveExcept);
+            //miscs
+            _lua.Globals["getStarter"] = new Func<string, bool>(GetStarter);
+            _lua.Globals["getMiningLevel"] = new Func<int>(GetMiningLevel);
+            _lua.Globals["getMiningTotalExperience"] = new Func<int>(GetMiningTotalExperience);
+            _lua.Globals["getMiningCurrentExperience"] = new Func<int>(GetMiningCurrentExperience);
+            _lua.Globals["getFishingLevel"] = new Func<int>(GetFishingLevel);
+            _lua.Globals["getFishingCurrentExperience"] = new Func<int>(GetFishingCurrentExperience);
+            _lua.Globals["getFishingTotalExperience"] = new Func<int>(GetFishingTotalExperience);
+            _lua.Globals["countColoredRocks"] = new Func<DynValue, int>(CountColoredRocks);
+            _lua.Globals["login"] = new Action<string, string, int, string, int, string, string>(Login);
+            _lua.Globals["relog"] = new Action<DynValue[]>(Relog);
+            _lua.Globals["startScript"] = new Func<bool>(StartScript);
+            _lua.Globals["invoke"] = new Action<DynValue, float, DynValue[]>(Invoke);
+            _lua.Globals["cancelInvokes"] = new Action(CancelInvokes);
+            //pc
+            _lua.Globals["withdrawPokemonFromPC"] = new Func<int, int, bool>(WithdrawPokemonFromPC);
+            _lua.Globals["depositePokemonToPC"] = new Func<int, int, bool>(DepositePokemonToPC);
 
-                _lua.Globals["getPCBoxCount"] = new Func<int>(GetPCBoxCount);
-                _lua.Globals["getPCPokemonCount"] = new Func<int, int>(GetPCPokemonCount);
-                _lua.Globals["getLastBoxIndexWithPokemon"] = new Func<int>(GetLastBoxIndexWithPokemon);
-                _lua.Globals["getFirstBoxIndexWithPokemon"] = new Func<int>(GetFirstBoxIndexWithPokemon);
+            _lua.Globals["getPCBoxCount"] = new Func<int>(GetPCBoxCount);
+            _lua.Globals["getPCPokemonCount"] = new Func<int, int>(GetPCPokemonCount);
+            _lua.Globals["getLastBoxIndexWithPokemon"] = new Func<int>(GetLastBoxIndexWithPokemon);
+            _lua.Globals["getFirstBoxIndexWithPokemon"] = new Func<int>(GetFirstBoxIndexWithPokemon);
 
-                _lua.Globals["getPokemonHealthFromPC"] = new Func<int, int, int>(GetPokemonHealthFromPC);
-                _lua.Globals["getPokemonStatusFromPC"] = new Func<int, int, string>(GetPokemonStatusFromPC);
-                _lua.Globals["getPokemonLevelFromPC"] = new Func<int, int, int>(GetPokemonLevelFromPC);
-                _lua.Globals["getPokemonNameFromPC"] = new Func<int, int, string>(GetPokemonNameFromPC);
-                _lua.Globals["getPokemonHeldItemFromPC"] = new Func<int, int, string>(GetPokemonHeldItemFromPC);
-                _lua.Globals["isPokemonFromPCShiny"] = new Func<int, int, bool>(IsPokemonFromPCShiny);
-                _lua.Globals["getPokemonIVFromPC"] = new Func<int, int, string, int>(GetPokemonIndividualValueFromPC);
-                _lua.Globals["getPokemonEVFromPC"] = new Func<int, int, string, int>(GetPokemonEffortValueFromPC);
-                _lua.Globals["getPokemonHealthPercentFromPC"] = new Func<int, int, int>(GetPokemonHealthPercentFromPC);
-                _lua.Globals["getPokemonMaxHealthFromPC"] = new Func<int, int, int>(GetPokemonMaxHealthFromPC);
-                _lua.Globals["getPokemonAbilityFromPC"] = new Func<int, int, string>(GetPokemonAbilityFromPC);
+            _lua.Globals["getPokemonHealthFromPC"] = new Func<int, int, int>(GetPokemonHealthFromPC);
+            _lua.Globals["getPokemonStatusFromPC"] = new Func<int, int, string>(GetPokemonStatusFromPC);
+            _lua.Globals["getPokemonLevelFromPC"] = new Func<int, int, int>(GetPokemonLevelFromPC);
+            _lua.Globals["getPokemonNameFromPC"] = new Func<int, int, string>(GetPokemonNameFromPC);
+            _lua.Globals["getPokemonHeldItemFromPC"] = new Func<int, int, string>(GetPokemonHeldItemFromPC);
+            _lua.Globals["isPokemonFromPCShiny"] = new Func<int, int, bool>(IsPokemonFromPCShiny);
+            _lua.Globals["getPokemonIVFromPC"] = new Func<int, int, string, int>(GetPokemonIndividualValueFromPC);
+            _lua.Globals["getPokemonEVFromPC"] = new Func<int, int, string, int>(GetPokemonEffortValueFromPC);
+            _lua.Globals["getPokemonHealthPercentFromPC"] = new Func<int, int, int>(GetPokemonHealthPercentFromPC);
+            _lua.Globals["getPokemonMaxHealthFromPC"] = new Func<int, int, int>(GetPokemonMaxHealthFromPC);
+            _lua.Globals["getPokemonAbilityFromPC"] = new Func<int, int, string>(GetPokemonAbilityFromPC);
 
-                // ReSharper disable once InvertIf
-                if (_libsContent.Count > 0)
-				{
-					foreach (var content in _libsContent)
-					{
-						CallContent(content);
-					}
-				}
-				CallContent(_content);
-			});
-		}
+            // ReSharper disable once InvertIf
+            if (_libsContent.Count > 0)
+            {
+                foreach (var content in _libsContent)
+                {
+                    CallContent(content);
+                }
+            }
+            CallContent(_content);
+        }
 
 
         // API: Get's specific starter if haven't received one...
@@ -416,14 +401,16 @@ namespace PPOBot.Scripting
 		// API: Moves to specific cell
 		private bool MoveToCell(int x, int y, string reason)
 		{
-			return Bot.MoveToCell(x, y, reason);
+			return ExecuteAction(Bot.MoveToCell(x, y, reason));
 		}
 
+		// API: Moves in a linear x line. 
 		private bool MoveLinearX(int x1, int x2, int y, string forWhat = "battle")
 		{
 			return ExecuteAction(Bot.MoveLeftRight(x1, y, x2, y, forWhat));
 		}
 
+		// API: Moves in a linear y line.
 		private bool MoveLinearY(int y1, int y2, int x, string forWhat = "battle")
 		{
 			return ExecuteAction(Bot.MoveLeftRight(x, y1, x, y2, forWhat));
@@ -599,7 +586,7 @@ namespace PPOBot.Scripting
 			}
 
 			var item = Bot.Game.GetItemFromName(itemName);
-			if (item == null || item.Quntity == 0)
+			if (item == null || item.Quantity == 0)
 			{
 				Fatal("error: giveItemToPokemon: tried to give the non-existing item '" + itemName + "'.");
 				return false;
@@ -638,7 +625,7 @@ namespace PPOBot.Scripting
 				return false;
 			}
 
-			if (item != null && item.Quntity > 0)
+			if (item != null && item.Quantity > 0)
 			{
 				if (Bot.Game.IsInBattle && !item.IsEquipAble())
 				{
@@ -730,7 +717,7 @@ namespace PPOBot.Scripting
 		// API: Returns true if the opponent pokémon has already been caught and has a pokédex entry.
 		private bool IsAlreadyCaught()
 		{
-			if (!Bot.Game.Battle || Bot.Game.ActiveBattle is null)
+			if (!Bot.Game.IsInBattle || Bot.Game.ActiveBattle is null)
 			{
 				Fatal("error: isAlreadyCaught is only usable in battle.");
 				return false;
@@ -759,10 +746,22 @@ namespace PPOBot.Scripting
 			return Bot.Game.HasItemName(itemName.ToUpperInvariant());
 		}
 
+		// API: Returns true if the specified badge has been obtained.
+		private bool HasBadge(string badgeName)
+		{
+			return Bot.Game.Badges.Contains(badgeName);
+		}
+
+		// API: Returns all the obtained badges.
+		private string[] GetBadges()
+		{
+			return Bot.Game.Badges.ToArray();
+		}
+
 		// API: Returns the quantity of the specified item in the inventory.
 		private int GetItemQuantity(string itemName)
 		{
-			return Bot.Game.GetItemFromName(itemName.ToUpperInvariant())?.Quntity ?? 0;
+			return Bot.Game.GetItemFromName(itemName.ToUpperInvariant())?.Quantity ?? 0;
 		}
 
 		// API: Returns the Y-coordinate of the current cell.
@@ -770,11 +769,13 @@ namespace PPOBot.Scripting
 		{
 			return Bot.Game.PlayerY;
 		}
+
+		// API: Returns true if the bot has started mining.
 		private bool IsMining() => Bot.Game.IsMinning;
 		
 		// API: Returns true when the opponent's full data is received.
 		private bool IsOppenentDataReceived() =>
-			Bot.Game.Battle
+			Bot.Game.IsInBattle
 			&& Bot.Game.ActiveBattle.WildPokemon != null;
 		
 		// API: Returns the percentage of remaining health of the specified pokémon in the team.
@@ -885,6 +886,7 @@ namespace PPOBot.Scripting
 			}
 			return false;
 		}
+
 		// API: Returns the maximum health of the specified pokémon in the team.
 		private int GetPokemonMaxHealth(int index)
 		{
@@ -896,16 +898,7 @@ namespace PPOBot.Scripting
 			Pokemon pokemon = Bot.Game.Team[index - 1];
 			return pokemon.MaxHealth;
 		}
-		private async void MoveLeftAndRight()
-		{
-			await MoveLeftAndRightAsync();
-		}
 
-		private async Task<bool> MoveLeftAndRightAsync()
-		{
-			if (!ValidateAction("moveLeftAndRight", false)) return false;
-			return ExecuteAction(await LeftRightMovement());
-		}
 		// API: Returns the effort value for the specified stat of the specified pokémon in the team.
 		private int GetPokemonEffortValue(int pokemonIndex, string statType)
 		{
@@ -945,6 +938,7 @@ namespace PPOBot.Scripting
 		{
 			return Bot.Game.Money;
 		}
+		// API: Forgets a specified move.
 		private bool ForgetMove(string moveName)
 		{
 			if (!Bot.MoveTeacher.IsLearning)
@@ -964,6 +958,8 @@ namespace PPOBot.Scripting
 			}
 			return false;
 		}
+
+		// API: Forgets any move except the specified ones.
 		private bool ForgetAnyMoveExcept(DynValue[] moveNames)
 		{
 			if (!Bot.MoveTeacher.IsLearning)
@@ -988,20 +984,28 @@ namespace PPOBot.Scripting
 			}
 			return false;
 		}
+
+		// API: Returns true if Auto Evolve is enabled.
 		private bool IsAutoEvolve()
 		{
 			return Bot.PokemonEvolver.IsEnabled;
 		}
+
+		// API: Enables Auto Evolve.
 		private bool EnableAutoEvolve()
 		{
 			Bot.PokemonEvolver.IsEnabled = true;
 			return Bot.PokemonEvolver.IsEnabled;
 		}
+
+		// API: Disables Auto Evolve.
 		private bool DisableAutoEvolve()
 		{
 			Bot.PokemonEvolver.IsEnabled = false;
 			return !Bot.PokemonEvolver.IsEnabled;
 		}
+
+		// API: Gets opponent's health percentage.
 		private int GetOpponentHealthPercent()
 		{
 			if (!Bot.Game.IsInBattle)
@@ -1009,9 +1013,11 @@ namespace PPOBot.Scripting
 				Fatal("error: getOpponentHealthPercent can only be used in battle.");
 				return 0;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
+
 			return (Bot.Game.ActiveBattle.WildPokemon.CurrentHealth) * 100 / ( Bot.Game.ActiveBattle.WildPokemon.MaxHealth);
 		}
+
+		// API: Gets opponent's max health.
 		private int GetOpponentMaxHealth()
 		{
 			if (!Bot.Game.IsInBattle)
@@ -1019,9 +1025,11 @@ namespace PPOBot.Scripting
 				Fatal("error: getOpponentMaxHealth can only be used in battle.");
 				return 0;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
+
 			return Bot.Game.ActiveBattle.WildPokemon.MaxHealth;
 		}
+
+		// API: Gets opponent's health.
 		private int GetOpponentLevel()
 		{
 			if (!Bot.Game.IsInBattle)
@@ -1029,9 +1037,11 @@ namespace PPOBot.Scripting
 				Fatal("error: getOpponentLevel can only be used in battle.");
 				return 0;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
+
 			return Bot.Game.ActiveBattle.WildPokemon.Level;
 		}
+
+		// API: Gets opponent's type.
 		private string[] GetOpponentType()
 		{
 			if (!Bot.Game.IsInBattle)
@@ -1039,7 +1049,7 @@ namespace PPOBot.Scripting
 				Fatal("error: getOpponentType can only be used in battle.");
 				return null;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return null; }
+
 			int id = Bot.Game.ActiveBattle.WildPokemon.Id;
 
 			if (id <= 0 || id >= TypesManager.Instance.Type1.Count())
@@ -1049,6 +1059,7 @@ namespace PPOBot.Scripting
 
 			return new [] { TypesManager.Instance.Type1[id].ToString(), TypesManager.Instance.Type2[id].ToString() };
 		}
+
 		private string GetOpponentStatus()
 		{
 			if (!Bot.Game.IsInBattle)
@@ -1056,7 +1067,7 @@ namespace PPOBot.Scripting
 				Fatal("error: getOpponentStatus can only be used in battle.");
 				return null;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return null; }
+
 			return Bot.Game.ActiveBattle.WildPokemon.Status;
 		}
 		private static Dictionary<string, StatType> _stats = new Dictionary<string, StatType>()
@@ -1083,7 +1094,7 @@ namespace PPOBot.Scripting
 				Fatal("error: getOpponentEffortValue can only be used in battle.");
 				return -1;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return -1; }
+
 			if (!_stats.ContainsKey(statType.ToUpperInvariant()))
 			{
 				Fatal("error: getOpponentEffortValue: the stat '" + statType + "' does not exist.");
@@ -1104,7 +1115,7 @@ namespace PPOBot.Scripting
 				Fatal("error: isOpponentEffortValue can only be used in battle.");
 				return false;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return false; }
+
 			if (!_stats.ContainsKey(statType.ToUpperInvariant()))
 			{
 				Fatal("error: isOpponentEffortValue: the stat '" + statType + "' does not exist.");
@@ -1247,12 +1258,12 @@ namespace PPOBot.Scripting
 		{
 			try
 			{
-				if (!Bot.Game.Battle)
+				if (!Bot.Game.IsInBattle)
 				{
 					Fatal("error: getActivePokemonNumber is only usable in battle.");
 					return 0;
 				}
-				if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
+
 				return Bot.Game.ActiveBattle.ActivePokemon + 1;
 			}
 			catch(Exception ex)
@@ -1263,32 +1274,32 @@ namespace PPOBot.Scripting
 		}
 		private int GetOpponentHealth()
 		{
-			if (!Bot.Game.Battle)
+			if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: getOpponentHealth can only be used in battle.");
 				return 0;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return 0; }
+
 			return Bot.Game.ActiveBattle.WildPokemon.CurrentHealth;
 		}
 		private string GetOpponentName()
 		{
-			if (!Bot.Game.Battle)
+			if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: getOpponentName can only be used in battle.");
 				return null;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return ""; }
+
 			return Bot.Game.ActiveBattle.WildPokemon.Name;
 		}
 		private bool IsOpponentRare()
 		{
-			if (!Bot.Game.Battle)
+			if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: isOpponentRare is only usable in battle.");
 				return false;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return false; }
+
 			if (Bot.Game.ActiveBattle.WildPokemon != null)
 			{
 				return Bot.Game.ActiveBattle.WildPokemon.IsRare;
@@ -1297,12 +1308,12 @@ namespace PPOBot.Scripting
 		}
 		private bool IsOpponentShiny()
 		{
-			if (!Bot.Game.Battle)
+			if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: isOpponentShiny is only usable in battle.");
 				return false;
 			}
-			if (Bot.Game.ActiveBattle is null) { Bot.Game.WaitWhileInBattle(); return false; }
+
 			if (Bot.Game.ActiveBattle.WildPokemon != null)
 			{
 				return Bot.Game.ActiveBattle.WildPokemon.IsShiny;
@@ -1314,7 +1325,7 @@ namespace PPOBot.Scripting
 		{
 			LogMessage(message);
 			Bot.Stop();
-			Bot.Game.Logout();
+			Bot.LogoutApi(false);
 		}
 		// API: Teleports to a map.
 		private bool TeleportTo(params DynValue[] values)
@@ -1347,32 +1358,32 @@ namespace PPOBot.Scripting
 			return ExecuteAction(Bot.Game.LoadMap(true, map, x, y));
 		}
 
-		private async Task<bool> LeftRightMovement()
-		{
-			await MoveLeft();
-			await MoveRight();
-			return true;
-		}
-		private async Task MoveRight() => await Task.Delay(500).ContinueWith((pr) => Bot.Game.SendMovement("right"));
-		private async Task MoveLeft() => await Task.Delay(500).ContinueWith((pr) => Bot.Game.SendMovement("left"));
 		// API: Starts a wild battle.
 		private bool StartBattle()
 		{
-
-			try
-			{
+            if (!ValidateAction("startBattle", false)) return false;
+            if (Bot.Game.IsFishing)
+                StopFishing();
+            return ExecuteAction(Bot.Game.StartWildBattle());
+        }
+		// API: Starts the specified trainer battle.
+        private bool StartTrainerBattle(DynValue id, string name)
+        {
+            try
+            {
+				if (!ValidateAction("startTrainerBattle", false)) return false;
 				if (Bot.Game.IsFishing)
-					StopFishing();
-				return ExecuteAction(Bot.Game.StartWildBattle());
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(e);
-				throw;
-			}
-		}
-		// API: Checks if the bot is fishing or not.
-		private bool IsFishing()
+                    StopFishing();
+                return ExecuteAction(Bot.Game.StartTrainerBattle(id.CastToString(), name));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+        // API: Checks if the bot is fishing or not.
+        private bool IsFishing()
 			=> Bot.Game.IsFishing;
 		// API: Starts fishing.
 		private bool UseMove(string moveName)
@@ -1383,7 +1394,7 @@ namespace PPOBot.Scripting
 		}
 		private bool StartFishing(DynValue value)
 		{
-			if (Bot.Game.Battle)
+			if (Bot.Game.IsInBattle)
 			{
 				Fatal("error: startFishing is only usable when you're not in battle.");
 				return false;
@@ -1400,11 +1411,12 @@ namespace PPOBot.Scripting
 				Fatal($"error: startFishing: {value.String} is not in your inventory.");
 				return false;
 			}
-			return ExecuteAction(Bot.Game.SendFishing(value.String));
+			return ExecuteAction(Bot.Game.FishWith(value.String));
 		}
+
 		private bool StartAnyColorRockMining(DynValue axe)
 		{
-			if (Bot.Game.Battle || Bot.Game.IsMinning)
+			if (Bot.Game.IsInBattle || Bot.Game.IsMinning)
 			{
 				Fatal("error: startAnyColorRockMining is only usable when you're not in battle and not mining.");
 				return false;
@@ -1419,7 +1431,7 @@ namespace PPOBot.Scripting
 		}
 		private bool StopMining()
 		{
-			if (!Bot.Game.IsMinning || Bot.Game.Battle)
+			if (!Bot.Game.IsMinning || Bot.Game.IsInBattle)
 			{
 				Fatal("error: stopMining is only usable when you've started mining and when you're not in battle.");
 				return false;
@@ -1439,7 +1451,7 @@ namespace PPOBot.Scripting
 				return false;
 			}
 
-			if (Bot.Game.Battle || Bot.Game.IsMinning)
+			if (Bot.Game.IsInBattle || Bot.Game.IsMinning)
 			{
 				Fatal("error: startColoredRockMining is only usable when you're not in battle and not mining.");
 				return false;
@@ -1456,11 +1468,11 @@ namespace PPOBot.Scripting
 		}
 
 		// API: Checks if battling or not
-		private bool IsInBattle() => Bot.Game.Battle;
+		private bool IsInBattle() => Bot.Game.IsInBattle;
 		// API: Stops fishing.
 		private bool StopFishing()
 		{
-			if (!Bot.Game.IsFishing || Bot.Game.Battle)
+			if (!Bot.Game.IsFishing || Bot.Game.IsInBattle)
 			{
 				Fatal("error: stopFishing is only usable when you've started fishing and when you're not in battle.");
 				return false;
@@ -1470,6 +1482,7 @@ namespace PPOBot.Scripting
 		// API: Starts a surf wild battle.
 		private bool StartSurfBattle()
 		{
+			if (!ValidateAction("startSurfBattle", false)) return false;
 			if (Bot.Game.IsFishing)
 			{
 				StopFishing();
@@ -1489,18 +1502,18 @@ namespace PPOBot.Scripting
 		}
 		private bool UseFirstItem()
 		{
-			if (!Bot.Game.Battle)
+			if (!Bot.Game.IsInBattle)
 			{
 				Fatal("error: useFirstItem only can be used in battles.");
 				return false;
 			}
-			return ExecuteAction(Bot.Game.UseItem());
+			return ExecuteAction(Bot.Game.UseItem(Bot.Game.Items.FirstOrDefault()?.Name));
 		}
 
 		private bool UseMoveAt(DynValue index)
 		{
 			if (!ValidateAction("useMove", true)) return false;
-			return ExecuteAction(Bot.AI.UseMove((int)index.Number));
+			return ExecuteAction(Bot.AI.UseMove((int)index.CastToNumber()));
 		}
 
 		private bool UseFirstMove()

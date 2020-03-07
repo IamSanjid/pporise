@@ -1,33 +1,14 @@
-# version format
-version: 1.2.{build}
-
-# VS Version
-image: Visual Studio 2017
-
+version: 1.3.{build}
+image: Visual Studio 2019
 # enable patching of AssemblyInfo.* files
 assembly_info:
   patch: true
   file: AssemblyInfo.*
-  assembly_version: "1.2.{build}"
+  assembly_version: "{version}"
   assembly_file_version: "{version}"
   assembly_informational_version: "{version}"
-
-
-#---------------------------------#
-#       build configuration       #
-#---------------------------------#
-
-# build platform, i.e. x86, x64, Any CPU. This setting is optional.
-platform: Any CPU
-
-# to add several platforms to build matrix:
-#platform:
-#  - x86
-#  - Any CPU
-
-# build Configuration, i.e. Debug, Release, etc.
 configuration: Release
-
+platform: Any CPU
 before_build:
 - cmd: appveyor-retry nuget restore
 build:
@@ -41,9 +22,9 @@ after_build:
 
     type nul > ReadMe.txt
 
-    echo Sample-Scripts: http://tmearn.com/es0ni0V > pporise/bin/Release/ReadMe.txt
+    echo Sample-Scripts: https://tmearn.com/es0ni0V > pporise/bin/Release/ReadMe.txt
 
     echo Discord Link: https://discord.gg/akxSZ9X >> pporise/bin/Release/ReadMe.txt
 artifacts:
 - path: pporise\bin\Release
-  name: "PPORise-Release"
+  name: "PPORise-{version}"

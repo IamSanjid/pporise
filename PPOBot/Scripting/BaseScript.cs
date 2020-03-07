@@ -14,7 +14,7 @@ namespace PPOBot.Scripting
 
         public event Action FlashBotWindow;
         //Asynchronous
-        public abstract Task Initialize();
+        public virtual void Initialize() { }
         public virtual void Start() { }
         public virtual void Stop() { }
         public virtual void Pause() { }

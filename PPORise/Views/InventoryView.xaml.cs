@@ -17,7 +17,7 @@ using System.Windows.Shapes;
 using PPOBot;
 using PPOProtocol;
 
-namespace PPORise.Views
+namespace PPORise
 {
     /// <summary>
     /// Interaction logic for InventoryView.xaml
@@ -26,11 +26,12 @@ namespace PPORise.Views
     {
         private readonly BotClient _bot;
         private InventoryItem _selectedItem;
-        public MainWindow MainWindow { get; set; }
-        public InventoryView(BotClient bot)
+        public MainWindow MainWindow { get; }
+        public InventoryView(BotClient bot, MainWindow mWin)
         {
-            _bot = bot;
             InitializeComponent();
+            _bot = bot;
+            MainWindow = mWin;
         }
         private void UseItem_Click(object sender, RoutedEventArgs e)
         {

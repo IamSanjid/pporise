@@ -7,6 +7,7 @@ namespace PPOProtocol
         private System.Timers.Timer _planTimer;
         private Action planAction;
         bool isRepeatedPlan;
+        int millisecondsDelay;
 
         private ExecutionPlan(int millisecondsDelay, Action planAction, bool isRepeatedPlan)
         {
@@ -16,6 +17,7 @@ namespace PPOProtocol
 
             this.planAction = planAction;
             this.isRepeatedPlan = isRepeatedPlan;
+            this.millisecondsDelay = millisecondsDelay;
         }
 
         public static ExecutionPlan Delay(int millisecondsDelay, Action planAction)
@@ -50,6 +52,8 @@ namespace PPOProtocol
                 Console.WriteLine(ex);
             }
         }
+
+        public bool IsActive() => _planTimer.Enabled;
 
         public void Dispose()
         {

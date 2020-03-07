@@ -59,6 +59,10 @@ namespace PPOProtocol
             EncryptedAbility = data[6];
             Ailment = data[7];
             Form = data[8];
+            IsElite = data[9].ToLowerInvariant() == "true";
+            IsRare = IsElite;
+            Type1 = TypesManager.Instance.Type1[Id];
+            Type2 = TypesManager.Instance.Type2[Id];
         }
 
         public void Update(string[] data)
@@ -73,6 +77,12 @@ namespace PPOProtocol
             Form = data[7];
             MaxHealth = Convert.ToInt32(data[8]);
             CurrentHealth = Convert.ToInt32(data[9]);
+        }
+
+        public void UpdateHealth(int currentHealth, int maxHealth)
+        {
+            if (maxHealth != -1) MaxHealth = maxHealth;
+            CurrentHealth = currentHealth;
         }
     }
 }

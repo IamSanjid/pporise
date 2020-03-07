@@ -65,7 +65,7 @@ namespace PPOBot
         }
         public bool Run()
         {
-            if (!_client.Battle) return false;
+            if (!_client.IsInBattle) return false;
             if (_client.ActiveBattle.IsDungeonBattle) return false;
             if (ActivePokemon.CurrentHealth <= 0) return false;
             return _client.Run();
@@ -88,20 +88,20 @@ namespace PPOBot
         public bool Attack()
         {
             if (!IsPokemonUsable(ActivePokemon)) return false;
-            if (HaveToWait) return true;
+
             return UseAttack(true);
         }
 
         public bool WeakAttack()
         {
             if (!IsPokemonUsable(ActivePokemon)) return false;
-            if (HaveToWait) return true;
+
             return UseAttack(false);
         }
         public bool SendAnyPokemon()
         {
             if (_client.IsTrapped) return false;
-            if (!_client.Battle) return false;
+            if (!_client.IsInBattle) return false;
             foreach (var pk in _client.Team)
             {
                 if (pk.CurrentHealth > 0 && pk != ActivePokemon)
@@ -109,20 +109,9 @@ namespace PPOBot
             }
             return false;
         }
-        private bool HaveToWait { get; set; } = false;
-        public Pokemon ActivePokemon {
-            get
-            {
-                if (_client.ActiveBattle is null)
-                {
-                    _client.WaitWhileInBattle();
-                    HaveToWait = true;
-                    return _client.Team[0];
-                }
-                HaveToWait = false;
-                return _client.Team[_client.ActiveBattle.ActivePokemon];
-            }
-        }
+
+        public Pokemon ActivePokemon => _client.Team[_client.ActiveBattle.ActivePokemon];
+
         public bool UseMove(string moveName)
         {
             if (ActivePokemon.CurrentHealth == 0) return false;
@@ -141,7 +130,7 @@ namespace PPOBot
         public bool SendPokemon(int index)
         {
             if (_client.IsTrapped) return false;
-            if (!_client.Battle) return false;
+            if (!_client.IsInBattle) return false;
             if (index < 1 || index > _client.Team.Count) return false;
             Pokemon pokemon = _client.Team[index - 1];
             if (pokemon.CurrentHealth > 0 && pokemon != ActivePokemon)
@@ -167,7 +156,7 @@ namespace PPOBot
         public bool UseAnyMove()
         {
             if (ActivePokemon.CurrentHealth == 0) return false;
-            if (!_client.Battle) return false;
+            if (!_client.IsInBattle) return false;
 
             for (int i = 0; i < ActivePokemon.Moves.Length; ++i)
             {
@@ -182,7 +171,7 @@ namespace PPOBot
         }
         public bool UseMove(int index)
         {
-            if (!_client.Battle || ActivePokemon.CurrentHealth == 0 || index < 1 || index > 4)
+            if (!_client.IsInBattle || ActivePokemon.CurrentHealth == 0 || index < 1 || index > 4)
             {
                 return false;
             }

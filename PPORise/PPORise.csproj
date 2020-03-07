@@ -142,6 +142,9 @@
     <Compile Include="Views\InventoryView.xaml.cs">
       <DependentUpon>InventoryView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\PlayersView.xaml.cs">
+      <DependentUpon>PlayersView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\TeamView.xaml.cs">
       <DependentUpon>TeamView.xaml</DependentUpon>
     </Compile>
@@ -192,6 +195,10 @@
     <Page Include="Resources\IconsNonShared.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\PlayersView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\TeamView.xaml">
       <SubType>Designer</SubType>
@@ -246,10 +253,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Network\Network.csproj">
-      <Project>{b469df04-e192-4972-832c-18b5e7f859b6}</Project>
-      <Name>Network</Name>
-    </ProjectReference>
     <ProjectReference Include="..\PPOBot\PPOBot.csproj">
       <Project>{e7554bec-f172-4f30-b55d-26b6d558070a}</Project>
       <Name>PPOBot</Name>
@@ -258,9 +261,6 @@
       <Project>{37c4e375-e98d-420e-a14f-e4396d56d885}</Project>
       <Name>PPOProtocol</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="HeaderMask.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

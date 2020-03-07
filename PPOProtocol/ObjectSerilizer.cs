@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Web;
 using System.IO;
+using System.Security.Cryptography;
 
-namespace Network
+namespace PPOProtocol
 {
     public static class ObjectSerilizer
     {
@@ -73,6 +74,51 @@ namespace Network
         {
             string decodedTxt = text.Replace("<![CDATA[", "").Replace("]]>", "");
             return decodedTxt;
+        }
+
+        public static string GenerateRandomString(int newLength)
+        {
+            const string loc5 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var loc2 = loc5.ToCharArray();
+            var loc3 = "";
+            var random = new Random();
+            for (var i = 0; i < newLength; ++i)
+            {
+                loc3 += loc2[(int)Math.Floor(random.NextDouble() * loc2.Length)];
+            }
+            return loc3;
+        }
+
+        public static string CalcMd5(string str)
+        {
+            var encodedPassword = new UTF8Encoding().GetBytes(str);
+
+            // need MD5 to calculate the hash
+            var hash = ((HashAlgorithm)CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
+            // string representation (similar to UNIX format)
+            var encoded = BitConverter.ToString(hash)
+                // without dashes
+                .Replace("-", string.Empty)
+                // make lowercase
+                .ToLower();
+
+            return encoded;
+        }
+
+        public static string CalcSH1(string str)
+        {
+            var encodedPassword = new UTF8Encoding().GetBytes(str);
+
+            // need SHA1 to calculate the hash
+            var hash = new SHA1Managed().ComputeHash(encodedPassword);
+            // string representation (similar to UNIX format)
+            var encoded = BitConverter.ToString(hash)
+                // without dashes
+                .Replace("-", string.Empty)
+                // make lowercase
+                .ToLower();
+
+            return encoded;
         }
     }
 }

@@ -5,7 +5,7 @@ namespace PPOProtocol
     public class ProtocolTimeout
     {
         public bool IsActive { get; private set; }
-        private DateTime _expirationTime;
+        public DateTime _expirationTime;
 
         public bool Update()
         {
@@ -16,7 +16,7 @@ namespace PPOProtocol
             return IsActive;
         }
 
-        public void Set(int milliseconds = 10000)
+        public void Set(int milliseconds = 1000)
         {
             IsActive = true;
             _expirationTime = DateTime.UtcNow.AddMilliseconds(milliseconds);

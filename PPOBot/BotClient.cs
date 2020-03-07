@@ -4,7 +4,6 @@ using PPOProtocol;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows.Media;
 
 namespace PPOBot
@@ -18,11 +17,10 @@ namespace PPOBot
             Paused
         }
 
-        public static BotClient Instance;
-
         public event Action<State> StateChanged;
-        public event Action Connected;
-        public event Action<Exception> Disconnected;
+        public event Action WebSuccessfullyLoggedIn;
+        public event Action ConnectionOpened;
+        public event Action ConnectionClosed;
         public event Action<string> LogMessage;
         public event Action ClientChanged;
         public event Action<string, Brush> ColoredLogMessage;
@@ -43,6 +41,10 @@ namespace PPOBot
         public BaseScript Script { get; private set; }
         private ProtocolTimeout _actionTimeout = new ProtocolTimeout();
         public Random Rand { get; } = new Random();
+
+        private bool _loginRequested;
+        private bool _saveIdAndHashPassword;
+
         public BotClient()
         {
             AccountManager = new AccountManager("Account");
@@ -51,8 +53,8 @@ namespace PPOBot
             AutoReconnector = new AutoReconnector(this);
             Settings = new UserSettings();
             Account = null;
-            Instance = this;
         }
+
         public void CancelInvokes()
         {
             if (Script != null)
@@ -80,10 +82,10 @@ namespace PPOBot
                 }
             }
         }
-        public void LogoutApi(bool isEnableAutoReconnector)
+        public void LogoutApi(bool allowAutoReconnect)
         {
-            AutoReconnector.IsEnabled = isEnableAutoReconnector;
-            Game.Logout();
+            AutoReconnector.IsEnabled = allowAutoReconnect;
+            Game.Close();
         }
         private void Client_SystemMessage(string message)
         {
@@ -99,15 +101,47 @@ namespace PPOBot
                 Script.OnBattleMessage(message);
             }
         }
-        private void Game_Disconnected(Exception obj)
+
+        private void Client_ConnectionOpened()
         {
-            Disconnected?.Invoke(obj);
+            Game.SendAuthentication(Account.ID, Account.Username, Account.HashPassword);
+            ConnectionOpened?.Invoke();
+        }
+
+        private void Client_ConnectionClosed(Exception ex)
+        {
+            if (ex != null)
+            {
+#if DEBUG
+                LogMessage("Disconnected from the server: " + ex);
+#else
+                LogMessage("Disconnected from the server: " + ex.Message);
+#endif
+            }
+            else
+            {
+                LogMessage("Disconnected from the server.");
+            }
+            ConnectionClosed?.Invoke();
             SetClient(null);
         }
 
-        private void Game_Connected()
+        private void Client_ConnectionFailed(Exception ex)
         {
-            Connected?.Invoke();
+            if (ex != null)
+            {
+#if DEBUG
+                LogMessage("Could not connect to the server: " + ex);
+#else
+                LogMessage("Could not connect to the server: " + ex.Message);
+#endif
+            }
+            else
+            {
+                LogMessage("Could not connect to the server.");
+            }
+            ConnectionClosed?.Invoke();
+            SetClient(null);
         }
 
         public void PrintLogMessage(string obj)
@@ -122,12 +156,20 @@ namespace PPOBot
         {
             AutoReconnector.Update();
             CallInvokes();
+
+            if (_loginRequested)
+            {
+                _loginRequested = false;
+                LoginUpdate();
+                return;
+            }
+
             if (Game is null)
             {
                 return;
             }
 
-            if (Game.IsCreatingNewCharacter)
+            if (Game.IsCreatingCharacter)
             {
                 C_LogMessage("Creating a new character with a random skin...", Brushes.OrangeRed);
                 Game.CreateCharacter();
@@ -141,15 +183,14 @@ namespace PPOBot
 
             if (PokemonEvolver.Update()) return;
             if (MoveTeacher.Update()) return;
-            if (MiningAI != null)
-                if (MiningAI.Update())
-                    return;
+            if (MiningAI?.Update() == true) return;
 
-            if (Game.IsInactive && Game.IsMapLoaded && Game.IsConnected)
+            if (Game.IsMapLoaded && Game.IsConnected && Game.IsInactive)
             {
                 ExecuteNextAction();
             }
         }
+
         public void Start()
         {
             if (Game != null && Script != null && Running == State.Stopped)
@@ -191,15 +232,13 @@ namespace PPOBot
                 Script?.Stop();
                 if (Game != null)
                 {
+                    Game.ClearPath();
                     Game.StopFishing();
                     Game.StopMining();
                 }
             }
         }
-        private async void LoginUpdate()
-        {
-            await _gameConnection.Connect();
-        }
+
         private void SetClient(GameClient client)
         {
             Game = client;
@@ -209,13 +248,14 @@ namespace PPOBot
 
             if (client != null)
             {
-                Game.Timer = DateTime.Now;
                 AI = new BattleAI(Game);
-                MiningAI = new MiningAI(Game);
+                MiningAI = new MiningAI(this);
                 client.LogMessage += PrintLogMessage;
-                client.Connected += Game_Connected;
-                client.Disconnected += Game_Disconnected;
-                client.TeleportationOccuring += client_TeleportationOccuring;
+                client.ConnectionOpened += Client_ConnectionOpened;
+                client.ConnectionFailed += Client_ConnectionFailed;
+                client.ConnectionClosed += Client_ConnectionClosed;
+                client.WebSuccessfullyLoggedIn += Client_WebSuccessfullyLoggedIn;
+                client.TeleportationOccuring += Client_TeleportationOccuring;
                 client.BattleMessage += Client_BattleMessage;
                 client.LoggingError += Client_LoggingError;
                 client.SystemMessage += Client_SystemMessage;
@@ -223,17 +263,33 @@ namespace PPOBot
             ClientChanged?.Invoke();
         }
 
+        private void Client_WebSuccessfullyLoggedIn(string id, string username, string hashpassword)
+        {
+            Account.SetInfo(id, username, hashpassword);
+            
+            if (_saveIdAndHashPassword)
+            {
+                if (AccountManager.Accounts.ContainsKey(Account.Name))
+                    AccountManager.Accounts[Account.Name] = Account;
+                else
+                    AccountManager.Accounts.Add(Account.Name, Account);
+                AccountManager.SaveAccount(Account.Name);
+                _saveIdAndHashPassword = false;
+            }
+
+            WebSuccessfullyLoggedIn?.Invoke();
+        }
+
         private void Client_LoggingError(Exception obj)
         {
             SetClient(null);
         }
-        //Asynchronous
-        public async Task LoadScript(string filename)
+
+        public void LoadScript(string filename)
         {
             using (var reader = new StreamReader(filename))
             {
-                //Asynchronous
-                var input = await reader.ReadToEndAsync();
+                var input = reader.ReadToEnd();
 
                 var libs = new List<string>();
                 if (Directory.Exists("Libs"))
@@ -245,8 +301,7 @@ namespace PPOBot
                         {
                             using (var streamReader = new StreamReader(file))
                             {
-                                //Asynchronous
-                                libs.Add(await streamReader.ReadToEndAsync());
+                                libs.Add(streamReader.ReadToEnd());
                             }
                         }
                     }
@@ -261,8 +316,7 @@ namespace PPOBot
             try
             {
                 Script.ScriptMessage += Script_ScriptMessage;
-                //Asynchronous
-                await Script.Initialize();
+                Script.Initialize();
             }
             catch (Exception)
             {
@@ -300,10 +354,10 @@ namespace PPOBot
             PrintLogMessage(obj);
         }
 
-        private void client_TeleportationOccuring(string map, int x, int y)
+        private void Client_TeleportationOccuring(string map, int x, int y)
         {
             var message = "Position updated: " + map + " (" + x + ", " + y + ")";
-            MiningAI = new MiningAI(Game);
+            MiningAI = new MiningAI(this);
             if (map != Game.MapName)
             {
                 message += " [WARNING, different map] /!\\";
@@ -373,51 +427,51 @@ namespace PPOBot
             return result;
         }
 
-        private GameConnection _gameConnection;
-        public async void Login(Account acc)
+        public void Login(Account acc, bool saveIdAndHashPassword = false)
         {
             if (acc is null) return;
-            try
+            _saveIdAndHashPassword = saveIdAndHashPassword;
+            Account = acc;
+            _loginRequested = true;
+        }
+
+        private void LoginUpdate()
+        {
+            GameConnection gameConnection;
+            WebConnection webConnection;
+            if (Account.Socks.Version != SocksVersion.None)
             {
-                Account = acc;
-                if (Account.Socks.Version != SocksVersion.None)
-                {
-                    if (Account.HttpProxy.Port > -1 && !string.IsNullOrEmpty(Account.HttpProxy.Host))
-                        _gameConnection = new GameConnection(Account.Name, (int)Account.Socks.Version, Account.Socks.Host,
-                            Account.Socks.Port, Account.Socks.Username, Account.Socks.Password, Account.HttpProxy.Host, Account.HttpProxy.Port);
-                    else
-                        _gameConnection = new GameConnection(Account.Name, (int)Account.Socks.Version, Account.Socks.Host,
-                            Account.Socks.Port, Account.Socks.Username, Account.Socks.Password);
-                }
-                else
-                {
-                    if (Account.HttpProxy.Port > -1 && !string.IsNullOrEmpty(Account.HttpProxy.Host))
-                        _gameConnection = new GameConnection(Account.Name, Account.HttpProxy.Host, Account.HttpProxy.Port);
-                    else
-                        _gameConnection = new GameConnection(Account.Name);
-                }
-                if (Settings.Versions != null)
-                {
-                    _gameConnection.GameVersion = Settings.Versions.Split(':')[0];
-                    _gameConnection.Version = Convert.ToInt32(Settings.Versions.Split(':')[1]);
-                }
-                if (Settings.ProtocolKeys != null)
-                {
-                    _gameConnection.KG1Value = Settings.ProtocolKeys.Split(':')[0];
-                    _gameConnection.KG2Value = Settings.ProtocolKeys.Split(':')[1];
-                }
-
-                SetClient(new GameClient(_gameConnection));
-
-                await _gameConnection.PostLogin(Account.Name, Account.Password);
-
-                if (_gameConnection._httpConnection.IsLoggedIn)
-                    LoginUpdate();
+                gameConnection = new GameConnection((int)Account.Socks.Version, Account.Socks.Host,
+                    Account.Socks.Port, Account.Socks.Username, Account.Socks.Password);
             }
-            catch (Exception e)
+            else
             {
-                Game_Disconnected(e);
+                gameConnection = new GameConnection();
             }
+
+            if (!string.IsNullOrEmpty(Account.HttpProxy.Host) && Account.HttpProxy.Port > 0)
+                webConnection = new WebConnection(Account.HttpProxy.Host, Account.HttpProxy.Port);
+            else
+                webConnection = new WebConnection();
+
+            if (Settings.ExtraHttpHeaders.Count > 0)
+            {
+                foreach(var header in Settings.ExtraHttpHeaders)
+                {
+                    webConnection.Client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                    if (header.Key.ToLowerInvariant() == "cookie")
+                        webConnection.ParseCookies(header.Value);
+                }
+            }
+
+            SetClient(new GameClient(gameConnection, webConnection, Settings.ProtocolKeys[0], Settings.ProtocolKeys[1]));
+            if (!string.IsNullOrEmpty(Account.ID) && !string.IsNullOrEmpty(Account.Username))
+            {
+                Account.HashPassword = ObjectSerilizer.CalcSH1(Account.Username + Account.Password);
+                Game.Open();
+            }
+            else
+                Game.SendWebsiteLogin(Account.Name, Account.Password);
         }
     }
 }

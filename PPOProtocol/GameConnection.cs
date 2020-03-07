@@ -1,10 +1,12 @@
 ﻿using System;
-using System.Threading.Tasks;
-using Network;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using BrightNetwork;
 
 namespace PPOProtocol
 {
-    public class GameConnection : Connection
+    public class GameConnection : SimpleTextClient
     {
         private bool _useSocks;
         private int _socksVersion;
@@ -12,18 +14,17 @@ namespace PPOProtocol
         private int _socksPort;
         private string _socksUser;
         private string _socksPass;
-        public bool IsLoggedInToWebsite { get; private set; }
-        public string Id { get; private set; }
 
-        //public event Action LoggedIn;
-        public event Action<Exception> LoggingError;
+        private readonly IPEndPoint serverHost = new IPEndPoint(IPAddress.Parse("167.114.159.20"), 9339);
 
-        public readonly HttpConnection _httpConnection;
+        public GameConnection() : base(new BrightClient())
+        {
+            PacketDelimiter = "\0";
+            TextEncoding = Encoding.UTF8;
+        }
 
-        public string GameVersion;
-        public string KG2Value;
-        public string KG1Value;
-        public GameConnection(string username, int socksVersion, string socksHost, int socksPort, string socksUser, string socksPass, string httphost = "", int httpport = -1)
+        public GameConnection(int socksVersion, string socksHost, int socksPort, string socksUser, string socksPass)
+            : this()
         {
             _useSocks = true;
             _socksVersion = socksVersion;
@@ -31,68 +32,20 @@ namespace PPOProtocol
             _socksPort = socksPort;
             _socksUser = socksUser;
             _socksPass = socksPass;
-
-            if (!string.IsNullOrEmpty(httphost) && httpport > 0)
-                _httpConnection = new HttpConnection(httphost, httpport);
-            else
-                _httpConnection = new HttpConnection();
-
-            _httpConnection.LoggingError += HttpConnection_LoggingError;
-
-            Username = username;
-
-            IsLoggedInToWebsite = false;
-
-            Port = 9339;
-            Host = "167.114.159.20";          
         }
 
-        public GameConnection(string username, string httphost, int httpport)
+        public async void Connect()
         {
-            _httpConnection = new HttpConnection(httphost, httpport);
-            _httpConnection.LoggingError += HttpConnection_LoggingError;
-
-            Username = username;
-
-            IsLoggedInToWebsite = false;
-
-            Port = 9339;
-            Host = "167.114.159.20";
-        }
-
-        public GameConnection(string username)
-        {
-            _httpConnection = new HttpConnection();
-            _httpConnection.LoggingError += HttpConnection_LoggingError;
-            Username = username;
-
-            IsLoggedInToWebsite = false;
-
-            Port = 9339;
-            Host = "167.114.159.20";
-        }
-
-        private void HttpConnection_LoggingError(Exception obj)
-        {
-            LoggingError?.Invoke(obj);
-        }
-        public async Task Connect()
-        {
-
-            base.Username = _httpConnection.Username;
-            Id = _httpConnection.Id;
-            base.HashPassword = _httpConnection.HashPassword;
-
             if (!_useSocks)
             {
-                Connect(Host, Port);
+                Connect(serverHost.Address, serverHost.Port);
             }
             else
             {
                 try
                 {
-                    var socket = await SocksConnection.OpenConnection(_socksVersion, Host, Port, _socksHost, _socksPort, _socksUser, _socksPass);
-                    Initialize(socket, _socksVersion);
+                    Socket socket = await SocksConnection.OpenConnection(_socksVersion, serverHost.Address, serverHost.Port, _socksHost, _socksPort, _socksUser, _socksPass);
+                    Initialize(socket);
                 }
                 catch (Exception ex)
                 {
@@ -100,9 +53,15 @@ namespace PPOProtocol
                 }
             }
         }
-        public async Task PostLogin(string userName, string password)
+
+        protected override string ProcessDataBeforeSending(string data)
         {
-            await _httpConnection.PostLogin(userName, password);
+            return data;
+        }
+
+        protected override string ProcessDataBeforeReceiving(string data)
+        {
+            return data;
         }
     }
 }

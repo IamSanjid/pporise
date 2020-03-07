@@ -4,11 +4,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Network
+namespace BrightNetwork
 {
     public static class SocksConnection
     {
-        public static async Task<Socket> OpenConnection(int version, string serverAddress, int serverPort, string socksAddress, int socksPort, string username = null, string password = null)
+        public static async Task<Socket> OpenConnection(int version, IPAddress serverAddress, int serverPort, string socksAddress, int socksPort, string username = null, string password = null)
         {
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             var endPoint = new DnsEndPoint(socksAddress, socksPort);
@@ -20,14 +20,14 @@ namespace Network
             return socket;
         }
 
-        public static async Task OpenConnectionFromSocks(Socket socket, int version, string serverAddress, int serverPort,
+        public static async Task OpenConnectionFromSocks(Socket socket, int version, IPAddress serverAddress, int serverPort,
             string username = null, string password = null)
         {
             if (socket == null)
             {
-                throw new ArgumentNullException("socket");
+                throw new ArgumentNullException("Socket cannot be null");
             }
-            if (!socket.Connected)
+            else if (!socket.Connected)
             {
                 throw new ArgumentException("Socket has to be connected");
             }
@@ -56,7 +56,7 @@ namespace Network
             await Task.Factory.FromAsync(begin, socket.EndReceive, null);
         }
 
-        private static async Task HandleSocks5(Socket socket, string serverAddress, int serverPort, string username, string password)
+        private static async Task HandleSocks5(Socket socket, IPAddress serverAddress, int serverPort, string username, string password)
         {
             byte[] buffer = new byte[1024];
 
@@ -86,7 +86,6 @@ namespace Network
 
             if (buffer[1] == 0x02)
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
                 byte[] usernameArray = Encoding.ASCII.GetBytes(username);
                 byte[] passwordArray = Encoding.ASCII.GetBytes(password);
 
@@ -119,7 +118,7 @@ namespace Network
                 throw new Exception("Received invalid authentication method from the proxy server");
             }
 
-            byte[] address = IPAddress.Parse(serverAddress).GetAddressBytes();
+            byte[] address = serverAddress.GetAddressBytes();
             byte[] port = BitConverter.GetBytes((ushort)serverPort);
             Array.Reverse(port);
 
@@ -146,11 +145,11 @@ namespace Network
             }
         }
 
-        private static async Task HandleSocks4(Socket socket, string serverAddress, int serverPort)
+        private static async Task HandleSocks4(Socket socket, IPAddress serverAddress, int serverPort)
         {
             byte[] buffer = new byte[1024];
 
-            byte[] address = IPAddress.Parse(serverAddress).GetAddressBytes();
+            byte[] address = serverAddress.GetAddressBytes();
             byte[] port = BitConverter.GetBytes((ushort)serverPort);
             Array.Reverse(port);
 

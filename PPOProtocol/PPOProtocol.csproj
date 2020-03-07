@@ -38,6 +38,9 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HtmlAgilityPack, Version=1.11.18.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlAgilityPack.1.11.18\lib\Net45\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="MoonSharp.Interpreter, Version=2.0.0.0, Culture=neutral, PublicKeyToken=921e73ce94aa17f8, processorArchitecture=MSIL">
       <HintPath>..\packages\MoonSharp.2.0.0.0\lib\net40-client\MoonSharp.Interpreter.dll</HintPath>
     </Reference>
@@ -64,6 +67,9 @@
     <Compile Include="MiningExtentions.cs" />
     <Compile Include="MiningObject.cs" />
     <Compile Include="MovesManager.cs" />
+    <Compile Include="Npc.cs" />
+    <Compile Include="ObjectSerilizer.cs" />
+    <Compile Include="PlayerInfos.cs" />
     <Compile Include="Pokemon.cs" />
     <Compile Include="PokemonAbility.cs" />
     <Compile Include="PokemonExperience.cs" />
@@ -78,12 +84,14 @@
     <Compile Include="ShopItem.cs" />
     <Compile Include="StatType.cs" />
     <Compile Include="TypesManager.cs" />
+    <Compile Include="WebConnection.cs" />
     <Compile Include="WildPokemon.cs" />
+    <Compile Include="XMLApi\DynamicXml.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Network\Network.csproj">
-      <Project>{b469df04-e192-4972-832c-18b5e7f859b6}</Project>
-      <Name>Network</Name>
+    <ProjectReference Include="..\BrightNetwork\BrightNetwork.csproj">
+      <Project>{F6F45690-9361-4DA4-8A8A-18D782E29752}</Project>
+      <Name>BrightNetwork</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

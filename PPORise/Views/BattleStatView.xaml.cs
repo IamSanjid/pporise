@@ -15,18 +15,19 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace PPORise.Views
+namespace PPORise
 {
     /// <summary>
     /// Interaction logic for BattleStatView.xaml
     /// </summary>
     public partial class BattleStatView : UserControl
     {
-        public MainWindow MainWindow { get; set; }
+        public MainWindow MainWindow { get; }
 
-        public BattleStatView()
+        public BattleStatView(MainWindow mWin)
         {
             InitializeComponent();
+            MainWindow = mWin;
         }
 
         private static T FindAnchestor<T>(DependencyObject current) where T : DependencyObject

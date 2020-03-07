@@ -77,9 +77,9 @@
     <Compile Include="Utils\TaskUtils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Network\Network.csproj">
-      <Project>{b469df04-e192-4972-832c-18b5e7f859b6}</Project>
-      <Name>Network</Name>
+    <ProjectReference Include="..\BrightNetwork\BrightNetwork.csproj">
+      <Project>{f6f45690-9361-4da4-8a8a-18d782e29752}</Project>
+      <Name>BrightNetwork</Name>
     </ProjectReference>
     <ProjectReference Include="..\PPOProtocol\PPOProtocol.csproj">
       <Project>{37c4e375-e98d-420e-a14f-e4396d56d885}</Project>

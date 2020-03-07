@@ -14,7 +14,7 @@ using PPOProtocol;
 using Brush = System.Windows.Media.Brush; //ReSharper converted
 using Brushes = System.Windows.Media.Brushes; //ReSharper converted
 
-namespace PPORise.Views
+namespace PPORise
 {
     /// <summary>
     /// Interaction logic for ChatCommandsView.xaml
@@ -396,25 +396,17 @@ namespace PPORise.Views
         }
         private void AddChatMessage(RichTextBox richTextBox, string message, Brush color = null)
         {
-            if (color is null)
-                color = Brushes.Aqua;
-            var test = new TextRange(richTextBox.Document.ContentEnd, richTextBox.Document.ContentEnd);
+            string text;
             if (Equals(richTextBox, ((ChatPanel)_commandsTab.Content).ChatBox))
             {
-                test.Text = message + Environment.NewLine;
+                text = message;
             }
             else
             {
-                test.Text = "[" + DateTime.Now.ToLongTimeString() + "] " + message + '\r';
+                text = "[" + DateTime.Now.ToLongTimeString() + "] " + message;
             }
 
-            // Coloring there.
-            test.ApplyPropertyValue(TextElement.ForegroundProperty, color);
-            if (richTextBox.Selection.IsEmpty)
-            {
-                richTextBox.CaretPosition = richTextBox.Document.ContentEnd;
-                richTextBox.ScrollToEnd();
-            }
+            MainWindow.AppendLineToRichTextBox(richTextBox, text, color);
 
             if (Equals(richTextBox, ((ChatPanel) _commandsTab.Content).ChatBox))
             {
@@ -448,11 +440,11 @@ namespace PPORise.Views
                                 "/startSurfBattle\t--Starts a wild battle of surf(not fishing).\n/switchPokemon Pokemon_index\t--Changes active Pokemon to another specific Pokemon while wild battle.\n" +
                                 "/useMove moveIndex/blank to use specific move or just type this to use first move.\n/run\t--Runs away from the current wild battle.\n/startFishing rod_name\t--Starts Fishing with specific rod.\n" +
                                 "/stopFishing\t--Stops Fishing if fishing has been started.\n/useItem item_name or blank\t--Uses an specific item or uses first item if it is blank in battle.\n/getPokeMoves index_of_Pokemon\t--This will printout you're specific Pokemon's Moves.\n" +
-                                "/swapPokemon Pokemon1,Pokemon2\t Swaps Pokemon.\n/getMiningRocks\t--Counts total minable rocks of current map.\n" +
+                                "/swapPokemon Pokemon1,Pokemon2\t Swaps Pokemon.\n/getMiningRocks\t--Counts total minable rocks of current map.\n/startTrainerBattle index,name" +
                                 "/useItemOn Item Name,Pokemon_Index\t--Uses the specified item on the specified pokémon.\n/takeItemFromPokemon Pokemon_index\t--Takes the held item from the specified pokemon.\n/giveItemToPokemon Item Name,Pokemon_index\t--Gives the specified item on the specified pokemon.\n" +
-                                "/openShop\t--Opens the Pokemart shop.\n/buyItem ItemName,amount\t--Buys the specified item from the opened shop.\n/pokemon\t--Prints out the Pokemon names that can be found in your current map." +
-                                "\n/countColoredRocks rock_color\t--Counts all rocks which color is specific.\n/findClosestRock\t--Finds the closests rock and prints out the cell.\n/moveLeft\t--Moves the player left.\n/moveRight\t--Moves the player right." +
-                                "\n/moveDown\t--Moves the player down.\n/moveUp\t--Moves the player up.\n/version\t--Prints out the version of the current bot.\n/moveToCell X,Y\t--Moves the player to specific coordinate\n/getHM 1-5\t--Get specific HM without moving the player." +
+                                "/openShop\t--Opens the Pokemart shop.\n/buyItem ItemName,amount\t--Buys the specified item from the opened shop.\n/pokemon\t--Prints out the Pokemon names that can be found in your current map.\n/setMount mount_name\n/setSurfMount mount_name" +
+                                "\n/countColoredRocks rock_color\t--Counts all rocks which color is specific.\n/findClosestRock\t--Finds the closests rock and prints out the cell.\n/moveLeft\t--Moves the player left.\n/moveRight\t--Moves the player right.\n/mineRock axe_name,x,y" +
+                                "\n/moveDown\t--Moves the player down.\n/moveUp\t--Moves the player up.\n/version\t--Prints out the version of the current bot.\n/moveToCell X,Y\t--Moves the player to specific coordinate\n/getHM 1-5\t--Get specific HM without moving the player.\n/removeMoney \t--Ammount you want to remove." +
                                 "\n/useBike\t--Will use bike while moving.\n/buyEliteTokens amount\t--Buys elite tokens.\n/getStarter starter_name\t--Gets a starter.\n/withdrawPokemonFromPC box_index,pokemonBox_index\t--Withdraws a pokemon from the PC.\n/depositePokemonToPC box_index,team_index\t--Deposites a pokemon to PC");
                             break;
                         case "withdrawpokemonfrompc":
@@ -460,7 +452,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.IsInBattle)
                                     {
                                         command = command.Replace(commandArg[0] + " ", "");
                                         if (!command.Contains(","))
@@ -478,7 +470,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.IsInBattle)
                                     {
                                         command = command.Replace(commandArg[0] + " ", "");
                                         if (!command.Contains(","))
@@ -496,7 +488,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.IsInBattle)
                                     {
                                         command = command.Replace(commandArg[0] + " ", "");
                                         var name = command;
@@ -507,12 +499,26 @@ namespace PPORise.Views
                                 }
                             }
                             break;
+                        case "removemoney":
+                            lock(_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        var amount = Convert.ToInt32(command);
+                                        _bot.Game.RemoveMoney(amount);
+                                    }
+                                }
+                            }
+                            break;
                         case "buyelitetokens":
                             lock (_bot)
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.IsInBattle)
                                     {
                                         command = command.Replace(commandArg[0] + " ", "");
                                         var amount = Convert.ToInt32(command);
@@ -528,7 +534,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.IsInBattle)
                                     {
                                         command = command.Replace(commandArg[0] + " ", "");
                                         var x = Convert.ToInt32(command.Split(',')[0]);
@@ -547,18 +553,38 @@ namespace PPORise.Views
                                 {
                                     if (_bot.Game.IsMapLoaded)
                                     {
-                                        _bot.Game._moveType = "bike";
+                                        if (_bot.Game._moveType == "bike")
+                                            _bot.Game.SetMount("Bike");
+                                        else
+                                            _bot.Game.SetMount("");
                                     }
                                 }
                             }
 
+                            break;
+                        case "setmount":                           
+                        case "setsurfmount":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.IsInBattle)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        var name = command;
+
+                                        _bot.Game.SetMount(name, commandArg[0].ToLowerInvariant() == "setsurfmount");
+
+                                    }
+                                }
+                            }
                             break;
                         case "gethm":
                             lock (_bot)
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.IsMapLoaded && !_bot.Game.Battle)
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.IsInBattle)
                                     {
                                         command = command.Replace(commandArg[0] + " ", "");
                                         var hmNum = Convert.ToInt16(command);
@@ -618,7 +644,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game is null is false)
                                 {
-                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && !_bot.Game.Battle &&
+                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && !_bot.Game.IsInBattle &&
                                         _bot.Game.Team.Count > 0)
                                     {
                                         _bot.Game.StartWildBattle();
@@ -642,7 +668,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game is null is false)
                                 {
-                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && !_bot.Game.Battle &&
+                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && !_bot.Game.IsInBattle &&
                                         _bot.Game.Team.Count > 0)
                                     {
                                         _bot.Game.StartSurfWildBattle();
@@ -650,23 +676,46 @@ namespace PPORise.Views
                                     else
                                     {
                                         AddChatMessage(((ChatPanel) _commandsTab.Content).ChatBox,
-                                            @"Please make sure you're logged in/you're not in battle/you got atleast 1 Pokemon/you're current map is loaded.");
+                                            @"Please make sure you're logged in/you're not in battle/you got at least 1 Pokemon/you're current map is loaded.");
                                     }
                                 }
                                 else
                                 {
                                     AddChatMessage(((ChatPanel) _commandsTab.Content).ChatBox,
+                                        @"Please make sure you're logged in/you're not in battle/you got at least 1 Pokemon/you're current map is loaded.");
+                                }
+                            }
+                            break;
+                        case "starttrainerbattle":
+                            lock (_bot)
+                            {
+                                if (_bot.Game is null is false)
+                                {
+                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && !_bot.Game.IsInBattle &&
+                                        _bot.Game.Team.Count > 0)
+                                    {
+                                        var splitted = commandArg[1].Split(',');
+                                        _bot.Game.StartTrainerBattle(splitted[0], splitted[1]);
+                                    }
+                                    else
+                                    {
+                                        AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
+                                            @"Please make sure you're logged in/you're not in battle/you got atleast 1 Pokemon/you're current map is loaded.");
+                                    }
+                                }
+                                else
+                                {
+                                    AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
                                         @"Please make sure you're logged in/you're not in battle/you got atleast 1 Pokemon/you're current map is loaded.");
                                 }
                             }
-
                             break;
                         case "usemove":
                             lock (_bot)
                             {
                                 if (_bot.Game is null is false)
                                 {
-                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && _bot.Game.Battle &&
+                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && _bot.Game.IsInBattle &&
                                         _bot.Game.Team.Count > 0)
                                     {
                                         if (commandArg.Length > 1)
@@ -704,7 +753,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && _bot.Game.Battle &&
+                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && _bot.Game.IsInBattle &&
                                         _bot.Game.Team.Count > 0)
                                     {
                                         if (commandArg.Length > 0)
@@ -731,7 +780,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game is null is false)
                                 {
-                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && _bot.Game.Battle &&
+                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && _bot.Game.IsInBattle &&
                                         _bot.Game.Team.Count > 0)
                                     {
                                         _bot.Game.Run();
@@ -755,7 +804,7 @@ namespace PPORise.Views
                                 {
                                     if (commandArg.Length > 0)
                                     {
-                                        if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && !_bot.Game.Battle &&
+                                        if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && !_bot.Game.IsInBattle &&
                                             _bot.Game.Team.Count > 0 && !_bot.Game.IsFishing)
                                         {
                                             if (commandArg.Length > 1)
@@ -767,7 +816,7 @@ namespace PPORise.Views
                                                     loc3 = loc3 + 1;
                                                 }
 
-                                                _bot.Game.SendFishing(commandArg[1]);
+                                                _bot.Game.FishWith(commandArg[1]);
                                             }
                                             else
                                                 AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
@@ -788,7 +837,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && _bot.Game.Battle &&
+                                    if (_bot.Game.IsConnected && _bot.Game.IsMapLoaded && _bot.Game.IsInBattle &&
                                         _bot.Game.Team.Count > 0 && _bot.Game.IsFishing)
                                     {
                                         _bot.Game.StopFishing();
@@ -807,7 +856,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.Battle && _bot.Game.IsConnected && _bot.Game.IsMapLoaded)
+                                    if (_bot.Game.IsInBattle && _bot.Game.IsConnected && _bot.Game.IsMapLoaded)
                                     {
                                         if (commandArg.Length > 1)
                                         {
@@ -857,7 +906,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.Battle && _bot.Game.IsConnected && _bot.Game.IsMapLoaded)
+                                    if (_bot.Game.IsInBattle && _bot.Game.IsConnected && _bot.Game.IsMapLoaded)
                                     {
                                         AddChatMessage(((ChatPanel) _commandsTab.Content).ChatBox,
                                             $"Active Pokemon: {_bot.AI.ActivePokemon.Name}");
@@ -921,7 +970,7 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (!_bot.Game.Battle && command.Contains(","))
+                                    if (!_bot.Game.IsInBattle && command.Contains(","))
                                     {
                                         var commandPer = command.Replace("swapPokemon ", "").Split(',');
                                         _bot.Game.SwapPokemon(int.Parse(commandPer[0]), int.Parse(commandPer[1]));
@@ -1070,7 +1119,7 @@ namespace PPORise.Views
                                                 InventoryItem item =
                                                     _bot.Game.GetItemFromName(itemName.ToUpperInvariant());
 
-                                                if (item != null && item.Quntity > 0)
+                                                if (item != null && item.Quantity > 0)
                                                 {
                                                     if (!_bot.Game.IsInBattle && !item.IsEquipAble())
                                                     {
@@ -1119,7 +1168,7 @@ namespace PPORise.Views
 
                                                 InventoryItem item = _bot.Game.GetItemFromName(itemName);
 
-                                                if (item != null && item.Quntity > 0)
+                                                if (item != null && item.Quantity > 0)
                                                 {
                                                     if (!_bot.Game.IsInBattle && item.IsEquipAble())
                                                     {
@@ -1239,6 +1288,7 @@ namespace PPORise.Views
                                     if (_bot.Game.MiningObjects is null || _bot.Game.MiningObjects.Count > 0 is false)
                                     {
                                         AddChatMessage(rtCommand, "Sorry, there is no rock around your map.");
+                                        return;
                                     }
 
                                     var closeRock = _bot.MiningAI.FindClosestRock();
@@ -1254,13 +1304,38 @@ namespace PPORise.Views
                                 }
                             }
                             break;
+                        case "minerock":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.MiningObjects is null || _bot.Game.MiningObjects.Count > 0 is false)
+                                    {
+                                        AddChatMessage(rtCommand, "Sorry, there is no rock around your map.");
+                                        return;
+                                    }
+                                    var arr = command.Replace(commandArg[0] + " ", "").Split(',');
+                                    if (arr.Length != 3)
+                                    {
+                                        AddChatMessage(rtCommand, "Sorry, make sure you've entered x,y and the axe name.");
+                                        return;
+                                    }
+                                    _bot.Game.MineRock(int.Parse(arr[1]), int.Parse(arr[2]), arr[0]); 
+                                }
+                                else
+                                {
+                                    AddChatMessage(((ChatPanel)_commandsTab.Content).ChatBox,
+                                        "Please login first to use this command or wait for some seconds until it loads all game data.");
+                                }
+                            }
+                            break;
                         case "moveleft":
                             lock (_bot)
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.Battle || !_bot.Game.IsMapLoaded) return;
-                                    _bot.Game.SendMovement("left");
+                                    if (_bot.Game.IsInBattle || !_bot.Game.IsMapLoaded) return;
+                                    _bot.Game.Move(Direction.Left, "");
                                 }
                                 else
                                 {
@@ -1274,8 +1349,8 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.Battle || !_bot.Game.IsMapLoaded) return;
-                                    _bot.Game.SendMovement("right");
+                                    if (_bot.Game.IsInBattle || !_bot.Game.IsMapLoaded) return;
+                                    _bot.Game.Move(Direction.Right, "");
                                 }
                                 else
                                 {
@@ -1289,8 +1364,8 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.Battle || !_bot.Game.IsMapLoaded) return;
-                                    _bot.Game.SendMovement("down");
+                                    if (_bot.Game.IsInBattle || !_bot.Game.IsMapLoaded) return;
+                                    _bot.Game.Move(Direction.Down, "");
                                 }
                                 else
                                 {
@@ -1304,8 +1379,8 @@ namespace PPORise.Views
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.Battle || !_bot.Game.IsMapLoaded) return;
-                                    _bot.Game.SendMovement("up");
+                                    if (_bot.Game.IsInBattle || !_bot.Game.IsMapLoaded) return;
+                                    _bot.Game.Move(Direction.Up, "");
                                 }
                                 else
                                 {
@@ -1349,11 +1424,11 @@ namespace PPORise.Views
     //Special Class to find out text lines
     public static class Extentions
     {
-        public static long Lines(this string s)
+        public static long TotalLines(this string s)
         {
             long count = 1;
             int position = 0;
-            while ((position = s.IndexOf('\n', position)) != -1)
+            while ((position = s.IndexOf(Environment.NewLine, position)) != -1)
             {
                 count++;
                 position++;

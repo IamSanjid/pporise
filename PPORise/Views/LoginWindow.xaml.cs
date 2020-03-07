@@ -60,6 +60,7 @@ namespace PPORise
         public string Password => PasswordTextBox.Password;
         public bool HasProxy => ProxyCheckBox?.IsChecked != null && ProxyCheckBox.IsChecked.Value;
         public bool HasHttpProxy => HttpProxyCheck?.IsChecked != null && HttpProxyCheck.IsChecked.Value;
+        public bool SaveIdAndHashPassword => SaveIdHashCheckBox?.IsChecked != null && SaveIdHashCheckBox.IsChecked.Value;
 
         public int ProxyVersion
         {
@@ -139,30 +140,19 @@ namespace PPORise
                 if (int.TryParse(ProxyPortTextBox.Text.Trim(), out int port) && port >= 0 && port <= 65535)
                 {
                     ProxyPort = port;
-                    if (HasHttpProxy)
-                    {
-                        if (int.TryParse(HttpProxyPortTextBox.Text.Trim(), out int httpport) && httpport >= 0 && httpport <= 65535)
-                        {
-                            HttpProxyPort = httpport;
-                            DialogResult = true;
-                        }
-                    }
-                    else
-                        DialogResult = true;
+                    goto CHECK_HTTP;
                 }
             }
-            else if (HasHttpProxy)
+            CHECK_HTTP:
+            if (HasHttpProxy)
             {
                 if (int.TryParse(HttpProxyPortTextBox.Text.Trim(), out int httpport) && httpport >= 0 && httpport <= 65535)
                 {
                     HttpProxyPort = httpport;
-                    DialogResult = true;
                 }
             }
-            else
-            {
-                DialogResult = true;
-            }
+
+            DialogResult = true;
         }
         private void ProxyCheckBox_Checked(object sender, RoutedEventArgs e)
         {
@@ -353,7 +343,14 @@ namespace PPORise
             {
                 return;
             }
+            
             var account = new Account(UsernameTextBox.Text.Trim());
+            if (_bot.AccountManager.Accounts.ContainsKey(account.Name))
+            {
+                account.ID = _bot.AccountManager.Accounts[account.Name].ID;
+                account.HashPassword = _bot.AccountManager.Accounts[account.Name].HashPassword;
+                account.Username = _bot.AccountManager.Accounts[account.Name].Username;
+            }
 
             if (!string.IsNullOrEmpty(PasswordTextBox.Password))
             {

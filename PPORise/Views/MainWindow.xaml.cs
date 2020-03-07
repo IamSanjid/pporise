@@ -1,7 +1,6 @@
 ﻿using Microsoft.Win32;
 using PPOBot;
 using PPOProtocol;
-using PPORise.Views;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -149,8 +148,13 @@ namespace PPORise
         public ChatCommandsView ChatCommandsView { get; }
         public InventoryView Inventory { get; }
         public BattleStatView BattleStat { get; }
+        public PlayersView Players { get; }
         private FileLogger FileLog { get; }
         private List<TabView> _views = new List<TabView>();
+
+        DateTime _refreshPlayers;
+        int _refreshPlayersDelay;
+
         private struct TabView
         {
             public ContentControl Content { get; set; }
@@ -169,10 +173,11 @@ namespace PPORise
 
             Thread.CurrentThread.Name = "UI Thread";
             Bot = new BotClient();
-            Bot.Connected += Client_Connected;
+            Bot.ConnectionOpened += Bot_ConnectionOpened;
+            Bot.ConnectionClosed += Bot_ConnectionClosed;
+            Bot.WebSuccessfullyLoggedIn += OnWebSuccessfullyLoggedIn;
             Bot.AutoReconnector.StateChanged += Bot_AutoReconnectorStateChanged;
             Bot.PokemonEvolver.StateChanged += Bot_PokemonEvolverStateChanged;
-            Bot.Disconnected += Bot_ConnectionClosed;
             Bot.LogMessage += Bot_LogMessage;
             Bot.ColoredLogMessage += Bot_ColoredLogMessage;
             Bot.ClientChanged += Bot_ClientChanged;
@@ -185,23 +190,21 @@ namespace PPORise
 
             FileLog = new FileLogger();
 
-            Team = new TeamView(Bot);
-            ChatCommandsView = new ChatCommandsView(Bot);
-            Inventory = new InventoryView(Bot);
-            BattleStat = new BattleStatView();
+            _refreshPlayers = DateTime.UtcNow;
+            _refreshPlayersDelay = 5000;
 
-            {
-                //Drag window things....
-                Team.MainWindow = this;
-                BattleStat.MainWindow = this;
-                Inventory.MainWindow = this;
-                //End of Drag Window things...
-            }
+            Team = new TeamView(Bot, this);
+            ChatCommandsView = new ChatCommandsView(Bot);
+            Inventory = new InventoryView(Bot, this);
+            BattleStat = new BattleStatView(this);
+            Players = new PlayersView(Bot, this);
+
 
             AddView(Team, TeamContent, TeamTab, true);
             AddView(ChatCommandsView, ChatCommandsContent, ChatTab);
             AddView(Inventory, InventoryContent, InventoryTab);
             AddView(BattleStat, BattleStatsContent, BattleStatTab);
+            AddView(Players, PlayersContent, PlayersTab);
 
             App.InitializeVersion();
 
@@ -224,7 +227,7 @@ namespace PPORise
             Task.Run(() => UpdateClients());
         }
 
-        private void Client_Connected()
+        private void Bot_ConnectionOpened()
         {
             Dispatcher.InvokeAsync(delegate
             {
@@ -233,16 +236,15 @@ namespace PPORise
                 LoginButton2.Content = "Logout";
                 LoginButton2.IsEnabled = true;
                 LoginButtonIcon.Kind = PackIconKind.Logout;
-                LogMessage("Connected to the server.", (Brush)new BrushConverter().ConvertFrom("#28d659"));
+                LogMessage("Connected to the game server.", (Brush)new BrushConverter().ConvertFrom("#28d659"));
+                LogMessage("Sending authentication to the server....", Brushes.ForestGreen);
             });
         }
-        private async void Bot_ConnectionClosed(Exception ex)
+
+        private void Bot_ConnectionClosed()
         {
-            await Dispatcher.InvokeAsync(delegate
+            Dispatcher.InvokeAsync(delegate
             {
-                LogMessage(ex is null
-                    ? "Disconnected from the server."
-                    : $"Disconnected from the server due to: {ex}", System.Drawing.Color.OrangeRed);
                 LoginButton.IsEnabled = true;
                 LoginButton2.Content = "Login";
                 LoginButton2.IsEnabled = true;
@@ -255,7 +257,7 @@ namespace PPORise
         {
             Dispatcher.InvokeAsync(delegate
             {
-                LogMessage(@"Logging failed. Please check your password and username again or your internet connection or please use another http proxy (if you have used one).", Brushes.OrangeRed);
+                LogMessage(@"Logging failed. Please check your password and username again or your Internet connection or please use another Http proxy (if you have used one).", Brushes.OrangeRed);
                 LoginButton.IsEnabled = true;
                 LoginButton2.Content = "Login";
                 LoginButton2.IsEnabled = true;
@@ -330,16 +332,61 @@ namespace PPORise
         }
         private void LogMessage(string message, Brush color)
         {
-            var test = new TextRange(MessageTextBox.Document.ContentEnd, MessageTextBox.Document.ContentEnd)
+            /*var test = new TextRange(MessageTextBox.Document.ContentEnd, MessageTextBox.Document.ContentEnd)
             {
                 Text = "[" + DateTime.Now.ToLongTimeString() + "] " + message + '\r'
             };
 
             // Coloring there.
-            test.ApplyPropertyValue(TextElement.ForegroundProperty, color);
-            FileLog.Append(test.Text);
-            MessageTextBox.ScrollToEnd();
+            test.ApplyPropertyValue(TextElement.ForegroundProperty, color);*/
+            var text = "[" + DateTime.Now.ToLongTimeString() + "] " + message;
+            AppendLineToRichTextBox(MessageTextBox, text, color);
+            FileLog.Append(text);
+            //MessageTextBox.ScrollToEnd();
         }
+
+        public static void AppendLineToRichTextBox(RichTextBox richTextBox, string message, Brush color = null)
+        {
+            if (color is null)
+                color = Brushes.Aqua;
+
+            Paragraph para;
+
+            para = richTextBox.Document.Blocks.LastBlock as Paragraph;
+
+            para.Inlines.Add(new Run(message)
+            {
+                Foreground = color
+            });
+
+            richTextBox.Document.Blocks.Add(para);
+            // adding extra line...
+            richTextBox.Document.Blocks.Add(new Paragraph() { Margin = new Thickness(0) });
+
+            var range = new TextRange(richTextBox.Document.ContentStart, richTextBox.Document.ContentEnd);
+            if (range.Text.Length > 12000)
+            {
+                var text = range.Text;
+                text = text.Substring(text.Length - 10000, 10000);
+                var index = text.IndexOf(Environment.NewLine, StringComparison.Ordinal);
+                if (index != -1)
+                {
+                    text = text.Substring(index + Environment.NewLine.Length);
+                }
+                var remove_lines = richTextBox.Document.Blocks.Count - (int)text.TotalLines();
+                for (var i = remove_lines; i >= 0; i--)
+                {
+                    richTextBox.Document.Blocks.Remove(richTextBox.Document.Blocks.ElementAt(i));
+                }
+            }
+
+            if (richTextBox.Selection.IsEmpty)
+            {
+                richTextBox.CaretPosition = richTextBox.Document.ContentEnd;
+                richTextBox.ScrollToEnd();
+            }
+        }
+
         private void LogMessage(string message)
         {
             var bc = new BrushConverter();
@@ -416,11 +463,23 @@ namespace PPORise
         private void Login(LoginWindow login)
         {
             try
-            {
-                LogMessage("Getting hash password from the website....", (Brush)new BrushConverter().ConvertFrom("#28d659"));
+            {               
                 lock(Bot)
                 {
                     var account = new Account(login.Username) { Password = login.Password };
+
+                    if (Bot.AccountManager.Accounts.ContainsKey(login.Username))
+                    {
+                        account.HashPassword = Bot.AccountManager.Accounts[login.Username].HashPassword;
+                        account.ID = Bot.AccountManager.Accounts[login.Username].ID;
+                        account.Username = Bot.AccountManager.Accounts[login.Username].Username;
+                    }
+
+                    if (string.IsNullOrEmpty(account.ID) || string.IsNullOrEmpty(account.HashPassword) || string.IsNullOrEmpty(account.Username))
+                        LogMessage("Connecting and logging in to the web server....", (Brush)new BrushConverter().ConvertFrom("#28d659"));
+                    else
+                        LogMessage("Connecting to the server....", (Brush)new BrushConverter().ConvertFrom("#28d659"));
+
                     if (login.HasProxy && login.ProxyPort > 0)
                     {
                         account.Socks.Version = (SocksVersion)login.ProxyVersion;
@@ -434,7 +493,7 @@ namespace PPORise
                         account.HttpProxy.Host = login.HttpProxyHost;
                         account.HttpProxy.Port = login.HttpProxyPort;
                     }
-                    Bot.Login(account);
+                    Bot.Login(account, login.SaveIdAndHashPassword);
                 }
             }
             catch (Exception e)
@@ -532,6 +591,7 @@ namespace PPORise
                 if (Equals(view.Button, sender))
                 {
                     view.Content.Visibility = Visibility.Visible;
+                    _refreshPlayersDelay = Equals(view.Content, PlayersContent) ? 200 : 5000;
                 }
                 else
                 {
@@ -556,29 +616,15 @@ namespace PPORise
                     Bot.Game.PlayerPositionUpdated += Game_PlayerPositionUpdated;
                     Bot.Game.BattleMessage += Client_BattleMessage;
                     Bot.Game.EnemyUpdated += Battle_EnemyUpdated;
-                    Bot.Game.SuccessfullyAuthenticated += () =>
-                        Dispatcher.InvokeAsync(delegate
-                        {
-                            LogMessage("Successfully authenticated.",
-                                (Brush)new BrushConverter().ConvertFrom("#28d659"));
-                        });
-
-                    Bot.Game.AuthenticationFailed += () =>
-                        Dispatcher.InvokeAsync(delegate
-                        {
-                            LogMessage(
-                                "Something went wrong while trying to log in to the server. " +
-                                "Make sure you have been logged out from the web browser or website and re-check your username and password. " +
-                                "Or may be it is your connection problem like slow internet or proxy is slow.", Brushes.OrangeRed);
-                        });
+                    Bot.Game.SuccessfullyAuthenticated += Client_SuccessfullyAuthenticated;
+                    Bot.Game.AuthenticationFailed += Client_AuthenticationFailed;
                     Bot.Game.ChatMessage += ChatCommandsView.ChatMessage_Receieved;
                     Bot.Game.PrivateChat += ChatCommandsView.ProcessPrivateMessages;
                     Bot.Game.ShopOpened += Client_ShopOpened;
-                    Bot.Game.SystemMessage += s =>
-                        Dispatcher.InvokeAsync(delegate
-                        {
-                            LogMessage($"[System] {s}", (Brush)new BrushConverter().ConvertFrom("#28d659"));
-                        });
+                    Bot.Game.SystemMessage += Client_SystemMessage;
+                    Bot.Game.PlayerAdded += Client_PlayerAdded;
+                    Bot.Game.PlayerUpdated += Client_PlayerUpdated;
+                    Bot.Game.PlayerRemoved += Client_PlayerRemoved;
                 }
             }
             Dispatcher.InvokeAsync(delegate
@@ -591,6 +637,44 @@ namespace PPORise
                 {
                     FileLog.CloseFile();
                 }
+            });
+        }
+
+        private void Client_SystemMessage(string message)
+        {
+            Dispatcher.InvokeAsync(delegate
+            {
+                LogMessage($"[System] {message}", (Brush)new BrushConverter().ConvertFrom("#28d659"));
+            });
+        }
+
+        private void Client_AuthenticationFailed()
+        {
+            Dispatcher.InvokeAsync(delegate
+            {
+                LogMessage(
+                    "Something went wrong while trying to log in to the server. " +
+                    "Make sure you have been logged out from the web browser or website and re-check your username and password. " +
+                    "Or may be it is your connection problem like slow Internet or proxy is slow.", Brushes.OrangeRed);
+            });
+        }
+
+        private void Client_SuccessfullyAuthenticated()
+        {
+            Dispatcher.InvokeAsync(delegate
+            {
+                LogMessage("Successfully authenticated.",
+                    (Brush)new BrushConverter().ConvertFrom("#28d659"));
+            });
+        }
+
+        private void OnWebSuccessfullyLoggedIn()
+        {
+            Dispatcher.InvokeAsync(delegate
+            {
+                LogMessage("Successfully connected and logged in to the web server.",
+                    (Brush)new BrushConverter().ConvertFrom("#28d659"));
+                LogMessage("Connecting to the game server....", (Brush)new BrushConverter().ConvertFrom("#28d659"));
             });
         }
 
@@ -641,7 +725,7 @@ namespace PPORise
             });
         }
 
-        private void Client_BattleEnded()
+        private void Client_BattleEnded(int battleStatus)
         {
             Dispatcher.InvokeAsync(delegate
             {
@@ -649,10 +733,18 @@ namespace PPORise
                 {
                     if (Bot.Game != null)
                     {
+                        var hasWon = (battleStatus & 0b100) > 0;
+                        var hasLost = (battleStatus & 0b010) > 0;
+                        var hasEnded = (battleStatus & 0b001) > 0;
+                        if (hasEnded)
+                            LogMessage("The battle has ended.", Brushes.Aqua);
+                        else if (hasLost)
+                            LogMessage("You've lost the battle!", Brushes.Aqua);
+                        else if (hasWon)
+                            LogMessage("You've won the battle!", Brushes.Aqua);
+
                         StatusText.Text = "Online";
                         StatusText.Foreground = (Brush) new BrushConverter().ConvertFrom("#28d659");
-                        MoneyText.Text = $"{Bot.Game.Money}$";
-                        CreditText.Text = $"{Bot.Game.Credits}";
                     }
                 }
             });
@@ -672,6 +764,42 @@ namespace PPORise
             });
         }
 
+        private void Client_PlayerAdded(PlayerInfos player)
+        {
+            if (_refreshPlayers < DateTime.UtcNow)
+            {
+                Dispatcher.InvokeAsync(delegate
+                {
+                    Players.RefreshView();
+                });
+                _refreshPlayers = DateTime.UtcNow.AddMilliseconds(_refreshPlayersDelay);
+            }
+        }
+
+        private void Client_PlayerUpdated(PlayerInfos player)
+        {
+            if (_refreshPlayers < DateTime.UtcNow)
+            {
+                Dispatcher.InvokeAsync(delegate
+                {
+                    Players.RefreshView();
+                });
+                _refreshPlayers = DateTime.UtcNow.AddMilliseconds(_refreshPlayersDelay);
+            }
+        }
+
+        private void Client_PlayerRemoved(PlayerInfos player)
+        {
+            if (_refreshPlayers < DateTime.UtcNow)
+            {
+                Dispatcher.InvokeAsync(delegate
+                {
+                    Players.RefreshView();
+                });
+                _refreshPlayers = DateTime.UtcNow.AddMilliseconds(_refreshPlayersDelay);
+            }
+        }
+
         private void Client_BattleMessage(string obj)
         {
             Dispatcher.InvokeAsync(delegate
@@ -680,11 +808,6 @@ namespace PPORise
                 {
                     if (obj != "")
                         LogMessage(FirstCharToUpper(obj), Brushes.Aqua);
-                    var isMessageContainsUserPokemon = Bot.Game.Team.Count(p => obj.Contains(p.Name)) > 0;
-                    if (obj.IndexOf("has fainted", StringComparison.InvariantCultureIgnoreCase) >= 0 && !isMessageContainsUserPokemon)
-                    {
-                        LogMessage("You have won the battle!", Brushes.Aqua); //Stupid Pokemon Planet.
-                    }
                 }
             });
         }
@@ -772,12 +895,12 @@ namespace PPORise
             
         }
 
-        private async void LoadScriptButton_OnClick(object sender, RoutedEventArgs e)
+        private void LoadScriptButton_OnClick(object sender, RoutedEventArgs e)
         {
-            await LoadScript();
+            LoadScript();
         }
 
-        private async Task LoadScript(string filePath = null)
+        private void LoadScript(string filePath = null)
         {
             if (filePath == null)
             {
@@ -798,14 +921,19 @@ namespace PPORise
                 Bot.Settings.LastScript = filePath;
                 ReloadPopup.Content = "Reload " + Path.GetFileName(filePath) + "\tCtrl+R";
                 ReloadPopup.IsEnabled = true;
-                await Bot.LoadScript(filePath);
-                LogMessage("Script \"{0}\" by \"{1}\" successfully loaded", Bot.Script.Name, Bot.Script.Author);
-                if (Bot.Script != null)
+                new Thread(() =>
                 {
-
-                    Bot.Script.FlashBotWindow += FlashWindow;
-                }
-
+                    Bot.LoadScript(filePath);
+                    Dispatcher.InvokeAsync(() =>
+                    {
+                        LogMessage("Script \"{0}\" by \"{1}\" successfully loaded", Bot.Script.Name, Bot.Script.Author);
+                        if (Bot.Script != null)
+                        {
+                            Bot.Script.FlashBotWindow += FlashWindow;
+                        }
+                    });
+                })
+                { IsBackground = true }.Start();
             }
             catch (Exception ex)
             {
@@ -865,19 +993,19 @@ namespace PPORise
             }
         }
 
-        private async void ReloadHotKey_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void ReloadHotKey_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(Bot.Settings.LastScript))
             {
-                await LoadScript(Bot.Settings.LastScript);
+                LoadScript(Bot.Settings.LastScript);
             }
         }
 
-        private async void ReLoadScriptButton_OnClick(object sender, RoutedEventArgs e)
+        private void ReLoadScriptButton_OnClick(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(Bot.Settings.LastScript))
             {
-                await LoadScript(Bot.Settings.LastScript);
+                LoadScript(Bot.Settings.LastScript);
             }
         }
 
@@ -908,14 +1036,14 @@ namespace PPORise
             MessageTextBox.CaretPosition = MessageTextBox.Document.ContentEnd;
             MessageTextBox.ScrollToEnd();
         }
-        private async void MainWindow_OnDrop(object sender, DragEventArgs e)
+        private void MainWindow_OnDrop(object sender, DragEventArgs e)
         {
             if (e.Data.GetData(DataFormats.FileDrop) != null)
             {
                 var file = (string[])e.Data.GetData(DataFormats.FileDrop);
                 if (file != null)
                 {
-                    await LoadScript(file[0]);
+                    LoadScript(file[0]);
                 }
             }
         }
