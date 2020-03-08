@@ -2176,6 +2176,17 @@ namespace PPOProtocol
                 loc8.Add("te:" + GetTimer());
                 SendXtMessage("PokemonPlanetExt", "b4", loc8, "xml");
             }
+            else if (type == "acceptMerchantItem")
+            {
+                var loc8 = new ArrayList();
+                loc8.Add($"merchantId:{p1}");
+                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
+                loc8.Add(
+                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
+                loc8.Add($"pk:{packetKey}");
+                loc8.Add($"te:{GetTimer()}");
+                SendXtMessage("PokemonPlanetExt", "b20", loc8, "xml");
+            }
             else if (type == "updateMap")
             {
                 var loc8 = new ArrayList();
@@ -3010,7 +3021,12 @@ namespace PPOProtocol
             IsTrainerBattle = false;
             GetTimeStamp("sendMovement", tempDir);
         }
-
+      
+        public bool buyMerchantItem(String merchantid)
+        {
+            GetTimeStamp("acceptMerchantItem", merchantid);
+            return true;
+        }
         private void CheckForBattle()
         {
             if (movingForBattle)

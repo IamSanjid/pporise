@@ -60,7 +60,8 @@ namespace PPORise
                     foreach (PlayerInfos player in playersList)
                     {
                         string petName = "";
-                        if (PokemonNamesManager.Instance.Names.Length > player.PokemonPetId)
+                        if (PokemonNamesManager.Instance.Names.Length > player.PokemonPetId 
+                            && player.PokemonPetId > 0)
                         {
                             petName = PokemonNamesManager.Instance.Names[player.PokemonPetId];
                             if (player.IsPokemonPetShiny)

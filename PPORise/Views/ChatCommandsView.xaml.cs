@@ -596,6 +596,22 @@ namespace PPORise
                             }
 
                             break;
+                        case "buymerchantitem":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        var name = command;
+                                        _bot.Game.buyMerchantItem(name);
+
+                                    }
+                                }
+                            }
+
+                            break;
                         case "tp2":
                             lock (_bot)
                             {
