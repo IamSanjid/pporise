@@ -17,6 +17,9 @@ namespace PPOProtocol
         private const int SmartFoxVersion = 163;
         public const string RareLengendaryPattern = "has encountered a";
 
+        private readonly string _kg1;
+        private readonly string _kg2;
+
         private int _avatarType;
         private double _mapMovements;
         private double _movementSpeedMod;
@@ -967,6 +970,17 @@ namespace PPOProtocol
                             UpdateTeamThroughXml(xml);
                             GetTimeStamp("updateFollowPokemon");
                             break;
+                        case "acceptMerchantItem":
+                            if (data.body.dataObj.money != null)
+                            {
+                                Money = Convert.ToInt32(data.body.dataObj.money);
+                                PlayerDataUpdated?.Invoke();
+                            }
+                            if (data.body.dataObj.inventory != null)
+                            {
+                                OnInventoryUpdateThroughXml(data.body.dataObj.inventory);
+                            }
+                            break;
                         case "trainerData":
                             if (data.body.dataObj.badges != null)
                                 PrintSystemMessage("Contact to bot developer: " + packet);
@@ -1347,6 +1361,12 @@ namespace PPOProtocol
             IsTrapped = false;
             _isBusy = false;
 
+            for (int i = 0; i < Team[LastBattle.ActivePokemon].Moves.Length; i++)
+            {
+                Team[LastBattle.ActivePokemon].Moves[i].CurrentPoints = 999;
+                Team[LastBattle.ActivePokemon].Moves[i].MaxPoints = 999;
+            }
+
             GetTimeStamp("updateFollowPokemon");
 
             if (!lostBattle)
@@ -1474,6 +1494,7 @@ namespace PPOProtocol
             try
             {
                 Players.Clear();
+                _removedPlayers.Clear();
                 if (data[4] != "")
                 {
                     Shop = new Shop(data[4]);
@@ -2302,6 +2323,28 @@ namespace PPOProtocol
                 loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b22", loc8, "xml");
             }
+            else if (type == "getItem")
+            {
+                var loc8 = new ArrayList();
+                loc8.Add($"itemName:{p1}");
+                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
+                loc8.Add(
+                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
+                loc8.Add($"pk:{packetKey}");
+                loc8.Add($"te:{GetTimer()}");
+                SendXtMessage("PokemonPlanetExt", "b23", loc8, "xml");
+            }
+            else if (type == "addCash")
+            {
+                var loc8 = new ArrayList();
+                loc8.Add($"amount:{p1}");
+                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
+                loc8.Add(
+                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
+                loc8.Add($"pk:{packetKey}");
+                loc8.Add($"te:{GetTimer()}");
+                SendXtMessage("PokemonPlanetExt", "b30", loc8, "xml");
+            }
             else if (type == "declineTrade")
             {
                 var loc8 = new ArrayList();
@@ -2712,6 +2755,26 @@ namespace PPOProtocol
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b182", loc8, "str");
             }
+            else if (type == "acceptQuest")
+            {
+                var loc8 = new ArrayList();
+                loc8.Add(GetTimer().ToString());
+                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
+                loc8.Add(ObjectSerilizer.CalcMd5(
+                    loc8[1] + _kg2 + loc8[0]));
+                loc8.Add(p1);
+                SendXtMessage("PokemonPlanetExt", "b183", loc8, "str");
+            }
+            else if (type == "completeQuest")
+            {
+                var loc8 = new ArrayList();
+                loc8.Add(GetTimer().ToString());
+                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
+                loc8.Add(ObjectSerilizer.CalcMd5(
+                    loc8[1] + _kg2 + loc8[0]));
+                loc8.Add(p1);
+                SendXtMessage("PokemonPlanetExt", "b184", loc8, "str");
+            }
             else if (type == "openChest")
             {
                 var loc8 = new ArrayList();
@@ -3004,6 +3067,7 @@ namespace PPOProtocol
             }
             return false;
         }
+
         public void SendTakeItem(int pokemonUid)
         {
             GetTimeStamp("unequipItem", pokemonUid.ToString());
@@ -3022,11 +3086,13 @@ namespace PPOProtocol
             GetTimeStamp("sendMovement", tempDir);
         }
       
-        public bool buyMerchantItem(String merchantid)
+        public bool BuyMerchantItem(string merchantid)
         {
             GetTimeStamp("acceptMerchantItem", merchantid);
+            _dialogTimeout.Set();
             return true;
         }
+
         private void CheckForBattle()
         {
             if (movingForBattle)
@@ -3083,9 +3149,6 @@ namespace PPOProtocol
                 }
             }
         }
-
-        private string _kg1;
-        private string _kg2;
 
         public bool CheckMapExits(int x, int y)
         {
@@ -3367,11 +3430,52 @@ namespace PPOProtocol
             Money -= amount;
             SendRemoveMoney(amount);
             PlayerDataUpdated?.Invoke();
+            _dialogTimeout.Set();
         }
 
         private void SendRemoveMoney(int amount)
         {
             GetTimeStamp("removeMoney", amount.ToString());
+        }
+
+        public void TradeAddMoney(int amount)
+        {
+            if (Money > amount)
+            {
+                SendTradeAddMoney(amount);
+                _dialogTimeout.Set();
+            }
+        }
+
+        private void SendTradeAddMoney(int amount)
+        {
+            GetTimeStamp("addCash", amount.ToString());
+        }
+
+        public void GetItem(string name)
+        {
+            if (!HasItemName(name))
+            {
+                SendGetItem(name);
+                _itemUseTimeout.Set();
+            }
+        }
+
+        private void SendGetItem(string name)
+        {
+            GetTimeStamp("getItem", name);
+        }
+
+        public void AcceptQuest(int id)
+        {
+            GetTimeStamp("acceptQuest", id.ToString());
+            _dialogTimeout.Set();
+        }
+
+        public void CompleteQuest(int id)
+        {
+            GetTimeStamp("completeQuest", id.ToString());
+            _dialogTimeout.Set();
         }
     }
 }

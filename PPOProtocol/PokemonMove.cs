@@ -6,10 +6,10 @@ namespace PPOProtocol
     {
         public int Position { get; private set; }
         public int Id { get; private set; }
-        public int MaxPoints { get; private set; }
+        public int MaxPoints { get; set; }
         public int CurrentPoints { get; set; }
 
-        private TextInfo ti = CultureInfo.CurrentCulture.TextInfo;
+        private readonly TextInfo ti = CultureInfo.CurrentCulture.TextInfo;
 
         public MovesManager.MoveData Data
         {

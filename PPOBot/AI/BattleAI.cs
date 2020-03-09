@@ -18,7 +18,7 @@ namespace PPOBot
         private const int Selfdestruct = 120;
         private const int Synchronoise = 485;
 
-        public readonly HashSet<int> LevitatingPokemons = new HashSet<int>
+        public readonly HashSet<int> _levitatingPokemons = new HashSet<int>
         {
             92, 93, 94, 109, 110, 200, 201, 329, 330, 337, 338, 343, 344, 355, 358, 380, 381,
             429, 433, 436, 437, 455, 479, 480, 481, 482, 487, 488, 602, 603, 604, 615, 635
@@ -28,12 +28,7 @@ namespace PPOBot
         {
             return moveData.Power > 0 || move.Id == DragonRage || move.Id == SeismicToss || move.Id == NightShade || move.Id == Psywave;
         }
-        private bool IsMoveOffensive(PokemonMove move, MovesManager.MoveData moveData, PokemonType opponentType1, PokemonType opponentType2)
-        {
-            return moveData.Power > 0 ||
-                   move.Id == DragonRage && opponentType1 != PokemonType.Fairy && opponentType2 != PokemonType.Fairy ||
-                   move.Id == SeismicToss || move.Id == NightShade || move.Id == Psywave;
-        }
+
         private double ApplySpecialEffects(PokemonMove move, double power)
         {
             if (move.Id == DragonRage)
@@ -182,43 +177,44 @@ namespace PPOBot
         private bool UseAttack(bool useBestAttack)
         {
             PokemonMove bestMove = null;
-            var bestIndex = 0;
+            int bestIndex = 0;
             double bestPower = 0;
 
             PokemonMove worstMove = null;
-            var worstIndex = 0;
+            int worstIndex = 0;
             double worstPower = 0;
 
-            for (var i = 0; i < ActivePokemon.Moves.Length; ++i)
+            for (int i = 0; i < ActivePokemon.Moves.Length; ++i)
             {
-                var move = ActivePokemon.Moves[i];
+                PokemonMove move = ActivePokemon.Moves[i];
                 if (move.CurrentPoints == 0) continue;
-                if (move.Name is null || move.Data is null) continue;
 
-                var moveData = MovesManager.Instance.GetMoveData(move.Id);
-                if (move.Id == DreamEater && (_client.ActiveBattle.WildPokemon.Status?.ToUpperInvariant() != "SLEEP"))
+                MovesManager.MoveData moveData = MovesManager.Instance.GetMoveData(move.Id);
+
+                if (move.Id == DreamEater && _client.ActiveBattle.WildPokemon.Status != "SLEEP")
                 {
                     continue;
                 }
+
                 if (move.Id == Explosion || move.Id == Selfdestruct ||
-                    (move.Id == DoubleEdge && ActivePokemon.CurrentHealth < (_client.ActiveBattle.WildPokemon.MaxHealth / 3)))
+                    (move.Id == DoubleEdge && ActivePokemon.CurrentHealth < _client.ActiveBattle.WildPokemon.CurrentHealth / 3))
                 {
                     continue;
                 }
 
-                var attackType = PokemonTypeExtensions.FromName(moveData.Type);
+                if (!IsMoveOffensive(move, moveData)) continue;
 
-                var playerType1 = TypesManager.Instance.Type1[ActivePokemon.Id];
-                var playerType2 = TypesManager.Instance.Type2[ActivePokemon.Id];
+                PokemonType attackType = PokemonTypeExtensions.FromName(moveData.Type);
 
-                var opponentType1 = TypesManager.Instance.Type1[_client.ActiveBattle.WildPokemon.Id];
-                var opponentType2 = TypesManager.Instance.Type2[_client.ActiveBattle.WildPokemon.Id];
+                PokemonType playerType1 = TypesManager.Instance.Type1[ActivePokemon.Id];
+                PokemonType playerType2 = TypesManager.Instance.Type2[ActivePokemon.Id];
 
-                if (!IsMoveOffensive(move, moveData, opponentType1, opponentType2)) continue;
+                PokemonType opponentType1 = _client.ActiveBattle.WildPokemon.Type1;
+                PokemonType opponentType2 = _client.ActiveBattle.WildPokemon.Type2;
 
-                var accuracy = moveData.Accuracy < 0 ? 101.0 : moveData.Accuracy;
+                double accuracy = (moveData.Accuracy < 0 ? 101.0 : moveData.Accuracy);
 
-                var power = moveData.Power * accuracy;
+                double power = moveData.Power * accuracy;
 
                 if (attackType == playerType1 || attackType == playerType2)
                 {
@@ -228,7 +224,7 @@ namespace PPOBot
                 power *= TypesManager.Instance.GetMultiplier(attackType, opponentType1);
                 power *= TypesManager.Instance.GetMultiplier(attackType, opponentType2);
 
-                if (attackType == PokemonType.Ground && LevitatingPokemons.Contains(_client.ActiveBattle.WildPokemon.Id))
+                if (attackType == PokemonType.Ground && _levitatingPokemons.Contains(_client.ActiveBattle.WildPokemon.Id))
                 {
                     power = 0;
                 }
@@ -243,6 +239,12 @@ namespace PPOBot
                     {
                         power = 0;
                     }
+                }
+
+                if (move.Id == DragonRage)
+                {
+                    if (opponentType1 == PokemonType.Fairy || opponentType2 == PokemonType.Fairy)
+                        power = 0;
                 }
 
                 if (power < 0.01) continue;
@@ -261,6 +263,7 @@ namespace PPOBot
                     worstIndex = i;
                 }
             }
+
 
             if (useBestAttack && bestMove != null)
             {
@@ -282,7 +285,7 @@ namespace PPOBot
                 foreach (PokemonMove move in pokemon.Moves)
                 {
                     MovesManager.MoveData moveData = MovesManager.Instance.GetMoveData(move.Id);
-                    if (IsMoveOffensive(move, moveData) &&
+                    if (move.CurrentPoints > 0 && IsMoveOffensive(move, moveData) &&
                         move.Id != DreamEater && move.Id != Synchronoise && move.Id != DoubleEdge)
                     {
                         return true;

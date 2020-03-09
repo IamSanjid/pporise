@@ -513,6 +513,61 @@ namespace PPORise
                                 }
                             }
                             break;
+                        case "addcash":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        var amount = Convert.ToInt32(command);
+                                        _bot.Game.TradeAddMoney(amount);
+                                    }
+                                }
+                            }
+                            break;
+                        case "getitem":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        _bot.Game.GetItem(command);
+                                    }
+                                }
+                            }
+                            break;
+                        case "acceptquest":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        var id = Convert.ToInt32(command);
+                                        _bot.Game.AcceptQuest(id);
+                                    }
+                                }
+                            }
+                            break;
+                        case "completequest":
+                            lock (_bot)
+                            {
+                                if (_bot.Game != null)
+                                {
+                                    if (_bot.Game.IsMapLoaded)
+                                    {
+                                        command = command.Replace(commandArg[0] + " ", "");
+                                        var id = Convert.ToInt32(command);
+                                        _bot.Game.CompleteQuest(id);
+                                    }
+                                }
+                            }
+                            break;
                         case "buyelitetokens":
                             lock (_bot)
                             {
@@ -605,7 +660,7 @@ namespace PPORise
                                     {
                                         command = command.Replace(commandArg[0] + " ", "");
                                         var name = command;
-                                        _bot.Game.buyMerchantItem(name);
+                                        _bot.Game.BuyMerchantItem(name);
 
                                     }
                                 }

@@ -74,6 +74,13 @@ namespace PPOProtocol
             }
             if (_client.HasEncounteredRarePokemon)
                 WildPokemon.IsRare = true;
+
+            var currentPPs = data[9].Split(',');
+            for (int i = 0; i < currentPPs.Length; i++)
+            {
+                _client.Team[ActivePokemon].Moves[i].CurrentPoints = Convert.ToInt32(currentPPs[i]);
+                _client.Team[ActivePokemon].Moves[i].MaxPoints = Convert.ToInt32(currentPPs[i]);
+            }
         }
 
         public void UpdateBattle(string[] resObj)
@@ -102,6 +109,17 @@ namespace PPOProtocol
                 && _client?.Team[ActivePokemon].Type2 != PokemonType.Steel);
 
             IsAlreadyCaught = _client.PokemonCaught[WildPokemon.Id - 1] == "true";
+
+            var currentPPs = resObj[13].Split(',');
+            for(int i = 0; i < currentPPs.Length; i++)
+            {
+                _client.Team[ActivePokemon].Moves[i].CurrentPoints = Convert.ToInt32(currentPPs[i]);
+            }
+            var maxPPs = resObj[14].Split(',');
+            for (int i = 0; i < maxPPs.Length; i++)
+            {
+                _client.Team[ActivePokemon].Moves[i].MaxPoints = Convert.ToInt32(maxPPs[i]);
+            }
 
             ProcessBattleMessage(resObj[10]);
         }
