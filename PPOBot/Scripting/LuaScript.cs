@@ -390,9 +390,9 @@ namespace PPOBot.Scripting
 
 		private bool UseBike()
 		{
-			if (HasItem("Bike") && !Bot.Game._moveType.ToLowerInvariant().Contains("surf"))
+			if (HasItem("Bike") && Bot.Game.IsOnGround)
 			{
-				Bot.Game._moveType = "bike";
+                Bot.Game.SetMount("Bike");
 				return true;
 			}
 			return false;

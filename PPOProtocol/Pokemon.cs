@@ -62,7 +62,7 @@ namespace PPOProtocol
         public int MaxHealth { get; set; }
         public int CurrentHealth { get; set; }
         public int Happiness { get; }
-        public string Gender { get; }
+        public string Gender => "Unknown";
         public PokemonMove[] Moves { get; set; }
         public bool IsRare { get; set; }
         public string Types
@@ -261,7 +261,6 @@ namespace PPOProtocol
                 Experience = new PokemonExperience(Convert.ToInt32(data[31]), Convert.ToInt32(data[29]), Convert.ToInt32(data[28]));
             IsShiny = (data[30].ToLowerInvariant() == "true");
             Status = data[36];
-            Gender = "M";
 
             Moves = new PokemonMove[4];
             if (data[21] != "")

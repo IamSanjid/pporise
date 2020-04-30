@@ -45,19 +45,7 @@ namespace PPOBot
 
         public string[] ProtocolKeys
         {
-            get
-            {
-                if (_settings.ProtocolKeys == null || _settings.ProtocolKeys.Length <= 0)
-                {
-                    _settings.ProtocolKeys = new[] 
-                    {
-                        "zzbjtdn2hdsfgsfcvbaegfsdafsss3tasdgta1235sdfz5", // kg1
-                        "zzbysdasfsgdsgfadfhdfrsadfs4easdfasdadadsgtz5" // kg2
-                    };
-                    _settings.Save();
-                }
-                return _settings.ProtocolKeys;
-            }
+            get => _settings.ProtocolKeys;
             set
             {
                 if (_settings.ProtocolKeys == value) return;
@@ -68,19 +56,7 @@ namespace PPOBot
 
         public Dictionary<string, string> ExtraHttpHeaders
         {
-            get
-            {
-                if (_settings.ExtraHttpHeaders == null || _settings.ExtraHttpHeaders.Count <= 0)
-                {
-                    _settings.ExtraHttpHeaders = new Dictionary<string, string>()
-                    {
-                        /*{ "Cookie", "__cfduid=d9a043d8b9b2392c5bae537410cb8afb11581154517; cf_clearance=ecd4cfa25be6117e98cf49d1ce5eab6a4ec1d454-1581157110-0-250" },
-                        { "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36" }*/
-                    };
-                    _settings.Save();
-                }
-                return _settings.ExtraHttpHeaders;
-            }
+            get => _settings.ExtraHttpHeaders ?? (_settings.ExtraHttpHeaders = new Dictionary<string, string>());
             set
             {
                 if (_settings.ExtraHttpHeaders == value) return;
@@ -113,8 +89,11 @@ namespace PPOBot
             public bool AutoReconnect;
             public bool AutoEvolve = true;
             public string LastScript;
-            public string[] ProtocolKeys;
-            public Dictionary<string, string> ExtraHttpHeaders;
+            public string[] ProtocolKeys = new string[2] {
+                "zzbjtdn2hdsfgsfcvbaegfsdafsss3tasdgta1235sdfz5b2", // kg1
+                "zzbysdasfsgdsgfadfhdfrsadfs4easdfasdadadsgtz5b2" // kg2
+            };
+            public Dictionary<string, string> ExtraHttpHeaders = new Dictionary<string, string>();
 
             public void Save()
             {

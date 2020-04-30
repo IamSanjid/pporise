@@ -104,7 +104,6 @@ namespace PPOBot
 
         private void Client_ConnectionOpened()
         {
-            Game.SendAuthentication(Account.ID, Account.Username, Account.HashPassword);
             ConnectionOpened?.Invoke();
         }
 
@@ -259,8 +258,14 @@ namespace PPOBot
                 client.BattleMessage += Client_BattleMessage;
                 client.LoggingError += Client_LoggingError;
                 client.SystemMessage += Client_SystemMessage;
+                client.SmartFoxApiOk += Client_SmartFoxApiOk;
             }
             ClientChanged?.Invoke();
+        }
+
+        private void Client_SmartFoxApiOk()
+        {
+            Game.SendAuthentication(Account.ID, Account.Username, Account.HashPassword);
         }
 
         private void Client_WebSuccessfullyLoggedIn(string id, string username, string hashpassword)

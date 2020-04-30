@@ -26,7 +26,7 @@ namespace PPOBot
 
         private bool IsMoveOffensive(PokemonMove move, MovesManager.MoveData moveData)
         {
-            return moveData.Power > 0 || move.Id == DragonRage || move.Id == SeismicToss || move.Id == NightShade || move.Id == Psywave;
+            return moveData?.Power > 0 || move.Id == DragonRage || move.Id == SeismicToss || move.Id == NightShade || move.Id == Psywave;
         }
 
         private double ApplySpecialEffects(PokemonMove move, double power)
@@ -53,11 +53,14 @@ namespace PPOBot
 
             return power;
         }
+
         private readonly GameClient _client;
+
         public BattleAI(GameClient client)
         {
             _client = client;
         }
+
         public bool Run()
         {
             if (!_client.IsInBattle) return false;
@@ -65,6 +68,7 @@ namespace PPOBot
             if (ActivePokemon.CurrentHealth <= 0) return false;
             return _client.Run();
         }
+
         public int UsablePokemonsCount
         {
             get
@@ -80,6 +84,7 @@ namespace PPOBot
                 return usablePokemons;
             }
         }
+
         public bool Attack()
         {
             if (!IsPokemonUsable(ActivePokemon)) return false;
@@ -93,6 +98,7 @@ namespace PPOBot
 
             return UseAttack(false);
         }
+
         public bool SendAnyPokemon()
         {
             if (_client.IsTrapped) return false;
@@ -122,6 +128,7 @@ namespace PPOBot
             }
             return false;
         }
+
         public bool SendPokemon(int index)
         {
             if (_client.IsTrapped) return false;
@@ -135,6 +142,7 @@ namespace PPOBot
             }
             return false;
         }
+
         public bool SendUsablePokemon()
         {
             if (_client.IsTrapped) return false;
@@ -148,6 +156,7 @@ namespace PPOBot
             }
             return false;
         }
+
         public bool UseAnyMove()
         {
             if (ActivePokemon.CurrentHealth == 0) return false;
@@ -158,12 +167,13 @@ namespace PPOBot
                 PokemonMove move = ActivePokemon.Moves[i];
                 if (move.CurrentPoints > 0)
                 {
-                     _client.UseAttack(i);
+                    _client.UseAttack(i);
                     return true;
                 }
             }
             return false;
         }
+
         public bool UseMove(int index)
         {
             if (!_client.IsInBattle || ActivePokemon.CurrentHealth == 0 || index < 1 || index > 4)
@@ -174,6 +184,7 @@ namespace PPOBot
             _client.UseAttack(index - 1);
             return true;
         }
+
         private bool UseAttack(bool useBestAttack)
         {
             PokemonMove bestMove = null;

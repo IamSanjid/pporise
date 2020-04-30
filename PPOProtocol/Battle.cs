@@ -111,7 +111,7 @@ namespace PPOProtocol
             IsAlreadyCaught = _client.PokemonCaught[WildPokemon.Id - 1] == "true";
 
             var currentPPs = resObj[13].Split(',');
-            for(int i = 0; i < currentPPs.Length; i++)
+            for (int i = 0; i < currentPPs.Length; i++)
             {
                 _client.Team[ActivePokemon].Moves[i].CurrentPoints = Convert.ToInt32(currentPPs[i]);
             }

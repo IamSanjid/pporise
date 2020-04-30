@@ -17,6 +17,8 @@ namespace PPOProtocol
 
         private readonly IPEndPoint serverHost = new IPEndPoint(IPAddress.Parse("167.114.159.20"), 9339);
 
+        private bool _isSecondConnection = false;
+
         public GameConnection() : base(new BrightClient())
         {
             PacketDelimiter = "\0";
@@ -61,7 +63,29 @@ namespace PPOProtocol
 
         protected override string ProcessDataBeforeReceiving(string data)
         {
+            if (!_isSecondConnection && data.Contains("cross-domain-policy"))
+            {
+                ExecutionPlan.Delay(1, () => Client.Disconnect(true));
+                return "";
+            }
             return data;
+        }
+
+        protected override bool ConfirmConnection()
+        {
+            return _isSecondConnection;
+        }
+
+        protected override bool ConfirmDisconnection(Exception error)
+        {
+            bool confirmed = true;
+            if (!_isSecondConnection && error == null)
+            {
+                Connect();
+                _isSecondConnection = true;
+                confirmed = false;
+            }
+            return confirmed;
         }
     }
 }

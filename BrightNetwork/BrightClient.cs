@@ -162,6 +162,10 @@ namespace BrightNetwork
             try
             {
                 int bytesSent = _socket.EndSend(result);
+                if (!IsConnected)
+                {
+                    return;
+                }
                 if (bytesSent != (int)result.AsyncState)
                 {
                     Close();
@@ -183,6 +187,10 @@ namespace BrightNetwork
             catch (Exception ex)
             {
                 Close(ex);
+                return;
+            }
+            if (!IsConnected)
+            {
                 return;
             }
             if (bytesRead == 0)

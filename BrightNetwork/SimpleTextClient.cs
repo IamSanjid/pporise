@@ -15,7 +15,7 @@ namespace BrightNetwork
         protected string PacketDelimiter = "\n";
         protected Encoding TextEncoding = Encoding.UTF8;
 
-        private readonly BrightClient _client;
+        protected readonly BrightClient Client;
 
         private string _receiveBuffer = string.Empty;
         private Queue<string> _pendingPackets = new Queue<string>();
@@ -26,17 +26,17 @@ namespace BrightNetwork
 
         public bool IsConnected
         {
-            get { return _client.IsConnected; }
+            get { return Client.IsConnected; }
         }
 
         public IPAddress RemoteIPAddress
         {
-            get { return _client.RemoteIPAddress; }
+            get { return Client.RemoteIPAddress; }
         }
 
         public SimpleTextClient(BrightClient client)
         {
-            _client = client;
+            Client = client;
 
             client.Connected += Client_Connected;
             client.Disconnected += Client_Disconnected;
@@ -45,12 +45,12 @@ namespace BrightNetwork
 
         public void Connect(IPAddress address, int port)
         {
-            _client.BeginConnect(address, port);
+            Client.BeginConnect(address, port);
         }
 
         public void Initialize(Socket socket)
         {
-            _client.Initialize(socket);
+            Client.Initialize(socket);
         }
 
         public void Update()
@@ -58,13 +58,19 @@ namespace BrightNetwork
             if (_wasConnected)
             {
                 _wasConnected = false;
-                Connected?.Invoke();
+                if (ConfirmConnection())
+                {
+                    Connected?.Invoke();
+                }
             }
             ReceivePendingPackets();
             if (_wasDisconnected)
             {
                 _wasDisconnected = false;
-                Disconnected?.Invoke(_closingException);
+                if (ConfirmDisconnection(_closingException))
+                {
+                    Disconnected?.Invoke(_closingException);
+                }
             }
         }
 
@@ -72,12 +78,12 @@ namespace BrightNetwork
         {
             packet = ProcessPacketBeforeSending(packet);
             byte[] data = TextEncoding.GetBytes(ProcessDataBeforeSending(packet + PacketDelimiter));
-            _client.BeginSend(data);
+            Client.BeginSend(data);
         }
 
         public void Close(Exception error = null)
         {
-            _client.Close(error);
+            Client.Close(error);
         }
 
         protected virtual string ProcessDataBeforeSending(string data)
@@ -98,6 +104,16 @@ namespace BrightNetwork
         protected virtual string ProcessPacketBeforeReceiving(string packet)
         {
             return packet;
+        }
+
+        protected virtual bool ConfirmConnection()
+        {
+            return true;
+        }
+
+        protected virtual bool ConfirmDisconnection(Exception error)
+        {
+            return true;
         }
 
         private void ReceivePendingPackets()

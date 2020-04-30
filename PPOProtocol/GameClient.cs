@@ -33,10 +33,11 @@ namespace PPOProtocol
         private readonly WebConnection _webConnection;
         private MiningObject _lastRock;
         private int _mapInstance = -1;
-        public string _moveType = "";
+        private string _moveType = "";
         private string _mount = "";
         private bool movingForBattle;
         private bool lm = false;
+        private DateTime Timer;
 
         private Direction _lastMovement = Direction.Down;
 
@@ -67,11 +68,11 @@ namespace PPOProtocol
         private readonly ProtocolTimeout _refreshPCTimeout = new ProtocolTimeout();
         private readonly ProtocolTimeout _npcBattleTimeout = new ProtocolTimeout();
 
-        private bool _updatedMap { get; set; } = false;
+        private bool _updatedMap = false;        
+        private string _sendInputLogsId = "";
 
         public bool CanMove = true;
         public int Credits;
-        public string EncryptedPacketCount;
         public string EncryptedstepsWalked;
         public Battle LastBattle;
         public bool HasEncounteredRarePokemon;
@@ -98,15 +99,17 @@ namespace PPOProtocol
 
         public bool IsCreatingCharacter { get; private set; }
 
-        public int PacketCount = -1;
         public Random Rand = new Random();
 
-        private readonly DateTime Timer;
         public Shop OpenedShop { get; private set; }
         private Shop Shop { get; set; }
         public string MemberType { get; private set; }
         public int MemberTime { get; private set; }
         public string Clan { get; private set; }
+        public bool IsSurfing => _mount == "surf" || _moveType == "surf";
+        public bool IsOnGround => _mount != "surf" && _moveType != "surf";
+        public bool IsBiking => _moveType == "bike";
+
         public GameClient(GameConnection gameConnection, WebConnection webConnection, string kg1, string kg2)
         {
             _kg1 = kg1;
@@ -118,6 +121,7 @@ namespace PPOProtocol
 
             _gameConnection = gameConnection;
             _gameConnection.PacketReceived += OnPacketReceived;
+            _gameConnection.Connected += OnConnectionOpened;
             _gameConnection.Disconnected += OnConnectionClosed;
 
             Items = new List<InventoryItem>();
@@ -129,13 +133,13 @@ namespace PPOProtocol
             Badges = new List<string>();
             TempMap = "";
             PokemonCaught = new string[900];
-            Timer = DateTime.UtcNow;
             Players = new Dictionary<string, PlayerInfos>();
             _removedPlayers = new Dictionary<string, PlayerInfos>();
         }
 
         public void Open()
         {
+            Timer = DateTime.UtcNow;
             _gameConnection.Connect();
         }
 
@@ -186,6 +190,7 @@ namespace PPOProtocol
         public bool IsMapLoaded => !string.IsNullOrEmpty(MapName) && _updatedMap;
 
         public event Action ConnectionOpened;
+        public event Action SmartFoxApiOk;
         public event Action<Exception> ConnectionFailed;
         public event Action<Exception> ConnectionClosed;
         public event Action<string> LogMessage;
@@ -246,17 +251,16 @@ namespace PPOProtocol
             Id = id;
             Username = username;
             HashPassword = hashpassword;
-            EncryptedPacketCount = ObjectSerilizer.CalcMd5(EncryptedPacketCount + _kg1 + Username);
             EncryptedstepsWalked = ObjectSerilizer.CalcMd5(_stepsWalked + _kg1 + Username);
         }
 
         private void OnJoinedRoom()
         {
             LogMessage?.Invoke("Loading Game Data...");
+            GetTimeStamp("getStartingInfo", "3");
+
             _checkForLoggingTimeout?.Dispose();
-            _checkForLoggingTimeout = null;
             _checkForLoggingTimeout = ExecutionPlan.Delay(180000, () => CheckForLoggingIn());
-            GetTimeStamp("getStartingInfo");
         }
 
         private void OnAuthentication(bool success)
@@ -272,10 +276,12 @@ namespace PPOProtocol
 
         private void OnConnectionOpened()
         {
-            IsConnected = true;
 #if DEBUG
             Console.WriteLine("[+++] Connection opened");
 #endif
+            IsConnected = true;
+            var verChk = $"<ver v='{SmartFoxVersion}' />";
+            SendCmd("tsys", "verChk", 0, verChk);
             ConnectionOpened?.Invoke();
         }
 
@@ -353,7 +359,7 @@ namespace PPOProtocol
                         PrivateChat?.Invoke(data);
                         break;
                     case "r10":
-                        HandleGetStartingInfo(data);
+                        HandleStartingInfo(data);
                         break;
                     case "r44":
                         Money = Convert.ToInt32(data[3]);
@@ -363,7 +369,7 @@ namespace PPOProtocol
                         InventoryUpdated?.Invoke();
                         break;
                     case "r51":
-                        PrintSystemMessage($"The server wants to teleport all the staff memebers to {data[5]} ({data[3]}, {data[4]})");
+                        PrintSystemMessage($"The server wants to teleport somone/may be you to {data[5]} ({data[3]}, {data[4]})");
                         break;
                     case "avn":
                         PrintSystemMessage($"M: {data[3]}, {data[4]} ({data[5]})");
@@ -633,13 +639,6 @@ namespace PPOProtocol
             }
             else
             {
-                if (!IsConnected && packet.Contains("cross-domain-policy"))
-                {
-                    var verChk = $"<ver v='{SmartFoxVersion}' />";
-                    SendCmd("tsys", "verChk", 0, verChk);
-                    return;
-                }
-
                 OnXmlPacket(packet);
             }
         }
@@ -893,7 +892,7 @@ namespace PPOProtocol
                     switch (data.body.action)
                     {
                         case "apiOK":
-                            OnConnectionOpened();
+                            SmartFoxApiOk?.Invoke();
                             break;
                         case "rmList":
                             SendCmd("tsys", "autoJoin", -1, "");
@@ -984,6 +983,14 @@ namespace PPOProtocol
                         case "trainerData":
                             if (data.body.dataObj.badges != null)
                                 PrintSystemMessage("Contact to bot developer: " + packet);
+                            break;
+                        case "b2adb2":
+                            _sendInputLogsId = data.body.dataObj.a.ToString();
+                            PrintSystemMessage("Contact the bot developers, you're being monitored by an admin or a moderator. Monitor ID: " + packet);
+                            break;
+                        case "b2adb2z":
+                            PrintSystemMessage("You're no longer being monitored. Packet: " + packet);
+                            _sendInputLogsId = "";
                             break;
                     }
                 }
@@ -1121,9 +1128,13 @@ namespace PPOProtocol
 
         private void UpdateTeamThroughXml(XmlDocument xml)
         {
-            Team.Clear();
             var xmlDocument = XDocument.Parse(xml.InnerXml);
             var pokeElement = xmlDocument.Descendants("obj").ToList().Find(o => o.Attribute("o")?.Value != null && o.Attribute("o")?.Value == "userPokemon");
+            if (pokeElement == null)
+            {
+                return;
+            }
+            Team.Clear();
             xml = new XmlDocument();
             xml.LoadXml(pokeElement.ToString());
             var nodes = xml.GetElementsByTagName("obj");
@@ -1152,20 +1163,6 @@ namespace PPOProtocol
             try
             {
                 Items.Clear();
-                //packet = ObjectSerilizer.DecodeEntities(packet);
-                //var xmlDocument = XDocument.Parse(packet);
-                //var result = xmlDocument.Descendants("obj").ToList().Find(o => o.Attribute("o")?.Value != null && o.Attribute("o").Value == "inventory");
-                //var inveXDocument = XDocument.Parse(result.ToString());
-                //var invResults = inveXDocument.Descendants("obj").ToList()
-                //    .FindAll(el => el.Element("var")?.Value != null);
-                //foreach (var sXElement in invResults)
-                //{
-                //    if (sXElement.Element("var")?.Value != null)
-                //    {
-                //        var item = new InventoryItem(sXElement);
-                //        Items.Add(item);
-                //    }
-                //}
                 foreach(var obj in data.obj)
                 {
                     InventoryItem item = new InventoryItem(obj.var[1], Convert.ToInt32(obj.var[0]));
@@ -1512,7 +1509,7 @@ namespace PPOProtocol
 
                 _mapInstance = data[3] != "" ? Convert.ToInt32(data[3]) : -1;
 
-                if (_avatarType > 0)
+                if (_avatarType != 0)
                     GetTimeStamp("sendAddPlayer");
 
                 TeleportationOccuring?.Invoke(MapName, PlayerX, PlayerY);
@@ -1601,7 +1598,7 @@ namespace PPOProtocol
             GetTimeStamp("buyItem", itemId.ToString(), quantity.ToString());
         }
         //Stupid SWF handles player things like below lol :D
-        private void HandleGetStartingInfo(string[] resObj)
+        private void HandleStartingInfo(string[] resObj)
         {
             Money = Convert.ToInt32(resObj[3]);
             Credits = Convert.ToInt32(resObj[4]);
@@ -1660,7 +1657,7 @@ namespace PPOProtocol
                 loopNum = loc7;
                 break;
             }
-            if (_swapTimeout.IsActive) _swapTimeout.Set(Rand.Next(500, 1000));
+            if (!_swapTimeout.IsActive) _swapTimeout.Set(Rand.Next(500, 1000));
             TeamUpdated?.Invoke(true);
             if (Team != null && Team.Count > 0)
                 GetTimeStamp("updateFollowPokemon");
@@ -1901,12 +1898,12 @@ namespace PPOProtocol
             {
                 _movementSpeedMod = 1;
             }
-            if (_moveType == "bike")
+            if (IsBiking)
             {
                 _mapMovementSpeed = 16 * _movementSpeedMod;
                 
             }
-            else if (_moveType == "surf" && HasItemName("Surfboard"))
+            else if (IsSurfing && HasItemName("Surfboard"))
             {
                 _mapMovementSpeed = 16 * _movementSpeedMod;
             }
@@ -2103,39 +2100,47 @@ namespace PPOProtocol
             SendPacket($"<msg {header[0]}='{header.Substring(1)}'><body action=\'{action}\' r=\'{fromRoom}\'>{message}</body></msg>");
         }
 
-        private void SendXtMessage(string xtName = "", string cmdName = "", ArrayList ps = null, string type = "",
+        private void SendXtMessage(string xtName, string cmdName, ArrayList ps, string type, bool sendEnc = true,
             int roomId = 1)
         {
-            if (type == "")
-                type = "xml";
+            var timer = GetTimer().ToString();
+            var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
+            var encP = ObjectSerilizer.CalcMd5(packetKey + _kg2 + timer);
 
-            switch (type)
+            if (type == "" || type == "xml")
             {
-                case "xml":
+                var list = new ArrayList();
+                list.Add($"name:{xtName}");
+                list.Add($"cmd:{cmdName}");
+                if (sendEnc)
+                {
+                    ps.Add("pke:" + encP);
+                    ps.Add("pk:" + packetKey);
+                    ps.Add("te:" + timer);
+                }
+                var srializedText = ObjectSerilizer.Serialize(list, ps);
+
+                var packet = $"<![CDATA[{srializedText}]]>";
+                SendCmd("txt", "xtReq", roomId, packet);
+            }
+            else if (type == "str")
+            {
+                var packet = $"`xt`{xtName}`{cmdName}`{roomId}`";
+                if (sendEnc)
+                {
+                    packet += $"{timer}`{packetKey}`{encP}`";
+                }
+                if (ps != null)
+                {
+                    if (ps.Count > 0)
                     {
-                        var list = new ArrayList();
-                        list.Add($"name:{xtName}");
-                        list.Add($"cmd:{cmdName}");
-                        string srializedText;
-                        srializedText = ps is null is false ? ObjectSerilizer.Serialize(list, ps) : ObjectSerilizer.Serialize(list);
-
-                        var packet = $"<![CDATA[{srializedText}]]>";
-                        SendCmd("txt", "xtReq", roomId, packet);
-                        break;
+                        foreach (var p in ps)
+                        {
+                            packet += p + "`";
+                        }
                     }
-                case "str":
-                    {
-                        var packet =
-                            $"`xt`{xtName}`{cmdName}`1`";
-                        if (ps != null)
-                            if (ps.Count > 0)
-                                foreach (var p in ps)
-                                    packet += p + "`";
-
-                        SendPacket(packet);
-
-                        break;
-                    }
+                }
+                SendPacket(packet);
             }
         }
 
@@ -2144,11 +2149,6 @@ namespace PPOProtocol
             SetUserInfos(id, username, password);
             var packet = $"<login z=\'" + Zone + "\'><nick><![CDATA[" + username + "]]></nick><pword><![CDATA[" + password + "]]></pword></login>";
             SendCmd("tsys", "login", 0, packet);
-        }
-
-        public void PingServer()
-        {
-            SendXtMessage("PokemonPlanetExt", "p", null, "str");
         }
 
         private string[] ParseStringArray(string tempStr2)
@@ -2173,46 +2173,28 @@ namespace PPOProtocol
         {
             if (!IsConnected) return;
 
+            var loc8 = new ArrayList();
+            var timer = GetTimer().ToString();
+            var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
+            var encP = ObjectSerilizer.CalcMd5(packetKey + _kg2 + timer);
+
             if (type == "forgetMove")
             {
-                var loc8 = new ArrayList();
                 loc8.Add($"moveNum:{p1}");
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add("pke:" +
-                         ObjectSerilizer.CalcMd5(packetKey + _kg2 +
-                                            GetTimer()));
-                loc8.Add("pk:" + packetKey);
-                loc8.Add("te:" + GetTimer());
                 SendXtMessage("PokemonPlanetExt", "b0", loc8, "xml");
             }
             else if (type == "command")
             {
-                var loc8 = new ArrayList();
                 loc8.Add($"command:{p1}");
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add("pke:" +
-                         ObjectSerilizer.CalcMd5(packetKey + _kg2 +
-                                            GetTimer()));
-                loc8.Add("pk:" + packetKey);
-                loc8.Add("te:" + GetTimer());
                 SendXtMessage("PokemonPlanetExt", "b4", loc8, "xml");
             }
             else if (type == "acceptMerchantItem")
             {
-                var loc8 = new ArrayList();
                 loc8.Add($"merchantId:{p1}");
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b20", loc8, "xml");
             }
             else if (type == "updateMap")
             {
-                var loc8 = new ArrayList();
-                LastUpdateX = PlayerX;
-                LastUpdateY = PlayerY;
                 if (lm)
                 {
                     loc8.Add("l:1");
@@ -2221,249 +2203,156 @@ namespace PPOProtocol
                 loc8.Add("y:" + PlayerY);
                 loc8.Add("x:" + PlayerX);
                 loc8.Add("map:" + p1);
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add("pke:" +
-                         ObjectSerilizer.CalcMd5(packetKey + _kg2 +
-                                            GetTimer()));
-                loc8.Add("pk:" + packetKey);
-                loc8.Add("te:" + GetTimer());
                 SendXtMessage("PokemonPlanetExt", "b5", loc8, "xml");
-            }
-            else if (type == "saveData")
-            {
-                SendXtMessage("PokemonPlanetExt", "b26", null, "xml");
             }
             else if (type == "buyItem")
             {
-                var loc8 = new ArrayList();
                 loc8.Add($"amount:{p2}");
                 loc8.Add($"buyNum:{p1}");
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b8", loc8, "xml");
             }
             else if (type == "stepsWalked")
             {
-                var loc8 = new ArrayList();
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b38", loc8, "xml");
             }
             else if (type == "useItem")
             {
-                var loc8 = new ArrayList();
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
                 loc8.Add($"itemNum:{p1}");
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b1", loc8, "xml");
             }
             else if (type == "useItem2")
             {
-                var loc8 = new ArrayList();
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-
                 loc8.Add($"i:{p1}");
-                //loc8.Add(p2 != "" ? $"a:{p2}" : @"a:false");
-                //loc8.Add(p3 != "" ? $"n:{p3}" : @"n:1");
                 loc8.Add($"p:{p2}");
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
-
                 SendXtMessage("PokemonPlanetExt", "b11", loc8, "xml");
             }
             else if (type == "acceptEvolve")
             {
-                var loc8 = new ArrayList();
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b18", loc8, "xml");
             }
             else if (type == "declineEvolve")
             {
-                var loc8 = new ArrayList();
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b19", loc8, "xml");
             }
             else if (type == "declineBattle")
             {
-                var loc8 = new ArrayList();
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b14", loc8, "xml");
             }
             else if (type == "getHM")
             {
-                var loc8 = new ArrayList();
                 loc8.Add($"hmNum:{p1}");
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b22", loc8, "xml");
             }
             else if (type == "getItem")
             {
-                var loc8 = new ArrayList();
                 loc8.Add($"itemName:{p1}");
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b23", loc8, "xml");
             }
             else if (type == "addCash")
             {
-                var loc8 = new ArrayList();
                 loc8.Add($"amount:{p1}");
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b30", loc8, "xml");
             }
             else if (type == "declineTrade")
             {
-                var loc8 = new ArrayList();
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt", "b17", loc8, "xml");
             }
             else if (type == "declineClanInvite")
             {
-                var loc8 = new ArrayList();
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 SendXtMessage("PokemonPlanetExt",
                     ObjectSerilizer.CalcMd5("declineClanInvitekzf76adngjfdgh12m7mdlbfi9proa15gjqp0sd3mo1lk7w90cd" +
                                        Username), loc8, "xml");
             }
             else if (type == "choosePokemon")
             {
-                var loc8 = new ArrayList();
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 loc8.Add($"pokemon:{p1}");
                 SendXtMessage("PokemonPlanetExt", "b7", loc8, "xml");
             }
             else if (type == "reorderStoragePokemon")
             {
-                var loc8 = new ArrayList();
-                var packetKey = ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20));
-                loc8.Add(
-                    $"pke:{ObjectSerilizer.CalcMd5(packetKey + _kg2 + GetTimer())}");
-                loc8.Add($"pk:{packetKey}");
-                loc8.Add($"te:{GetTimer()}");
                 loc8.Add($"t:{p3}");
                 loc8.Add($"num2:{p2}");
                 loc8.Add($"num1:{p1}");
                 SendXtMessage("PokemonPlanetExt", "b6", loc8, "xml");
             }
+            else if (type == "saveData")
+            {
+                SendXtMessage("PokemonPlanetExt", "b26", null, "xml", false);
+            }
             else if (type == "updateXYZ")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(PlayerX.ToString());
-                loc8.Add(PlayerY.ToString());
+                loc8.Add(PlayerX);
+                loc8.Add(PlayerY);
                 loc8.Add(EncryptedTileX);
                 loc8.Add(EncryptedTileY);
                 loc8.Add(TileZ);
                 loc8.Add(MapName);
-                SendXtMessage("PokemonPlanetExt", "r8", loc8, "str");
+                SendXtMessage("PokemonPlanetExt", "r8", loc8, "str", false);
             }
             else if (type == "r")
             {
-                SendXtMessage("PokemonPlanetExt", "r", null, "str");
+                SendXtMessage("PokemonPlanetExt", "r", null, "str", false);
+            }
+            else if (type == "asf8n2fs")
+            {
+                loc8.Add(p1);
+                loc8.Add(p2);
+                loc8.Add(p3);
+                loc8.Add(_sendInputLogsId);
+                SendXtMessage("PokemonPlanetExt", "b68", loc8, "str", false);
+            }
+            else if (type == "asf8n2fa")
+            {
+                loc8.Add(p1);
+                loc8.Add(p2);
+                loc8.Add(_sendInputLogsId);
+                SendXtMessage("PokemonPlanetExt", "b69", loc8, "str", false);
             }
             else if (type == "sendMovement")
             {
-                var loc8 = new ArrayList();
                 loc8.Add(p1);
-                if (_moveType != "")
+                if (IsBiking)
                 {
-                    if (_moveType == "bike")
+                    loc8.Add("b");
+                }
+                else if (IsSurfing)
+                {
+                    if (_mapMovementSpeed >= 16)
                     {
-                        loc8.Add("b");
+                        loc8.Add("z");
                     }
-                    else if (_moveType == "surf")
+                    else
                     {
-                        if (_mapMovementSpeed >= 16)
-                        {
-                            loc8.Add("z");
-                        }
-                        else
-                        {
-                            loc8.Add("s");
-                        }
+                        loc8.Add("s");
                     }
                 }
 
-                SendXtMessage("PokemonPlanetExt", "m", loc8, "str");
+                SendXtMessage("PokemonPlanetExt", "m", loc8, "str", false);
             }
             else if (type == "updateMount")
             {
-                var loc8 = new ArrayList();
                 if (p1 == "")
                     p1 = "0";
                 loc8.Add(p1);
-                SendXtMessage("PokemonPlanetExt", "b191", loc8, "str");
+                SendXtMessage("PokemonPlanetExt", "b191", loc8, "str", false);
             }
             else if (type == "sendFishAnimation")
             {
-                var loc8 = new ArrayList();
                 loc8.Add(_lastMovement.AsChar());
-                SendXtMessage("PokemonPlanetExt", "f", loc8, "str");
+                SendXtMessage("PokemonPlanetExt", "f", loc8, "str", false);
             }
             else if (type == "sendMineAnimation")
             {
-                var loc8 = new ArrayList();
                 loc8.Add(_lastMovement.AsChar());
-                SendXtMessage("PokemonPlanetExt", "f2", loc8, "str");
+                SendXtMessage("PokemonPlanetExt", "f2", loc8, "str", false);
             }
             else if (type == "sendStopMineAnimation")
             {
-                var loc8 = new ArrayList();
                 loc8.Add(_lastMovement.AsChar());
-                SendXtMessage("PokemonPlanetExt", "f3", loc8, "str");
+                SendXtMessage("PokemonPlanetExt", "f3", loc8, "str", false);
             }
             else if (type == "battleMove")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 if (p2 != "")
                     loc8.Add(p2);
@@ -2478,65 +2367,35 @@ namespace PPOProtocol
             else if (type == "getStartingInfo")
             {
                 Console.WriteLine("@@getstartinginfo");
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(HashPassword);
                 loc8.Add(Id);
-                loc8.Add("3");
+                loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b61", loc8, "str");
             }
             else if (type == "pmsg")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b66", loc8, "str");
             }
             else if (type == "clanMessage")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b67", loc8, "str");
             }
             else if (type == "pm")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 loc8.Add(p2);
                 SendXtMessage("PokemonPlanetExt", "r36", loc8, "str");
             }
             else if (type == "removePlayer")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(Username);
                 if (p1 != "") loc8.Add(p1.ToLowerInvariant());
                 SendXtMessage("PokemonPlanetExt", "b74", loc8, "str");
             }
             else if (type == "sendAddPlayer")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(PlayerX);
                 loc8.Add(PlayerY);
                 loc8.Add(_lastMovement.AsString());
@@ -2544,16 +2403,10 @@ namespace PPOProtocol
                 loc8.Add(_mapInstance != -1 ? MapName + $"({_mapInstance})" : MapName);
                 loc8.Add(IsFishing ? "1" : "0");
                 loc8.Add(_mount == "" ? "0" : _mount);
-                
                 SendXtMessage("PokemonPlanetExt", "b55", loc8, "str");
             }
             else if (type == "sendAddPlayerTarget")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(PlayerX);
                 loc8.Add(PlayerY);
                 loc8.Add(_lastMovement.AsString());
@@ -2562,49 +2415,25 @@ namespace PPOProtocol
                 loc8.Add(p2);
                 loc8.Add(IsFishing ? "1" : "0");
                 loc8.Add(_mount == "" ? "0" : _mount);
-
                 SendXtMessage("PokemonPlanetExt", "b56", loc8, "str");
             }
             else if (type == "removeMoney")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
-
                 SendXtMessage("PokemonPlanetExt", "r11", loc8, "str");
             }
             else if (type == "reorderPokemon")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 loc8.Add(p2);
                 SendXtMessage("PokemonPlanetExt", "b2", loc8, "str");
             }
             else if (type == "escapeBattle")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
-
                 SendXtMessage("PokemonPlanetExt", "b77", loc8, "str");
             }
             else if (type == "wildBattle")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
-
                 loc8.Add(MapName);
                 if (p1 == "")
                     loc8.Add(_moveType);
@@ -2616,12 +2445,6 @@ namespace PPOProtocol
             }
             else if (type == "trainerBattle")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
-
                 loc8.Add(p1); // trainer id
                 loc8.Add(p2); // trainer name
                 loc8.Add(MapName);
@@ -2630,49 +2453,24 @@ namespace PPOProtocol
             }
             else if (type == "switchPokemon")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b80", loc8, "str");
             }
             else if (type == "endBattleDisconnect")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 SendXtMessage("PokemonPlanetExt", "b81", loc8, "str");
             }
             else if (type == "endBattleDisconnect2")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 SendXtMessage("PokemonPlanetExt", "b82", loc8, "str");
             }
             else if (type == "fish")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b70", loc8, "str");
             }
             else if (type == "mine")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 loc8.Add(p2);
                 loc8.Add(p3);
@@ -2680,39 +2478,22 @@ namespace PPOProtocol
             }
             else if (type == "goodHook")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b122", loc8, "str");
             }
             else if (type == "equipItem")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 loc8.Add(p2);
                 SendXtMessage("PokemonPlanetExt", "b58", loc8, "str");
             }
             else if (type == "unequipItem")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b59", loc8, "str");
             }
             else if (type == "updateFollowPokemon")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(loc8[1] + _kg2 + loc8[0]));
                 if (Team is null || Team.Count <= 0) return;
                 if (Team[0].IsShiny)
                     loc8.Add($"{Team[0].Id + _shinyDifference}");
@@ -2722,10 +2503,6 @@ namespace PPOProtocol
             }
             else if (type == "createCharacter")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(_characterCreation.Body);
                 loc8.Add(_characterCreation.Eyes);
                 loc8.Add(_characterCreation.Hair);
@@ -2748,39 +2525,21 @@ namespace PPOProtocol
             }
             else if (type == "eliteBuy")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b182", loc8, "str");
             }
             else if (type == "acceptQuest")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b183", loc8, "str");
             }
             else if (type == "completeQuest")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(
-                    loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b184", loc8, "str");
             }
             else if (type == "openChest")
             {
-                var loc8 = new ArrayList();
-                loc8.Add(GetTimer().ToString());
-                loc8.Add(ObjectSerilizer.GenerateRandomString(Rand.Next(5, 20)));
-                loc8.Add(ObjectSerilizer.CalcMd5(loc8[1] + _kg2 + loc8[0]));
                 loc8.Add(p1);
                 loc8.Add(p2);
                 SendXtMessage("PokemonPlanetExt", "b186", loc8, "str");
@@ -3101,51 +2860,51 @@ namespace PPOProtocol
                 {
                     if (Rand.Next(1, 14) == 7)
                     {
-                        SendWildBattle(_moveType == "surf");
+                        SendWildBattle(IsSurfing);
                     }
                 }
                 else if (Team[0].AbilityNo == 35 || Team[0].AbilityNo == 71)
                 {
                     if (Rand.Next(1, 9) <= 2)
                     {
-                        SendWildBattle(_moveType == "surf");
+                        SendWildBattle(IsSurfing);
                     }
                 }
                 else if (Team[0].AbilityNo == 99)
                 {
                     if (Rand.Next(1, 90) <= 15)
                     {
-                        SendWildBattle(_moveType == "surf");
+                        SendWildBattle(IsSurfing);
                     }
                 }
                 else if (Rand.Next(1, 9) == 7)
                 {
-                    SendWildBattle(_moveType == "surf");
+                    SendWildBattle(IsSurfing);
                 }
                 else if (Team[0].AbilityNo == 1 || Team[0].AbilityNo == 73 || Team[0].AbilityNo == 95)
                 {
                     if (Rand.Next(1, 27) == 7)
                     {
-                        SendWildBattle(_moveType == "surf");
+                        SendWildBattle(IsSurfing);
                     }
                 }
                 else if (Team[0].AbilityNo == 35 || Team[0].AbilityNo == 71)
                 {
                     if (Rand.Next(1, 9) == 7)
                     {
-                        SendWildBattle(_moveType == "surf");
+                        SendWildBattle(IsSurfing);
                     }
                 }
                 else if (Team[0].AbilityNo == 99)
                 {
                     if (Rand.Next(1, 180) <= 15)
                     {
-                        SendWildBattle(_moveType == "surf");
+                        SendWildBattle(IsSurfing);
                     }
                 }
                 else if (Rand.Next(1, 18) == 7)
                 {
-                    SendWildBattle(_moveType == "surf");
+                    SendWildBattle(IsSurfing);
                 }
             }
         }
@@ -3171,7 +2930,7 @@ namespace PPOProtocol
         public void Move(Direction direction, string reason)
         {
             movingForBattle = reason == "battle";
-            if (reason.Contains("surf"))
+            if (reason.Contains("surf") && !IsSurfing)
             {
                 SetMount("", true);
             }
@@ -3243,9 +3002,9 @@ namespace PPOProtocol
             if ((DateTime.UtcNow - _lastSentPing).TotalMilliseconds >= 30000)
             {
                 _lastSentPing = DateTime.UtcNow;
-                PingServer();
+                SendXtMessage("PokemonPlanetExt", "p", null, "str");
             }
-            if ((DateTime.UtcNow - _lastSavedData).TotalMilliseconds >= 1800000)
+            if ((DateTime.UtcNow - _lastSavedData).TotalMilliseconds >= 2400000)
             {
                 _lastSavedData = DateTime.UtcNow;
                 GetTimeStamp("saveData");
@@ -3273,7 +3032,7 @@ namespace PPOProtocol
                     else
                         _mapMovements = 0;
 
-                    if (_moveType == "bike")
+                    if (IsBiking)
                     {
                         _mapMovementSpeed = 16 * _movementSpeedMod;
                         if (_mount == "")
@@ -3287,7 +3046,7 @@ namespace PPOProtocol
                     SendMovement(dir.AsChar());
                     _lastMovement = dir;
                     CheckMapExits(PlayerX, PlayerY);
-                    _movementTimeout.Set(_moveType == "bike" ? 125 : 250);
+                    _movementTimeout.Set(IsBiking ? 125 : 250);
                     CheckForBattle();
                 }
             }
@@ -3356,6 +3115,22 @@ namespace PPOProtocol
             GetTimeStamp("reorderPokemon", pokemon1.ToString(), pokemon2.ToString());
         }
 
+        private void SendMouseLogs(int x, int y)
+        {
+            if (!string.IsNullOrEmpty(_sendInputLogsId))
+            {
+                GetTimeStamp("asf8n2fs", x.ToString(), y.ToString(), GetTimer().ToString());
+            }
+        }
+
+        private void SendKeyLog(int key)
+        {
+            if (!string.IsNullOrEmpty(_sendInputLogsId))
+            {
+                GetTimeStamp("asf8n2fa", key.ToString(), GetTimer().ToString());
+            }
+        }
+
         public void MineRock(int x, int y, string axe)
         {
             _lastRock = MiningObjects.Find(p => p.X == x && p.Y == y);
@@ -3417,7 +3192,7 @@ namespace PPOProtocol
                 _mount = "surf";
             }
 
-            if (mount_name != "")
+            if (_mount != "")
                 _moveType = isSurf ? "surf" : "bike";
             else
                 _moveType = "";

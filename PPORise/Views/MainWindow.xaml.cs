@@ -210,6 +210,11 @@ namespace PPORise
 
             SetTitle(null);
             LogMessage("Running " + App.Name + " by " + App.Author + ", version " + App.Version);
+            if (App.IsBeta)
+            {
+                LogMessage("This is a BETA version. Bugs, crashes and bans might occur.");
+                LogMessage("Join the Discord chat for the latest information and to report issues.");
+            }
 
             if (!string.IsNullOrEmpty(Bot.Settings.LastScript) && File.Exists(Bot.Settings.LastScript))
             {
@@ -921,19 +926,15 @@ namespace PPORise
                 Bot.Settings.LastScript = filePath;
                 ReloadPopup.Content = "Reload " + Path.GetFileName(filePath) + "\tCtrl+R";
                 ReloadPopup.IsEnabled = true;
-                new Thread(() =>
+                Bot.LoadScript(filePath);
+                Dispatcher.InvokeAsync(() =>
                 {
-                    Bot.LoadScript(filePath);
-                    Dispatcher.InvokeAsync(() =>
+                    LogMessage("Script \"{0}\" by \"{1}\" successfully loaded", Bot.Script.Name, Bot.Script.Author);
+                    if (Bot.Script != null)
                     {
-                        LogMessage("Script \"{0}\" by \"{1}\" successfully loaded", Bot.Script.Name, Bot.Script.Author);
-                        if (Bot.Script != null)
-                        {
-                            Bot.Script.FlashBotWindow += FlashWindow;
-                        }
-                    });
-                })
-                { IsBackground = true }.Start();
+                        Bot.Script.FlashBotWindow += FlashWindow;
+                    }
+                });
             }
             catch (Exception ex)
             {

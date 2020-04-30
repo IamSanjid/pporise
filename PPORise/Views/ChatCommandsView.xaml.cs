@@ -606,9 +606,9 @@ namespace PPORise
                             {
                                 if (_bot.Game != null)
                                 {
-                                    if (_bot.Game.IsMapLoaded)
+                                    if (_bot.Game.IsMapLoaded && !_bot.Game.IsInBattle)
                                     {
-                                        if (_bot.Game._moveType == "bike")
+                                        if (!_bot.Game.IsBiking)
                                             _bot.Game.SetMount("Bike");
                                         else
                                             _bot.Game.SetMount("");
