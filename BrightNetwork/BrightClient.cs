@@ -119,7 +119,10 @@ namespace BrightNetwork
         {
             try
             {
-                _socket.BeginReceive(_receiveBuffer, 0, _receiveBuffer.Length, SocketFlags.None, ReceiveCallback, null);
+                if (_socket.Connected && IsConnected)
+                {
+                    _socket.BeginReceive(_receiveBuffer, 0, _receiveBuffer.Length, SocketFlags.None, ReceiveCallback, null);
+                }
             }
             catch (Exception ex)
             {
@@ -144,17 +147,20 @@ namespace BrightNetwork
 
         private void DisconnectCallback(IAsyncResult result)
         {
-            Exception error = null;
-            try
+            if (result.IsCompleted)
             {
-                error = (Exception)result.AsyncState;
-                _socket.EndDisconnect(result);
+                Exception error = null;
+                try
+                {
+                    error = (Exception)result.AsyncState;
+                    _socket.EndDisconnect(result);
+                }
+                catch (Exception ex)
+                {
+                    error = new AggregateException(error, ex);
+                }
+                Disconnected?.Invoke(error);
             }
-            catch(Exception ex)
-            {
-                error = new AggregateException(error, ex);
-            }
-            Disconnected?.Invoke(error);
         }
 
         private void SendCallback(IAsyncResult result)

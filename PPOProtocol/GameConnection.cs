@@ -58,6 +58,10 @@ namespace PPOProtocol
 
         protected override string ProcessDataBeforeSending(string data)
         {
+            if (!_isSecondConnection)
+            {
+                return "";
+            }
             return data;
         }
 
@@ -65,7 +69,7 @@ namespace PPOProtocol
         {
             if (!_isSecondConnection && data.Contains("cross-domain-policy"))
             {
-                ExecutionPlan.Delay(1, () => Client.Disconnect(true));
+                Client.Disconnect(true);
                 return "";
             }
             return data;
@@ -81,9 +85,9 @@ namespace PPOProtocol
             bool confirmed = true;
             if (!_isSecondConnection && error == null)
             {
-                Connect();
                 _isSecondConnection = true;
                 confirmed = false;
+                this.Connect();
             }
             return confirmed;
         }

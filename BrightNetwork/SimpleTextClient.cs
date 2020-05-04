@@ -67,10 +67,7 @@ namespace BrightNetwork
             if (_wasDisconnected)
             {
                 _wasDisconnected = false;
-                if (ConfirmDisconnection(_closingException))
-                {
-                    Disconnected?.Invoke(_closingException);
-                }
+                Disconnected?.Invoke(_closingException);
             }
         }
 
@@ -78,7 +75,10 @@ namespace BrightNetwork
         {
             packet = ProcessPacketBeforeSending(packet);
             byte[] data = TextEncoding.GetBytes(ProcessDataBeforeSending(packet + PacketDelimiter));
-            Client.BeginSend(data);
+            if (data.Length > 0)
+            {
+                Client.BeginSend(data);
+            }
         }
 
         public void Close(Exception error = null)
@@ -141,20 +141,26 @@ namespace BrightNetwork
 
         private void Client_Connected()
         {
-            _wasConnected = true;
+            _wasConnected = ConfirmConnection();
         }
 
         private void Client_Disconnected(Exception ex)
         {
-            _wasDisconnected = true;
-            _closingException = ex;
+            if (ConfirmDisconnection(ex))
+            {
+                _wasDisconnected = true;
+                _closingException = ex;
+            }
         }
 
         private void Client_DataReceived(byte[] data)
         {
             string text = ProcessDataBeforeReceiving(TextEncoding.GetString(data));
-            _receiveBuffer += text;
-            ExtractPackets();
+            if (text.Length > 0)
+            {
+                _receiveBuffer += text;
+                ExtractPackets();
+            }
         }
 
         private void ExtractPackets()
