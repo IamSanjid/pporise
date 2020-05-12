@@ -3194,7 +3194,7 @@ namespace PPOProtocol
         {
             if (index < 1 || index > Team.Count)
                 return false;
-            PerformingAction?.Invoke(Actions.SWAPPING_POKEMON);
+            PerformingAction?.Invoke(Actions.USING_MOVE);
             if (Team[index - 1] != null)
                 PCPokemon[box].Add(Team[index - 1]);
             GetTimeStamp("reorderStoragePokemon", (index - 1).ToString(), "0", box.ToString());
