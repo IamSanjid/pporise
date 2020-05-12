@@ -56,7 +56,7 @@ namespace PPOBot.Modules
 
         private void Game_Evolving()
         {
-            _evolutionTimeout.Set(_bot.Rand.Next(2000, 3000));
+            _evolutionTimeout.Set(_bot.Game.Rand.Next(2000, 3000));
         }
     }
 }

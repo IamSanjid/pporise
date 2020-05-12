@@ -45,7 +45,7 @@ namespace PPOBot.Modules
             IsLearning = true;
             PokemonUid = pokemonUid;
             MoveToForget = -1;
-            _learningTimeout.Set(_bot.Rand.Next(1000, 3000));
+            _learningTimeout.Set(_bot.Game.Rand.Next(1000, 3000));
 
             _bot.Script.OnLearningMove(moveName, pokemonUid);
         }

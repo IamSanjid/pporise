@@ -69,7 +69,6 @@ namespace PPOProtocol
         private readonly ProtocolTimeout _npcBattleTimeout = new ProtocolTimeout();
 
         private bool _updatedMap = false;        
-        private string _sendInputLogsId = "";
 
         public bool CanMove = true;
         public int Credits;
@@ -220,6 +219,10 @@ namespace PPOProtocol
         public event Action<PlayerInfos> PlayerUpdated;
         public event Action<PlayerInfos> PlayerAdded;
         public event Action<PlayerInfos> PlayerRemoved;
+
+        public event Action<string> AskedForKeyLogs;
+        public event Action NoKeyLogsNeeded;
+        public event Action<uint> PerformingAction;
 
         public List<string> Badges { get; private set; }
 
@@ -590,11 +593,7 @@ namespace PPOProtocol
                         TeamUpdated?.Invoke(true);
                         break;
                     case "b121":
-                        IsInBattle = true;
-                        CanMove = false;
-                        IsFishing = false;
-                        GetTimeStamp("goodHook", "1");
-                        StopFishing();
+                        OnFishingBattle();
                         break;
                     case "b164":
                         HandleMiningRockDepleted(data);
@@ -641,6 +640,16 @@ namespace PPOProtocol
             {
                 OnXmlPacket(packet);
             }
+        }
+
+        private void OnFishingBattle()
+        {
+            IsInBattle = true;
+            CanMove = false;
+            IsFishing = false;
+            GetTimeStamp("goodHook", "1");
+            PerformingAction?.Invoke(Actions.ACTION_KEY);
+            StopFishing();
         }
 
         private void HandleTrainerBattleCooldownError(string[] data)
@@ -985,12 +994,12 @@ namespace PPOProtocol
                                 PrintSystemMessage("Contact to bot developer: " + packet);
                             break;
                         case "b2adb2":
-                            _sendInputLogsId = data.body.dataObj.a.ToString();
-                            PrintSystemMessage("Contact the bot developers, you're being monitored by an admin or a moderator. Monitor ID: " + packet);
+                            AskedForKeyLogs?.Invoke(data.body.dataObj.a.ToString());
+                            PrintSystemMessage("You're being monitored by an admin or a moderator. Don't worry sending some random keys to fool them. Packet: " + packet);
                             break;
                         case "b2adb2z":
-                            PrintSystemMessage("You're no longer being monitored. Packet: " + packet);
-                            _sendInputLogsId = "";
+                            PrintSystemMessage("You're no longer being monitored. You've successfully fooled them. Packet: " + packet);
+                            NoKeyLogsNeeded?.Invoke();
                             break;
                     }
                 }
@@ -2293,19 +2302,19 @@ namespace PPOProtocol
             {
                 SendXtMessage("PokemonPlanetExt", "r", null, "str", false);
             }
-            else if (type == "asf8n2fs")
+            else if (type == "sendMousePos")
             {
                 loc8.Add(p1);
                 loc8.Add(p2);
                 loc8.Add(p3);
-                loc8.Add(_sendInputLogsId);
+                loc8.Add(p4);
                 SendXtMessage("PokemonPlanetExt", "b68", loc8, "str", false);
             }
-            else if (type == "asf8n2fa")
+            else if (type == "sendKeys")
             {
                 loc8.Add(p1);
                 loc8.Add(p2);
-                loc8.Add(_sendInputLogsId);
+                loc8.Add(p3);
                 SendXtMessage("PokemonPlanetExt", "b69", loc8, "str", false);
             }
             else if (type == "sendMovement")
@@ -2571,6 +2580,7 @@ namespace PPOProtocol
             if (IsInBattle && IsConnected && IsMapLoaded)
             {
                 _battleTimeout.Set();
+                PerformingAction?.Invoke(Actions.SWAPPING_POKEMON | Actions.IN_BATTLE);
                 SendAttack("0", "switchPokemon", changeTo.ToString());
                 return true;
             }
@@ -2748,7 +2758,7 @@ namespace PPOProtocol
         {
             npc.CanBattle = false;
             _isBusy = true;
-
+            PerformingAction?.Invoke(Actions.ACTION_KEY);
             GetTimeStamp("trainerBattle", npc.Id.ToString(), npc.Name);
             _dialogTimeout.Set();
         }
@@ -2769,6 +2779,7 @@ namespace PPOProtocol
             {
                 if (!_itemUseTimeout.IsActive && !IsInBattle && item.IsNormallyUsable())
                 {
+                    PerformingAction?.Invoke(Actions.USING_ITEM);
                     _isBusy = true;
                     GetTimeStamp("useItem2", name, "0");
                     _itemUseTimeout.Set();
@@ -2776,6 +2787,7 @@ namespace PPOProtocol
                 }
                 if (!_battleTimeout.IsActive && IsInBattle && item.IsUsableInBattle())
                 {
+                    PerformingAction?.Invoke(Actions.USING_ITEM | Actions.IN_BATTLE);
                     SendAttack("0", "i", item.Uid.ToString());
                     _battleTimeout.Set();
                     return true;
@@ -2785,6 +2797,7 @@ namespace PPOProtocol
             {
                 if (!_itemUseTimeout.IsActive && !IsInBattle && item.IsNormallyUsable())
                 {
+                    PerformingAction?.Invoke(Actions.USING_ITEM | Actions.USING_ON_POKEMON);
                     _isBusy = true;
                     GetTimeStamp("useItem2", name, (pokemonUid - 1).ToString());
                     _itemUseTimeout.Set(Rand.Next(1000, 1500));
@@ -2793,6 +2806,7 @@ namespace PPOProtocol
             }
             return false;
         }
+
         public bool TakeItemFromPokemon(int pokemonUid)
         {
             if (pokemonUid < 1 || pokemonUid > Team.Count)
@@ -2801,12 +2815,14 @@ namespace PPOProtocol
             }
             if (!_itemUseTimeout.IsActive && Team[pokemonUid - 1].ItemHeld != "")
             {
+                PerformingAction?.Invoke(Actions.USING_ITEM | Actions.USING_ON_POKEMON);
                 SendTakeItem(pokemonUid - 1);
                 _itemUseTimeout.Set();
                 return true;
             }
             return false;
         }
+
         public bool GiveItemToPokemon(int pokemonUid, int itemId)
         {
             if (pokemonUid < 1 || pokemonUid > Team.Count)
@@ -2820,6 +2836,7 @@ namespace PPOProtocol
             }
             if (!_itemUseTimeout.IsActive && !IsInBattle && item.IsEquipAble(Team[pokemonUid - 1].Name))
             {
+                PerformingAction?.Invoke(Actions.USING_ITEM | Actions.USING_ON_POKEMON);
                 SendGiveItem(pokemonUid - 1, itemId);
                 _itemUseTimeout.Set();
                 return true;
@@ -2847,6 +2864,7 @@ namespace PPOProtocol
       
         public bool BuyMerchantItem(string merchantid)
         {
+            PerformingAction?.Invoke(Actions.USING_MOVE);
             GetTimeStamp("acceptMerchantItem", merchantid);
             _dialogTimeout.Set();
             return true;
@@ -3042,7 +3060,7 @@ namespace PPOProtocol
                     {
                         _mapMovementSpeed = 8 * _movementSpeedMod;
                     }
-
+                    
                     SendMovement(dir.AsChar());
                     _lastMovement = dir;
                     CheckMapExits(PlayerX, PlayerY);
@@ -3061,6 +3079,7 @@ namespace PPOProtocol
                 direction.ApplyToCoordinates(ref destinationX, ref destinationY);
                 PlayerX = destinationX;
                 PlayerY = destinationY;
+                PerformingAction?.Invoke(Actions.MOVING_UP << (int)direction);
                 PlayerPositionUpdated?.Invoke();
                 EncryptedTileX = ObjectSerilizer.CalcMd5(destinationX + _kg1 + Username);
                 EncryptedTileY = ObjectSerilizer.CalcMd5(destinationY + _kg1 + Username);
@@ -3101,6 +3120,7 @@ namespace PPOProtocol
                 pokemon1 == pokemon2) return false;
             if (_swapTimeout.IsActive is false)
             {
+                PerformingAction?.Invoke(Actions.SWAPPING_POKEMON);
                 SendSwapPokemons(pokemon1 - 1, pokemon2);
                 _swapTimeout.Set();
                 return true;
@@ -3115,25 +3135,20 @@ namespace PPOProtocol
             GetTimeStamp("reorderPokemon", pokemon1.ToString(), pokemon2.ToString());
         }
 
-        private void SendMouseLogs(int x, int y)
+        public void SendMouseLogs(int x, int y, string id)
         {
-            if (!string.IsNullOrEmpty(_sendInputLogsId))
-            {
-                GetTimeStamp("asf8n2fs", x.ToString(), y.ToString(), GetTimer().ToString());
-            }
+            GetTimeStamp("sendMousePos", x.ToString(), y.ToString(), GetTimer().ToString(), id);
         }
 
-        private void SendKeyLog(int key)
+        public void SendKeyLog(string key, string id)
         {
-            if (!string.IsNullOrEmpty(_sendInputLogsId))
-            {
-                GetTimeStamp("asf8n2fa", key.ToString(), GetTimer().ToString());
-            }
+            GetTimeStamp("sendKeys", key, GetTimer().ToString(), id);
         }
 
         public void MineRock(int x, int y, string axe)
         {
             _lastRock = MiningObjects.Find(p => p.X == x && p.Y == y);
+            PerformingAction?.Invoke(Actions.ACTION_KEY);
             SendMine(x, y, axe);
         }
 
@@ -3141,6 +3156,7 @@ namespace PPOProtocol
         {
             if (!IsInBattle && _updatedMap && rod != "" && HasItemName(rod))
             {
+                PerformingAction?.Invoke(Actions.ACTION_KEY);
                 SendFishing(rod);
                 return true;
             }
@@ -3158,6 +3174,7 @@ namespace PPOProtocol
         {
             if (Team.Count > 0)
                 return false;
+            PerformingAction?.Invoke(Actions.USING_MOVE);
             GetTimeStamp("choosePokemon", name.ToLowerInvariant());
             return true;
         }
@@ -3166,6 +3183,7 @@ namespace PPOProtocol
         {
             if (PCPokemon[box].Count <= 0 || boxId < 1 || boxId > PCPokemon.Count)
                 return false;
+            PerformingAction?.Invoke(Actions.USING_MOVE);
             PCPokemon[box].RemoveAt(boxId - 1);
             GetTimeStamp("reorderStoragePokemon", "-1", boxId.ToString(), box.ToString());
             _refreshPCTimeout?.Set();
@@ -3176,6 +3194,7 @@ namespace PPOProtocol
         {
             if (index < 1 || index > Team.Count)
                 return false;
+            PerformingAction?.Invoke(Actions.SWAPPING_POKEMON);
             if (Team[index - 1] != null)
                 PCPokemon[box].Add(Team[index - 1]);
             GetTimeStamp("reorderStoragePokemon", (index - 1).ToString(), "0", box.ToString());

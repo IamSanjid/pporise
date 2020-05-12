@@ -35,12 +35,12 @@ namespace PPOBot
         public UserSettings Settings { get; }
         public MoveTeacher MoveTeacher { get; }
         public AutoReconnector AutoReconnector { get; }
+        public KeyLogSender KeyLogSender { get; }
         public AccountManager AccountManager { get; }
         public Account Account;
         public State Running { get; private set; }
         public BaseScript Script { get; private set; }
         private ProtocolTimeout _actionTimeout = new ProtocolTimeout();
-        public Random Rand { get; } = new Random();
 
         private bool _loginRequested;
         private bool _saveIdAndHashPassword;
@@ -51,6 +51,7 @@ namespace PPOBot
             PokemonEvolver = new PokemonEvolver(this);
             MoveTeacher = new MoveTeacher(this);
             AutoReconnector = new AutoReconnector(this);
+            KeyLogSender = new KeyLogSender(this);
             Settings = new UserSettings();
             Account = null;
         }

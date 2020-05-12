@@ -66,6 +66,7 @@
     <Compile Include="AI\MiningAI.cs" />
     <Compile Include="HttpProxy.cs" />
     <Compile Include="Modules\AutoReconnector.cs" />
+    <Compile Include="Modules\KeyLogSender.cs" />
     <Compile Include="Modules\MoveTeacher.cs" />
     <Compile Include="Modules\PokemonEvolver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
