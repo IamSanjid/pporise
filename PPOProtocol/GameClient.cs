@@ -880,6 +880,7 @@ namespace PPOProtocol
                 }
             }
             //-----------------Stupid way to check chat messages xD------------------------//
+
             ChatMessage?.Invoke(packet, isClan);
         }
 

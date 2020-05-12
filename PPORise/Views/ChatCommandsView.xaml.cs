@@ -331,6 +331,9 @@ namespace PPORise
             var type = typeMatches[typeMatches.Count - 1].Value;
             msg = Regex.Replace(msg, @"<[a-zA-Z]>", "");
 
+            if (string.IsNullOrEmpty(msg))
+                return;
+
             var fromMap = "";
 
             var userName = data[4];
@@ -351,7 +354,8 @@ namespace PPORise
             if (isClan)
                 type = "<cl>";
 
-            UpdateChatMessage(type, userName, msg, fromMap);
+           
+             UpdateChatMessage(type, userName, msg, fromMap);
         }
 
         private void UpdateChatMessage(string type, string tempUsername, string msg, string fromMap)
