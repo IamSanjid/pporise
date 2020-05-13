@@ -59,14 +59,14 @@ namespace PPOBot.Modules
 
             _bot.PrintLogMessage("Reconnecting...");
             _bot.Login(_bot.Account);
-            _autoReconnectTimeout = DateTime.UtcNow.AddSeconds(_bot.Game.Rand.Next(MinDelay, MaxDelay + 1));
+            _autoReconnectTimeout = DateTime.UtcNow.AddSeconds(_bot.Rand.Next(MinDelay, MaxDelay + 1));
         }
 
         private void Client_ConnectionClosed(Exception ex)
         {
             if (!IsEnabled) return;
             _reconnecting = true;
-            var seconds = _bot.Game.Rand.Next(MinDelay, MaxDelay + 1);
+            var seconds = _bot.Rand.Next(MinDelay, MaxDelay + 1);
             _autoReconnectTimeout = DateTime.UtcNow.AddSeconds(seconds);
             _bot.PrintLogMessage("Reconnecting in " + seconds + " seconds.");
         }

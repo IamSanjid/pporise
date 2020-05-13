@@ -326,13 +326,12 @@ namespace PPORise
                 return;
             }
             var msg = data[3];
+            if (string.IsNullOrEmpty(msg) || msg.Length == 0)
+                return;
 
             var typeMatches = new Regex(@"<([a-zA-Z])>").Matches(msg);
             var type = typeMatches[typeMatches.Count - 1].Value;
             msg = Regex.Replace(msg, @"<[a-zA-Z]>", "");
-
-            if (string.IsNullOrEmpty(msg))
-                return;
 
             var fromMap = "";
 

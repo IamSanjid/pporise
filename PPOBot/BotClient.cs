@@ -40,6 +40,7 @@ namespace PPOBot
         public Account Account;
         public State Running { get; private set; }
         public BaseScript Script { get; private set; }
+        public Random Rand { get; } = new Random();
         private ProtocolTimeout _actionTimeout = new ProtocolTimeout();
 
         private bool _loginRequested;

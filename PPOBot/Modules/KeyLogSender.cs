@@ -57,8 +57,8 @@ namespace PPOBot.Modules
             {
                 int minX = pos.Item1, minY = pos.Item2, maxX = pos.Item3, maxY = pos.Item4;
                 
-                int x = _bot.Game.Rand.Next(minX, maxX + 1);
-                int y = _bot.Game.Rand.Next(minY, maxY + 1);
+                int x = _bot.Rand.Next(minX, maxX + 1);
+                int y = _bot.Rand.Next(minY, maxY + 1);
 
                 _bot.Game.SendMouseLogs(x, y, _requestId);
             }

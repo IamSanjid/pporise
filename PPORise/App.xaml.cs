@@ -20,7 +20,7 @@ namespace PPORise
             var assembly = typeof(App).Assembly;
             var assemblyName = assembly.GetName();
             Name = assemblyName.Name;
-            Version = IsBeta ? assemblyName.Version.ToString(3) + "-beta2" : assemblyName.Version.ToString();
+            Version = IsBeta ? assemblyName.Version.ToString(3) + "-beta3" : assemblyName.Version.ToString();
             Author = ((AssemblyCompanyAttribute)Attribute.GetCustomAttribute(assembly, typeof(AssemblyCompanyAttribute), false)).Company;
             Description = ((AssemblyDescriptionAttribute)Attribute.GetCustomAttribute(assembly, typeof(AssemblyDescriptionAttribute), false)).Description;
         }
