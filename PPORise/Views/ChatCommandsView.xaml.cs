@@ -316,6 +316,7 @@ namespace PPORise
                 }
             }
         }
+
         public void ChatMessage_Receieved(string msgObj, bool isClan)
         {
             var data = msgObj.Split('`');
@@ -325,10 +326,8 @@ namespace PPORise
                 ProcessSpecialChatMessages(data, msgObj);
                 return;
             }
-            var msg = data[3];
-            if (string.IsNullOrEmpty(msg) || msg.Length == 0)
-                return;
 
+            var msg = data[3];
             var typeMatches = new Regex(@"<([a-zA-Z])>").Matches(msg);
             var type = typeMatches[typeMatches.Count - 1].Value;
             msg = Regex.Replace(msg, @"<[a-zA-Z]>", "");
@@ -347,13 +346,14 @@ namespace PPORise
                         fromMap = mapMatch.Groups[0].Value;
                 }
 
-                msg = msg.Replace(fromMap, "").Replace("<", "").Replace(">", "");
+                if (!string.IsNullOrEmpty(fromMap))
+                    msg = msg.Replace(fromMap, "");
+                msg = msg.Replace("<", "").Replace(">", "");
             }
 
             if (isClan)
                 type = "<cl>";
 
-           
              UpdateChatMessage(type, userName, msg, fromMap);
         }
 

@@ -58,19 +58,33 @@ namespace PPOBot
 #endif
         }
 
+        public event Action<string> LogMessage;
 
         private readonly ProtocolTimeout _delayIfNoRockMineable = new ProtocolTimeout();
-        private readonly BotClient Bot;
+        private readonly GameClient _client;
 
-        public MiningAI(BotClient bot)
+        private IList<MiningObject> Rocks => _client.MiningObjects;
+        private readonly List<MiningObject> _minedRocks = new List<MiningObject>();
+
+        public MiningAI(GameClient client)
         {
-            Bot = bot;
-            Bot.Game.RockDepleted += _client_RockDepleted;
-            Bot.Game.RockRestored += _client_RockRestored;
-            Bot.Game.MapUpdated += Client_MapUpdated;
+            _client = client;
+            _client.RockDepleted += Game_RockDepleted;
+            _client.RockRestored += Game_RockRestored;
+            _client.MapUpdated += Game_MapUpdated;
         }
 
-        private void Client_MapUpdated()
+        private void Bot_ClientChanged()
+        {
+            if (_client != null)
+            {
+                _client.RockDepleted += Game_RockDepleted;
+                _client.RockRestored += Game_RockRestored;
+                _client.MapUpdated += Game_MapUpdated;
+            }
+        }
+
+        private void Game_MapUpdated()
         {
             _minedRocks.Clear();
         }
@@ -79,12 +93,8 @@ namespace PPOBot
         {
             return _delayIfNoRockMineable.Update();
         }
-        
-        private IList<MiningObject> Rocks => Bot.Game.MiningObjects;
 
-        private readonly List<MiningObject> _minedRocks = new List<MiningObject>();
-
-        private void _client_RockRestored(MiningObject rock)
+        private void Game_RockRestored(MiningObject rock)
         {
             try
             {
@@ -106,7 +116,7 @@ namespace PPOBot
             }
         }
 
-        private void _client_RockDepleted(MiningObject rock)
+        private void Game_RockDepleted(MiningObject rock)
         {
             try
             {
@@ -128,13 +138,13 @@ namespace PPOBot
         }
 
         private MiningObject _lastRock;
-        public bool IsAnyMineAbleRock() => Bot.Game.IsAnyMinableRocks();
-        public bool IsRockMineAbleAt(int x, int y) => Bot.Game.IsMinable(x, y);
+        public bool IsAnyMineAbleRock() => _client.IsAnyMinableRocks();
+        public bool IsRockMineAbleAt(int x, int y) => _client.IsMinable(x, y);
         public bool IsRockMineAble(MiningObject rock) => IsRockMineAbleAt(rock.X, rock.Y);
         public bool MineRockAt(int x, int y, string axe)
         {
             if (!IsRockMineAbleAt(x, y)) return false;
-            Bot.Game.MineRock(x, y, axe);
+            _client.MineRock(x, y, axe);
             return true;
         }
 
@@ -156,7 +166,7 @@ namespace PPOBot
                     var coloredRocks = new List<MiningObject>();
                     foreach (var rock in tempRocks)
                     {
-                        if (rock.IsGoldMember == Bot.Game.IsGoldMember && IsRockMineAble(rock) &&
+                        if (rock.IsGoldMember == _client.IsGoldMember && IsRockMineAble(rock) &&
                             colors.ToList().Contains(rock.Color))
                         {
                             coloredRocks.Add(rock);
@@ -217,7 +227,7 @@ namespace PPOBot
                             _delayIfNoRockMineable.Set(180000);
                             delay = 180000;
                         }
-                        Bot.PrintLogMessage($"There is no specific colored mine able rocks. Waiting for {TimeSpan.FromMilliseconds(delay).FormatTimeString()}");
+                        LogMessage?.Invoke($"There is no specific colored mine able rocks. Waiting for {TimeSpan.FromMilliseconds(delay).FormatTimeString()}");
                     }
 #if DEBUG
                     Rocks.ToList().FindAll(r => colors.Contains(r.Color)).ForEach(r =>
@@ -226,7 +236,7 @@ namespace PPOBot
                         Console.WriteLine($"Is Mineable {r.Color}({r.X}, {r.Y}): {IsRockMineAble(r)}"));
 #endif
                 }
-                if (Bot.Game.HasItemName(axe) && waitForRocks)
+                if (_client.HasItemName(axe) && waitForRocks)
                     return true;
             }
             catch (Exception e)
@@ -244,7 +254,7 @@ namespace PPOBot
                 var tempRocks = new List<MiningObject>();
                 foreach (var rock in Rocks)
                 {
-                    if (rock.IsGoldMember == Bot.Game.IsGoldMember && IsRockMineAble(rock))
+                    if (rock.IsGoldMember == _client.IsGoldMember && IsRockMineAble(rock))
                     {
                         tempRocks.Add(rock);
                     }
@@ -286,7 +296,7 @@ namespace PPOBot
                 if (_minedRocks.Count > 0 && _minedRocks.Contains(rock))
                     continue;
                 if (rock.IsMined) continue;
-                var distance = GameClient.DistanceBetween(Bot.Game.PlayerX, Bot.Game.PlayerY, rock.X, rock.Y);
+                var distance = GameClient.DistanceBetween(_client.PlayerX, _client.PlayerY, rock.X, rock.Y);
                 var node = new Node
                 {
                     Distance = distance,
@@ -350,7 +360,7 @@ namespace PPOBot
         private bool IsNodeClosest(Node node, IList<MiningObject> rocks)
         {
             if (rocks.Any(r =>
-                GameClient.DistanceBetween(Bot.Game.PlayerX, Bot.Game.PlayerY, r.X, r.Y) < node.Distance))
+                GameClient.DistanceBetween(_client.PlayerX, _client.PlayerY, r.X, r.Y) < node.Distance))
             {
                 return false;
             }

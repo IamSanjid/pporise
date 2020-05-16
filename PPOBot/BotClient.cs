@@ -31,11 +31,12 @@ namespace PPOBot
         public BattleAI AI { get; private set; }
         // ReSharper disable once InconsistentNaming
         public MiningAI MiningAI { get; private set; }
+
         public PokemonEvolver PokemonEvolver { get; }
         public UserSettings Settings { get; }
         public MoveTeacher MoveTeacher { get; }
         public AutoReconnector AutoReconnector { get; }
-        public KeyLogSender KeyLogSender { get; }
+        public KeyLogSender KeyLogSender { get; private set; }
         public AccountManager AccountManager { get; }
         public Account Account;
         public State Running { get; private set; }
@@ -52,7 +53,6 @@ namespace PPOBot
             PokemonEvolver = new PokemonEvolver(this);
             MoveTeacher = new MoveTeacher(this);
             AutoReconnector = new AutoReconnector(this);
-            KeyLogSender = new KeyLogSender(this);
             Settings = new UserSettings();
             Account = null;
         }
@@ -84,11 +84,13 @@ namespace PPOBot
                 }
             }
         }
+
         public void LogoutApi(bool allowAutoReconnect)
         {
             AutoReconnector.IsEnabled = allowAutoReconnect;
             Game.Close();
         }
+
         private void Client_SystemMessage(string message)
         {
             if (Running == State.Started)
@@ -149,10 +151,12 @@ namespace PPOBot
         {
             LogMessage?.Invoke(obj);
         }
+
         public void C_LogMessage(string msg, Brush color)
         {
             ColoredLogMessage?.Invoke(msg, color);
         }
+
         public void Update()
         {
             AutoReconnector.Update();
@@ -250,7 +254,10 @@ namespace PPOBot
             if (client != null)
             {
                 AI = new BattleAI(Game);
-                MiningAI = new MiningAI(this);
+                MiningAI = new MiningAI(Game);
+                KeyLogSender = new KeyLogSender(Game);
+
+                MiningAI.LogMessage += PrintLogMessage;
                 client.LogMessage += PrintLogMessage;
                 client.ConnectionOpened += Client_ConnectionOpened;
                 client.ConnectionFailed += Client_ConnectionFailed;
@@ -331,6 +338,7 @@ namespace PPOBot
                 throw;
             }
         }
+
         private void ExecuteNextAction()
         {
             try
@@ -356,6 +364,7 @@ namespace PPOBot
                 Stop();
             }
         }
+
         private void Script_ScriptMessage(string obj)
         {
             PrintLogMessage(obj);
@@ -364,7 +373,7 @@ namespace PPOBot
         private void Client_TeleportationOccuring(string map, int x, int y)
         {
             var message = "Position updated: " + map + " (" + x + ", " + y + ")";
-            MiningAI = new MiningAI(this);
+            MiningAI = new MiningAI(Game);
             if (map != Game.MapName)
             {
                 message += " [WARNING, different map] /!\\";
@@ -411,6 +420,7 @@ namespace PPOBot
             }
             return result;
         }
+
         public bool MoveLeftRight(int startX, int startY, int destX, int destY, string movingReason)
         {
             bool result;
@@ -457,9 +467,13 @@ namespace PPOBot
             }
 
             if (!string.IsNullOrEmpty(Account.HttpProxy.Host) && Account.HttpProxy.Port > 0)
+            {
                 webConnection = new WebConnection(Account.HttpProxy.Host, Account.HttpProxy.Port);
+            }
             else
+            {
                 webConnection = new WebConnection();
+            }
 
             if (Settings.ExtraHttpHeaders.Count > 0)
             {
@@ -478,7 +492,9 @@ namespace PPOBot
                 Game.Open();
             }
             else
+            {
                 Game.SendWebsiteLogin(Account.Name, Account.Password);
+            }
         }
     }
 }

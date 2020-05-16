@@ -42,16 +42,16 @@ namespace PPOProtocol
             if (_client?.Team != null && (WildPokemon.EncryptedAbility
                                           == ObjectSerilizer.CalcMd5(
                                               new char[23] + "asion1asfonapsfobq1n12iofrasnfra") &&
-                                          _client?.Team[activePokemon].Type1 != PokemonType.Steel &&
-                                          _client?.Team[activePokemon].Type2 != PokemonType.Steel))
+                                          _client.Team[activePokemon].Type1 != PokemonType.Steel &&
+                                          _client.Team[activePokemon].Type2 != PokemonType.Steel))
             {
                 IsTrapped = true;
             }
             else if (_client?.Team != null && (WildPokemon.EncryptedAbility ==
                                                ObjectSerilizer.CalcMd5(
                                                    new char[42] + "asion1asfonapsfobq1n12iofrasnfra") &&
-                                               _client?.Team[activePokemon].Type1 != PokemonType.Fire &&
-                                               _client?.Team[activePokemon].Type2 != PokemonType.Fire))
+                                               _client.Team[activePokemon].Type1 != PokemonType.Fire &&
+                                               _client.Team[activePokemon].Type2 != PokemonType.Fire))
             {
                 IsTrapped = true;
             }
@@ -126,7 +126,6 @@ namespace PPOProtocol
 
         private void ProcessBattleMessage(string str)
         {
-            WildPokemon.IsRare = _client.HasEncounteredRarePokemon;
             IsTrapped = str.IndexOf("can not run away", StringComparison.InvariantCultureIgnoreCase) >= 0
                 || str.IndexOf("can not switch", StringComparison.InvariantCultureIgnoreCase) >= 0 ? true : false;
         }

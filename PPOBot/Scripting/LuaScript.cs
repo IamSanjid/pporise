@@ -1302,7 +1302,7 @@ namespace PPOBot.Scripting
 
 			if (Bot.Game.ActiveBattle.WildPokemon != null)
 			{
-				return Bot.Game.ActiveBattle.WildPokemon.IsRare;
+				return Bot.Game.ActiveBattle.WildPokemon.IsRare || Bot.Game.ActiveBattle.WildPokemon.IsElite;
 			}
 			return false;
 		}

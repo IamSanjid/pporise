@@ -23,7 +23,7 @@ namespace PPOProtocol
         public PokemonType Type2 { get; private set; }
         public string Ailment { get; private set; }
         public string EncryptedAbility { get; private set; }
-        public bool IsRare { get; set; }
+        public bool IsRare;
         public bool IsElite { get; private set; }
 
         private string _status;
@@ -73,7 +73,7 @@ namespace PPOProtocol
             IsElite = data[3].ToLowerInvariant() == "true";
             IsRare = IsElite;
             Id = Convert.ToInt32(data[5]);
-            IsShiny = (data[6].ToLowerInvariant() == "true");
+            IsShiny = data[6].ToLowerInvariant() == "true";
             Form = data[7];
             MaxHealth = Convert.ToInt32(data[8]);
             CurrentHealth = Convert.ToInt32(data[9]);

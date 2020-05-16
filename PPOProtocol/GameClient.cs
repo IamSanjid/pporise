@@ -691,8 +691,8 @@ namespace PPOProtocol
                     {
                         LogMessage?.Invoke("Declined battle request");
                         GetTimeStamp("declineBattle");
+                        CanMove = true;
                     });
-                CanMove = true;
             }
             else
             {
@@ -702,8 +702,8 @@ namespace PPOProtocol
                     {
                         LogMessage?.Invoke("Declined battle request");
                         GetTimeStamp("declineBattle");
+                        CanMove = true;
                     });
-                CanMove = true;
             }
         }
 
@@ -834,6 +834,11 @@ namespace PPOProtocol
             {
                 IsFishing = false;
                 StopFishing();
+            }
+
+            if (packet.Contains("Please finish what you are doing first"))
+            {
+                _dialogTimeout.Set(Rand.Next(1500, 2500)); // wait for few seconds...
             }
 
             if (RemoveUnknownSymbolsFromString(packet)
@@ -1080,15 +1085,17 @@ namespace PPOProtocol
             PlayerDataUpdated?.Invoke();
         }
 
-        private void PrintSystemMessage(string msg)
+        public void PrintSystemMessage(string msg)
         {
             SystemMessage?.Invoke(msg);
         }
+
         public void LearnMove(int moveUid)
         {
             if (moveUid < 0)
                 return;
             _swapTimeout.Set();
+            PerformingAction?.Invoke(Actions.USING_MOVE);
             GetTimeStamp("forgetMove", moveUid.ToString());
         }
 
@@ -1382,7 +1389,6 @@ namespace PPOProtocol
                 _needToLoadR = true;
             IsInBattle = false;
             IsTrainerBattle = false;
-            HasEncounteredRarePokemon = false;
             movingForBattle = false;
             CanMove = true;
             int battleStatus = (LastBattle.BattleHasWon ? 1 : 0) << 2 | (lostBattle ? 1 : 0) << 1 | (LastBattle.BattleEnded ? 1 : 0) << 0;
@@ -2303,19 +2309,19 @@ namespace PPOProtocol
             {
                 SendXtMessage("PokemonPlanetExt", "r", null, "str", false);
             }
-            else if (type == "sendMousePos")
+            else if (type == "asf8n2fs")
             {
-                loc8.Add(p1);
-                loc8.Add(p2);
-                loc8.Add(p3);
-                loc8.Add(p4);
+                loc8.Add(p1); // mouse X
+                loc8.Add(p2); // mouse Y
+                loc8.Add(p3); // Timer
+                loc8.Add(p4); // Id
                 SendXtMessage("PokemonPlanetExt", "b68", loc8, "str", false);
             }
-            else if (type == "sendKeys")
+            else if (type == "asf8n2fa")
             {
-                loc8.Add(p1);
-                loc8.Add(p2);
-                loc8.Add(p3);
+                loc8.Add(p1); // key
+                loc8.Add(p2); // Timer
+                loc8.Add(p3); // Id
                 SendXtMessage("PokemonPlanetExt", "b69", loc8, "str", false);
             }
             else if (type == "sendMovement")
@@ -2875,55 +2881,65 @@ namespace PPOProtocol
         {
             if (movingForBattle)
             {
+                bool startBattle = false;
+
                 if (Team[0].AbilityNo == 1 || Team[0].AbilityNo == 73 || Team[0].AbilityNo == 95)
                 {
                     if (Rand.Next(1, 14) == 7)
                     {
-                        SendWildBattle(IsSurfing);
+                        startBattle = true;
                     }
                 }
                 else if (Team[0].AbilityNo == 35 || Team[0].AbilityNo == 71)
                 {
                     if (Rand.Next(1, 9) <= 2)
                     {
-                        SendWildBattle(IsSurfing);
+                        startBattle = true;
                     }
                 }
                 else if (Team[0].AbilityNo == 99)
                 {
                     if (Rand.Next(1, 90) <= 15)
                     {
-                        SendWildBattle(IsSurfing);
+                        startBattle = true;
                     }
                 }
                 else if (Rand.Next(1, 9) == 7)
                 {
-                    SendWildBattle(IsSurfing);
+                    startBattle = true;
                 }
                 else if (Team[0].AbilityNo == 1 || Team[0].AbilityNo == 73 || Team[0].AbilityNo == 95)
                 {
                     if (Rand.Next(1, 27) == 7)
                     {
-                        SendWildBattle(IsSurfing);
+                        startBattle = true;
                     }
                 }
                 else if (Team[0].AbilityNo == 35 || Team[0].AbilityNo == 71)
                 {
                     if (Rand.Next(1, 9) == 7)
                     {
-                        SendWildBattle(IsSurfing);
+                        startBattle = true;
                     }
                 }
                 else if (Team[0].AbilityNo == 99)
                 {
                     if (Rand.Next(1, 180) <= 15)
                     {
-                        SendWildBattle(IsSurfing);
+                        startBattle = true;
                     }
                 }
                 else if (Rand.Next(1, 18) == 7)
                 {
-                    SendWildBattle(IsSurfing);
+                    startBattle = true;
+                }
+
+                if (startBattle)
+                {
+                    if (IsSurfing)
+                        StartSurfWildBattle();
+                    else
+                        StartWildBattle();
                 }
             }
         }
@@ -3041,6 +3057,7 @@ namespace PPOProtocol
 
             if (!_movementTimeout.IsActive && _movements.Count > 0)
             {
+                HasEncounteredRarePokemon = false;
                 var dir = _movements[0];
                 _movements.RemoveAt(0);
 
@@ -3138,12 +3155,12 @@ namespace PPOProtocol
 
         public void SendMouseLogs(int x, int y, string id)
         {
-            GetTimeStamp("sendMousePos", x.ToString(), y.ToString(), GetTimer().ToString(), id);
+            GetTimeStamp("asf8n2fs", x.ToString(), y.ToString(), GetTimer().ToString(), id);
         }
 
         public void SendKeyLog(string key, string id)
         {
-            GetTimeStamp("sendKeys", key, GetTimer().ToString(), id);
+            GetTimeStamp("asf8n2fa", key, GetTimer().ToString(), id);
         }
 
         public void MineRock(int x, int y, string axe)
