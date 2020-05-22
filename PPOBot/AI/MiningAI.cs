@@ -74,16 +74,6 @@ namespace PPOBot
             _client.MapUpdated += Game_MapUpdated;
         }
 
-        private void Bot_ClientChanged()
-        {
-            if (_client != null)
-            {
-                _client.RockDepleted += Game_RockDepleted;
-                _client.RockRestored += Game_RockRestored;
-                _client.MapUpdated += Game_MapUpdated;
-            }
-        }
-
         private void Game_MapUpdated()
         {
             _minedRocks.Clear();

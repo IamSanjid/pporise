@@ -105,22 +105,26 @@ namespace PPORise
 
             Marshal.FreeHGlobal(accentPtr);
         }
+
         private void PPORiseWindow_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 DragMove();
             }
-                
+
         }
+
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
         }
+
         private void PPORiseWindow_Loaded(object sender, RoutedEventArgs e)
         {
             EnableBlur();
         }
+
         private void MaximizeButton_Click(object sender, RoutedEventArgs e)
         {
             if (WindowState == WindowState.Maximized)
@@ -160,6 +164,7 @@ namespace PPORise
             public ContentControl Content { get; set; }
             public ListViewItem Button { get; set; }
         }
+
         public MainWindow()
         {
 #if !DEBUG
@@ -258,6 +263,7 @@ namespace PPORise
                 StatusText.Foreground = Brushes.Red;
             });
         }
+
         private void Bot_LoggingFailed(Exception ex)
         {
             Dispatcher.InvokeAsync(delegate
@@ -271,6 +277,7 @@ namespace PPORise
                 StatusText.Foreground = Brushes.Red;
             });
         }
+
         private void Client_LoggedIn()
         {
             Dispatcher.InvokeAsync(delegate
@@ -280,13 +287,19 @@ namespace PPORise
                 StatusText.Foreground = (Brush)new BrushConverter().ConvertFrom("#28d659");
             });
         }
-        private void Bot_ColoredLogMessage(string message, Brush color)
+
+        private void Bot_ColoredLogMessage(string message, uint argb)
         {
             Dispatcher.InvokeAsync(delegate
             {
-                LogMessage(message, color);
+                LogMessage(message, new SolidColorBrush(Color.FromArgb(
+                    (byte)((argb & 0xff000000) >> 24),
+                    (byte)((argb & 0x00ff0000) >> 16),
+                    (byte)((argb & 0x0000ff00) >> 8),
+                    (byte)(argb & 0x000000ff))) as Brush);
             });
         }
+
         private void SetTitle(string username)
         {
             Title = username == null ? "" : username + " - ";
@@ -296,10 +309,12 @@ namespace PPORise
 #endif
             MainTitle.Text = Title;
         }
+
         private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             Dispatcher.InvokeAsync(() => HandleUnhandledException(e.Exception.InnerException));
         }
+
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             HandleUnhandledException(e.ExceptionObject as Exception);
@@ -323,6 +338,7 @@ namespace PPORise
                 //ignore
             }
         }
+
         private void UpdateClients()
         {
             lock (Bot)
@@ -335,7 +351,8 @@ namespace PPORise
             }
             Task.Delay(1).ContinueWith((previous) => UpdateClients());
         }
-        private void LogMessage(string message, Brush color)
+
+        public void LogMessage(string message, Brush color)
         {
             /*var test = new TextRange(MessageTextBox.Document.ContentEnd, MessageTextBox.Document.ContentEnd)
             {
@@ -397,10 +414,12 @@ namespace PPORise
             var bc = new BrushConverter();
             LogMessage(message, (Brush)bc.ConvertFrom("#FF99AAB5"));
         }
+
         private void LogMessage(string format, params object[] args)
         {
             LogMessage(string.Format(format, args));
         }
+
         private void AutoEvolveSwitch_Checked(object sender, RoutedEventArgs e)
         {
             lock (Bot)
@@ -408,6 +427,7 @@ namespace PPORise
                 Bot.PokemonEvolver.IsEnabled = true;
             }
         }
+
         private void AutoEvolveSwitch_Unchecked(object sender, RoutedEventArgs e)
         {
             lock (Bot)
@@ -415,6 +435,7 @@ namespace PPORise
                 Bot.PokemonEvolver.IsEnabled = false;
             }
         }
+
         private void Bot_PokemonEvolverStateChanged(bool value)
         {
             Dispatcher.InvokeAsync(delegate
@@ -424,6 +445,7 @@ namespace PPORise
                 AutoEvolveSwitch.IsChecked = value;
             });
         }
+
         private void AutoReconnectSwitch_Checked(object sender, RoutedEventArgs e)
         {
             lock (Bot)
@@ -431,6 +453,7 @@ namespace PPORise
                 Bot.AutoReconnector.IsEnabled = true;
             }
         }
+
         private void AutoReconnectSwitch_Unchecked(object sender, RoutedEventArgs e)
         {
             lock (Bot)
@@ -439,6 +462,7 @@ namespace PPORise
 
             }
         }
+
         private void Bot_AutoReconnectorStateChanged(bool value)
         {
             Dispatcher.InvokeAsync(delegate
@@ -448,6 +472,7 @@ namespace PPORise
                 AutoReconnectSwitch.IsChecked = value;
             });
         }
+
         private void OpenLoginWindow()
         {
             var login = new LoginWindow(Bot) { Owner = this };
@@ -468,8 +493,8 @@ namespace PPORise
         private void Login(LoginWindow login)
         {
             try
-            {               
-                lock(Bot)
+            {
+                lock (Bot)
                 {
                     var account = new Account(login.Username) { Password = login.Password };
 
@@ -509,6 +534,7 @@ namespace PPORise
                 Msg("Error", "", e);
             }
         }
+
         private void Bot_StateChanged(BotClient.State state)
         {
             Dispatcher.InvokeAsync(delegate
@@ -543,6 +569,7 @@ namespace PPORise
                 LogMessage(message);
             });
         }
+
         private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             bool shouldLogin = false;
@@ -562,6 +589,7 @@ namespace PPORise
                 OpenLoginWindow();
             }
         }
+
         private void Logout()
         {
             LogMessage("Logging out...", Brushes.OrangeRed);
@@ -570,6 +598,7 @@ namespace PPORise
                 Bot.LogoutApi(false);
             }
         }
+
         private void AddView(UserControl view, ContentControl content, ListViewItem button, bool visible = false)
         {
             _views.Add(new TabView
@@ -604,6 +633,7 @@ namespace PPORise
                 }
             }
         }
+
         private void Bot_ClientChanged()
         {
             lock (Bot)
@@ -749,7 +779,7 @@ namespace PPORise
                             LogMessage("You've won the battle!", Brushes.Aqua);
 
                         StatusText.Text = "Online";
-                        StatusText.Foreground = (Brush) new BrushConverter().ConvertFrom("#28d659");
+                        StatusText.Foreground = (Brush)new BrushConverter().ConvertFrom("#28d659");
                     }
                 }
             });
@@ -897,7 +927,7 @@ namespace PPORise
                     }
                 }
             });
-            
+
         }
 
         private void LoadScriptButton_OnClick(object sender, RoutedEventArgs e)
@@ -1037,6 +1067,7 @@ namespace PPORise
             MessageTextBox.CaretPosition = MessageTextBox.Document.ContentEnd;
             MessageTextBox.ScrollToEnd();
         }
+
         private void MainWindow_OnDrop(object sender, DragEventArgs e)
         {
             if (e.Data.GetData(DataFormats.FileDrop) != null)
@@ -1051,7 +1082,7 @@ namespace PPORise
 
         private void AboutButton_OnClick(object sender, RoutedEventArgs e)
         {
-            new AboutWindow{Owner = this}.ShowDialog();
+            new AboutWindow { Owner = this }.ShowDialog();
         }
     }
 }

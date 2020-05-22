@@ -1233,12 +1233,14 @@ namespace PPOProtocol
             CanMove = false;
             if (ActiveBattle.IsWildBattle)
             {
-                BattleMessage?.Invoke("A wild " + (ActiveBattle.WildPokemon.IsShiny ? "Shiny " : "") + ActiveBattle.WildPokemon.Name +
+                BattleMessage?.Invoke("A wild " + (ActiveBattle.WildPokemon.IsShiny ? "Shiny " : "")
+                    + (ActiveBattle.WildPokemon.IsElite ? "Elite " : "") + ActiveBattle.WildPokemon.Name +
                                       " has appeared!");
             }
             else
             {
-                BattleMessage?.Invoke("Opponent sent " + (ActiveBattle.WildPokemon.IsShiny ? "Shiny " : "") + ActiveBattle.WildPokemon.Name +
+                BattleMessage?.Invoke("Opponent sent " + (ActiveBattle.WildPokemon.IsShiny ? "Shiny " : "")
+                    + (ActiveBattle.WildPokemon.IsElite ? "Elite " : "") + ActiveBattle.WildPokemon.Name +
                                       "!");
             }
 

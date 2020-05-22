@@ -39,13 +39,13 @@ namespace PPORise
             lock (_bot)
             {
                 if (_selectedItem.Name.Contains("TM") || _selectedItem.Name.Contains("HM"))
-                    _bot.C_LogMessage("Cant's use TM from Inventory view. Try to use it from Teamview.", Brushes.OrangeRed);
+                    MainWindow.LogMessage("Cant's use TM from Inventory view. Try to use it from Teamview.", Brushes.OrangeRed);
                 else
                 {
                     if (!_selectedItem.IsEquipAble())
                         _bot.Game.UseItem(_selectedItem.Name);
                     else
-                        _bot.C_LogMessage("This item can't be used like this way.", Brushes.OrangeRed);
+                        MainWindow.LogMessage("This item can't be used like this way.", Brushes.OrangeRed);
                 }
             }
         }

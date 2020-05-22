@@ -4,7 +4,7 @@ using PPOProtocol;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Windows.Media;
+using PPOBot.Utils;
 
 namespace PPOBot
 {
@@ -23,7 +23,7 @@ namespace PPOBot
         public event Action ConnectionClosed;
         public event Action<string> LogMessage;
         public event Action ClientChanged;
-        public event Action<string, Brush> ColoredLogMessage;
+        public event Action<string, uint> ColoredLogMessage;
 
         //private bool _loginUpdate;
         public GameClient Game { get; private set; }
@@ -152,7 +152,7 @@ namespace PPOBot
             LogMessage?.Invoke(obj);
         }
 
-        public void C_LogMessage(string msg, Brush color)
+        public void C_LogMessage(string msg, uint color)
         {
             ColoredLogMessage?.Invoke(msg, color);
         }
@@ -176,7 +176,7 @@ namespace PPOBot
 
             if (Game.IsCreatingCharacter)
             {
-                C_LogMessage("Creating a new character with a random skin...", Brushes.OrangeRed);
+                C_LogMessage("Creating a new character with a random skin...", (uint)KnownColor.OrangeRed);
                 Game.CreateCharacter();
                 return;
             }
@@ -346,7 +346,7 @@ namespace PPOBot
                 var executed = Script.ExecuteNextAction();
                 if (!executed && Running != State.Stopped && !_actionTimeout.Update())
                 {
-                    C_LogMessage("No action executed: stopping the bot.", Brushes.OrangeRed);
+                    C_LogMessage("No action executed: stopping the bot.", (uint)KnownColor.OrangeRed);
                     Stop();
                 }
                 else if (executed)
@@ -359,7 +359,7 @@ namespace PPOBot
 #if DEBUG
                 PrintLogMessage("Error during the script execution: " + ex);
 #else
-                C_LogMessage("Error during the script execution: " + ex.Message, Brushes.OrangeRed);
+                C_LogMessage("Error during the script execution: " + ex.Message, (uint)KnownColor.OrangeRed);
 #endif
                 Stop();
             }
@@ -397,11 +397,11 @@ namespace PPOBot
             }
             if (message.Contains("[OK]"))
             {
-                C_LogMessage(message, Brushes.Lime);
+                C_LogMessage(message, (uint)KnownColor.Lime);
             }
             if (message.Contains("WARNING"))
             {
-                C_LogMessage(message, Brushes.OrangeRed);
+                C_LogMessage(message, (uint)KnownColor.OrangeRed);
             }
         }
 
