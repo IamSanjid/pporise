@@ -268,7 +268,7 @@ namespace PPORise
         {
             Dispatcher.InvokeAsync(delegate
             {
-                LogMessage(@"Logging failed. Please check your password and username again or your Internet connection or please use another Http proxy (if you have used one).", Brushes.OrangeRed);
+                LogMessage(@"Logging failed. Please check your password and username again or please use another Http proxy (if you have used one).", Brushes.OrangeRed);
                 LoginButton.IsEnabled = true;
                 LoginButton2.Content = "Login";
                 LoginButton2.IsEnabled = true;

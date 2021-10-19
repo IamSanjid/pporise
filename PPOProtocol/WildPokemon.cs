@@ -77,6 +77,8 @@ namespace PPOProtocol
             Form = data[7];
             MaxHealth = Convert.ToInt32(data[8]);
             CurrentHealth = Convert.ToInt32(data[9]);
+            Type1 = TypesManager.Instance.Type1[Id];
+            Type2 = TypesManager.Instance.Type2[Id];
         }
 
         public void UpdateHealth(int currentHealth, int maxHealth)

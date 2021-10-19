@@ -51,7 +51,7 @@ namespace PPOProtocol
         private DateTime _lastUpdatePos = DateTime.MaxValue;
 
         public string[] PokemonCaught { get; private set; }
-        
+
         //private ExecutionPlan _updatePositionTimeout;
         private ExecutionPlan _checkForLoggingTimeout;
 
@@ -68,7 +68,7 @@ namespace PPOProtocol
         private readonly ProtocolTimeout _refreshPCTimeout = new ProtocolTimeout();
         private readonly ProtocolTimeout _npcBattleTimeout = new ProtocolTimeout();
 
-        private bool _updatedMap = false;        
+        private bool _updatedMap = false;
 
         public bool CanMove = true;
         public int Credits;
@@ -114,7 +114,7 @@ namespace PPOProtocol
             _kg1 = kg1;
             _kg2 = kg2;
             _webConnection = webConnection;
-            
+
             _webConnection.LoggingError += OnWebConnectionLoggingError;
             _webConnection.LoggedIn += OnWebConnectionLoggedIn;
 
@@ -247,7 +247,7 @@ namespace PPOProtocol
             WebSuccessfullyLoggedIn?.Invoke(_webConnection.Id, _webConnection.Username, _webConnection.HashPassword);
         }
 
-        public int GetTimer() => (int) (DateTime.UtcNow - Timer).TotalMilliseconds;
+        public int GetTimer() => (int)(DateTime.UtcNow - Timer).TotalMilliseconds;
 
         private void SetUserInfos(string id, string username, string hashpassword)
         {
@@ -677,6 +677,7 @@ namespace PPOProtocol
             _npcBattler = null;
             IsTrainerBattle = false;
             _npcBattleTimeout.Cancel();
+            _isBusy = false;
         }
 
         // xt`b179`-1`Username`Level`??`Wager
@@ -698,7 +699,7 @@ namespace PPOProtocol
             {
                 SystemMessage?.Invoke(data[3] + " would like to battle you.");
                 ExecutionPlan.Delay(Rand.Next(2000, 3000),
-                    () => 
+                    () =>
                     {
                         LogMessage?.Invoke("Declined battle request");
                         GetTimeStamp("declineBattle");
@@ -1020,7 +1021,7 @@ namespace PPOProtocol
                 //                case "_cmd":
                 //                    switch (textNode.InnerText)
                 //                    {
-                                        
+
                 //                    }
                 //                    break;
                 //            }
@@ -1180,7 +1181,7 @@ namespace PPOProtocol
             try
             {
                 Items.Clear();
-                foreach(var obj in data.obj)
+                foreach (var obj in data.obj)
                 {
                     InventoryItem item = new InventoryItem(obj.var[1], Convert.ToInt32(obj.var[0]));
                     item.Uid = Convert.ToInt32(obj.o);
@@ -1919,7 +1920,7 @@ namespace PPOProtocol
             if (IsBiking)
             {
                 _mapMovementSpeed = 16 * _movementSpeedMod;
-                
+
             }
             else if (IsSurfing && HasItemName("Surfboard"))
             {
@@ -1972,7 +1973,7 @@ namespace PPOProtocol
                     data = data.Substring(2, data.Length - 4);
                     data = data.Replace("],[", "#");
                     var loc2 = data.Split('#');
-                    foreach(var q in loc2)
+                    foreach (var q in loc2)
                     {
                         n = q.Split(',');
                         var item = new InventoryItem(n[0], Convert.ToInt32(n[1]));
@@ -2005,7 +2006,7 @@ namespace PPOProtocol
                 item.Uid = Items.IndexOf(item);
                 Items[Items.IndexOf(item)].Uid = Items.IndexOf(item);
             }
-            UPDATE:
+        UPDATE:
             Items = Items.OrderBy(o => o.Uid).ToList();
             _itemUseTimeout.Set(Rand.Next(1000, 1500));
             InventoryUpdated?.Invoke();
@@ -2067,7 +2068,7 @@ namespace PPOProtocol
             }
 
             double offsetAmount = 0;
-            
+
             if (_movements.Count > 0)
                 offsetAmount = 64 - _mapMovements;
             if (_avatarType != 0 && addBack)
@@ -2766,7 +2767,6 @@ namespace PPOProtocol
         public void TalkToNpc(Npc npc)
         {
             npc.CanBattle = false;
-            _isBusy = true;
             PerformingAction?.Invoke(Actions.ACTION_KEY);
             GetTimeStamp("trainerBattle", npc.Id.ToString(), npc.Name);
             _dialogTimeout.Set();
@@ -2870,7 +2870,7 @@ namespace PPOProtocol
             IsTrainerBattle = false;
             GetTimeStamp("sendMovement", tempDir);
         }
-      
+
         public bool BuyMerchantItem(string merchantid)
         {
             PerformingAction?.Invoke(Actions.USING_MOVE);
@@ -3080,7 +3080,7 @@ namespace PPOProtocol
                     {
                         _mapMovementSpeed = 8 * _movementSpeedMod;
                     }
-                    
+
                     SendMovement(dir.AsChar());
                     _lastMovement = dir;
                     CheckMapExits(PlayerX, PlayerY);
@@ -3129,7 +3129,6 @@ namespace PPOProtocol
         private void UpdateNpcBattle()
         {
             if (_npcBattler == null || _npcBattleTimeout.Update()) return;
-
             TalkToNpc(_npcBattler);
             _npcBattler = null;
         }
