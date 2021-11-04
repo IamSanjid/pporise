@@ -1248,12 +1248,16 @@ namespace PPOProtocol
             // if Lastbreak was more than 5 mins ago, by .1 perc chance, we are taking a break between 10 to 120 seconds
             if (PercentSuccess(0.1) && LastBreakTime.AddMinutes(5) < DateTime.Now)
             {
-                _battleTimeout.Set(Rand.Next(10000, 120000));
                 LastBreakTime = DateTime.Now;
+                var breakTime = Rand.Next(10000, 120000);
+                PrintSystemMessage($"Taking a break of {breakTime} miliseconds...");
+
+                _battleTimeout.Set(breakTime);
+
             }
             else
             {
-                _battleTimeout.Set(Rand.Next(500, 3500));
+                _battleTimeout.Set(Rand.Next(2000, 4500));
             }
 
             CanMove = false;
@@ -1272,6 +1276,8 @@ namespace PPOProtocol
 
             if (disconnect)
             {
+                PrintSystemMessage($"Disconnecting because w2...");
+
                 BattleStarted?.Invoke();
             }
 
@@ -1336,8 +1342,11 @@ namespace PPOProtocol
 
             if (PercentSuccess(0.01) && LastBreakTime.AddMinutes(5) < DateTime.Now)
             {
-                _battleTimeout.Set(Rand.Next(5000, 12000) + totalDelay);
                 LastBreakTime = DateTime.Now;
+                var breakTime = Rand.Next(5000, 12000) + totalDelay;
+                PrintSystemMessage($"Taking a break of {breakTime} miliseconds...");
+
+                _battleTimeout.Set(breakTime);
             }
             else
             {
@@ -1409,8 +1418,14 @@ namespace PPOProtocol
         {
             if (PercentSuccess(0.01) && LastBreakTime.AddMinutes(5) < DateTime.Now)
             {
-                _battleTimeout.Set(Rand.Next(15000, 75000));
                 LastBreakTime = DateTime.Now;
+                var breakTime = Rand.Next(15000, 75000);
+
+                PrintSystemMessage($"Taking a break of {breakTime} miliseconds...");
+
+
+                _battleTimeout.Set(breakTime);
+
             }
             else
             {
