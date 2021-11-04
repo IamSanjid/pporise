@@ -4,10 +4,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using PPOBot.Utils;
 
 namespace PPOProtocol
 {
@@ -98,7 +100,7 @@ namespace PPOProtocol
 
         public bool IsCreatingCharacter { get; private set; }
 
-        public Random Rand = new Random();
+        public ThreadSafeRandom Rand;
 
         public Shop OpenedShop { get; private set; }
         private Shop Shop { get; set; }
@@ -134,6 +136,8 @@ namespace PPOProtocol
             PokemonCaught = new string[900];
             Players = new Dictionary<string, PlayerInfos>();
             _removedPlayers = new Dictionary<string, PlayerInfos>();
+
+            Rand = new ThreadSafeRandom();
         }
 
         public void Open()
@@ -146,7 +150,7 @@ namespace PPOProtocol
         {
             _webConnection.PostLogin(name, password);
         }
-
+        
         public int PlayerX { get; private set; }
         public int PlayerY { get; private set; }
         public int TileZ { get; private set; }
@@ -226,6 +230,8 @@ namespace PPOProtocol
 
         public List<string> Badges { get; private set; }
 
+        public DateTime LastBreakTime;
+
         private void CheckForLoggingIn()
         {
             if (!IsMapLoaded)
@@ -233,6 +239,15 @@ namespace PPOProtocol
                 Close();
                 AuthenticationFailed?.Invoke();
             }
+        }
+
+        public bool PercentSuccess(double _chance)
+        {
+            return Rand.NextDouble() * 100 < _chance;
+        }
+        public bool PercentSuccess(int _chance)
+        {
+            return Rand.NextDouble() * 100 < _chance;
         }
 
         private void OnWebConnectionLoggingError(Exception obj)
@@ -687,7 +702,7 @@ namespace PPOProtocol
             if (data[6] != null && data[6] != "")
             {
                 SystemMessage?.Invoke(data[3] + " would like to start a $" + Int32.Parse(data[6]) + " wager battle with you.");
-                ExecutionPlan.Delay(Rand.Next(2000, 3000),
+                ExecutionPlan.Delay(Rand.Next(2000, 5000),
                     () =>
                     {
                         LogMessage?.Invoke("Declined battle request");
@@ -698,7 +713,7 @@ namespace PPOProtocol
             else
             {
                 SystemMessage?.Invoke(data[3] + " would like to battle you.");
-                ExecutionPlan.Delay(Rand.Next(2000, 3000),
+                ExecutionPlan.Delay(Rand.Next(2000, 5000),
                     () =>
                     {
                         LogMessage?.Invoke("Declined battle request");
@@ -1229,7 +1244,17 @@ namespace PPOProtocol
             OpenedShop = null;
             IsInBattle = true;
             ActiveBattle = new Battle(data, !IsTrainerBattle, disconnect, this);
-            _battleTimeout.Set(Rand.Next(2000, 3000));
+
+            // if Lastbreak was more than 5 mins ago, by .1 perc chance, we are taking a break between 10 to 120 seconds
+            if (PercentSuccess(0.1) && LastBreakTime.AddMinutes(5) < DateTime.Now)
+            {
+                _battleTimeout.Set(Rand.Next(10000, 120000));
+                LastBreakTime = DateTime.Now;
+            }
+            else
+            {
+                _battleTimeout.Set(Rand.Next(500, 3500));
+            }
 
             CanMove = false;
             if (ActiveBattle.IsWildBattle)
@@ -1307,7 +1332,17 @@ namespace PPOProtocol
             var battleTexts = str.Split('|');
             var loc2 = 0;
 
-            _battleTimeout.Set(Rand.Next(1500, 2000) * (battleTexts.Length + 1));
+            int totalDelay = battleTexts.Sum(text => Rand.Next(2000, 3000));
+
+            if (PercentSuccess(0.01) && LastBreakTime.AddMinutes(5) < DateTime.Now)
+            {
+                _battleTimeout.Set(Rand.Next(5000, 12000) + totalDelay);
+                LastBreakTime = DateTime.Now;
+            }
+            else
+            {
+                _battleTimeout.Set(totalDelay + Rand.Next(1000, 3500));
+            }
 
             var lastWPFainted = false;
             while (loc2 < battleTexts.Length)
@@ -1372,7 +1407,16 @@ namespace PPOProtocol
 
         public void EndBattle(bool lostBattle = false)
         {
-            _battleTimeout.Set(Rand.Next(1500, 2000));
+            if (PercentSuccess(0.01) && LastBreakTime.AddMinutes(5) < DateTime.Now)
+            {
+                _battleTimeout.Set(Rand.Next(15000, 75000));
+                LastBreakTime = DateTime.Now;
+            }
+            else
+            {
+                _battleTimeout.Set(Rand.Next(3500, 5500));
+            }
+
             LastBattle = ActiveBattle;
             ActiveBattle = null;
             IsTrapped = false;
@@ -1390,6 +1434,8 @@ namespace PPOProtocol
                 GetTimeStamp("r");
             else
                 _needToLoadR = true;
+
+
             IsInBattle = false;
             IsTrainerBattle = false;
             movingForBattle = false;
@@ -2670,7 +2716,7 @@ namespace PPOProtocol
             if (IsInBattle && !ActiveBattle.IsDungeonBattle)
             {
                 GetTimeStamp("escapeBattle");
-                _battleTimeout.Set(Rand.Next(1500, 2000));
+                _battleTimeout.Set(Rand.Next(2000, 2500));
                 return true;
             }
 

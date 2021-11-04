@@ -84,6 +84,7 @@
     <Compile Include="Shop.cs" />
     <Compile Include="ShopItem.cs" />
     <Compile Include="StatType.cs" />
+    <Compile Include="ThreadSafeRandom.cs" />
     <Compile Include="TypesManager.cs" />
     <Compile Include="WebConnection.cs" />
     <Compile Include="WildPokemon.cs" />

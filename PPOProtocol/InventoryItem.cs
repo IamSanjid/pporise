@@ -13,55 +13,61 @@ namespace PPOProtocol
         public string Name { get; set; }
         public int Quantity { get; set; } = -1;
         public int Uid { get; set; }
+        private IEnumerable<string> EquipableItems;
         public InventoryItem(string name, int qu = 1, int uid = -1)
         {
             Name = name;
             Quantity = qu;
             Uid = uid;
+
+            EquipableItems = new List<string>()
+            {
+                "Red Card", "Air Balloon" ,
+                "Light Clay", "Soul Shard (Enhanced)" ,
+                "Focus Sash (Permanent)", "Fire Stone (Enhanced)" ,
+                "Water Stone (Enhanced)" ,
+                "Thunder Stone (Enhanced)", "Exp Share" ,
+                "Metal Coat", "Kings Rock" ,
+                "Kings Rock", "Leftovers" ,
+                "Big Root", "Macho Brace" ,
+                "Soothe Bell", "Muscle Band" ,
+                "Wise Glasses", "Focus Band" ,
+                "Focus Sash", "Expert Belt" ,
+                "Razor Claw", "Razor Fang" ,
+                "Black Sludge", "Shed Shell" ,
+                "Shell Bell", "Lagging Tail" ,
+                "Quick Claw", "Rocky Helmet" ,
+                "Bright Powder", "Scope Lens" ,
+                "Wide Lens", "Binding Band" ,
+                "Metronome", "Eviolite" ,
+                "Assault Vest", "Life Orb" ,
+                "Choice Scarf", "Choice Specs" ,
+                "Choice Band", "Effort Brace" ,
+                "Gold Effort Brace", "Feather of Articuno" ,
+                "Feather of Moltres", "Feather of Zapdos" ,
+                "Feather of Moltres (Enhanced)" ,
+                "Feather of Zapdos (Enhanced)" ,
+                "Feather of Articuno (Enhanced)", "White Herb" ,
+                "Weakness Policy", "Toxic Orb" ,
+                "Flame Orb", "Damp Rock" ,
+                "Heat Rock", "Smooth Rock" ,
+                "Icy Rock", "Fire Gem" ,
+                "Water Gem", "Electric Gem" ,
+                "Grass Gem", "Ice Gem" ,
+                "Fighting Gem", "Poison Gem" ,
+                "Ground Gem", "Flying Gem" ,
+                "Psychic Gem", "Bug Gem" ,
+                "Rock Gem", "Ghost Gem" ,
+                "Dragon Gem", "Dark Gem" ,
+                "Steel Gem", "Normal Gem" ,
+                "Fairy Gem"
+            };
         }
 
         public bool IsEquipAble(string pokeName = "")
         {
             //----------------I promise I am not mad or stupid, Pokemon Planet checks like below lol-----------------//
-            if (Name == "Red Card" || Name == "Air Balloon" ||
-                Name == "Light Clay" || Name == "Soul Shard (Enhanced)" ||
-                Name == "Focus Sash (Permanent)" || Name == "Fire Stone (Enhanced)" ||
-                Name == "Water Stone (Enhanced)" ||
-                Name == "Thunder Stone (Enhanced)" || Name == "Exp Share" ||
-                Name == "Metal Coat" || Name == "Kings Rock" ||
-                Name == "Kings Rock" || Name == "Leftovers" ||
-                Name == "Big Root" || Name == "Macho Brace" ||
-                Name == "Soothe Bell" || Name == "Muscle Band" ||
-                Name == "Wise Glasses" || Name == "Focus Band" ||
-                Name == "Focus Sash" || Name == "Expert Belt" ||
-                Name == "Razor Claw" || Name == "Razor Fang" ||
-                Name == "Black Sludge" || Name == "Shed Shell" ||
-                Name == "Shell Bell" || Name == "Lagging Tail" ||
-                Name == "Quick Claw" || Name == "Rocky Helmet" ||
-                Name == "Bright Powder" || Name == "Scope Lens" ||
-                Name == "Wide Lens" || Name == "Binding Band" ||
-                Name == "Metronome" || Name == "Eviolite" ||
-                Name == "Assault Vest" || Name == "Life Orb" ||
-                Name == "Choice Scarf" || Name == "Choice Specs" ||
-                Name == "Choice Band" || Name == "Effort Brace" ||
-                Name == "Gold Effort Brace" || Name == "Feather of Articuno" ||
-                Name == "Feather of Moltres" || Name == "Feather of Zapdos" ||
-                Name == "Feather of Moltres (Enhanced)" ||
-                Name == "Feather of Zapdos (Enhanced)" ||
-                Name == "Feather of Articuno (Enhanced)" || Name == "White Herb" ||
-                Name == "Weakness Policy" || Name == "Toxic Orb" ||
-                Name == "Flame Orb" || Name == "Damp Rock" ||
-                Name == "Heat Rock" || Name == "Smooth Rock" ||
-                Name == "Icy Rock" || Name == "Fire Gem" ||
-                Name == "Water Gem" || Name == "Electric Gem" ||
-                Name == "Grass Gem" || Name == "Ice Gem" ||
-                Name == "Fighting Gem" || Name == "Poison Gem" ||
-                Name == "Ground Gem" || Name == "Flying Gem" ||
-                Name == "Psychic Gem" || Name == "Bug Gem" ||
-                Name == "Rock Gem" || Name == "Ghost Gem" ||
-                Name == "Dragon Gem" || Name == "Dark Gem" ||
-                Name == "Steel Gem" || Name == "Normal Gem" ||
-                Name == "Fairy Gem")
+            if (EquipableItems.Contains(Name))
             {
                 return true;
             }

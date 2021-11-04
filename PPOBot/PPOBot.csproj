@@ -74,6 +74,7 @@
     <Compile Include="UserSettings.cs" />
     <Compile Include="Utils\KnownColor.cs" />
     <Compile Include="Utils\TaskUtils.cs" />
+    <Compile Include="Utils\ThreadSafeRandom.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BrightNetwork\BrightNetwork.csproj">
