@@ -207,6 +207,7 @@ namespace PPOBot.Scripting
             _lua.Globals["flashWindow"] = new Action(FlashBotWindow);
             //battle
             _lua.Globals["isOpponentShiny"] = new Func<bool>(IsOpponentShiny);
+            _lua.Globals["isSpecialForm"] = new Func<bool>(IsOpponentSpecialForm);
             _lua.Globals["isAlreadyCaught"] = new Func<bool>(IsAlreadyCaught);
             _lua.Globals["isOpponentEffortValue"] = new Func<string, bool>(IsOpponentEffortValue);
             _lua.Globals["getOpponentEffortValue"] = new Func<string, int>(GetOpponentEffortValue);
@@ -1320,6 +1321,20 @@ namespace PPOBot.Scripting
 			}
 			return false;
 		}
+        private bool IsOpponentSpecialForm()
+        {
+            if (!Bot.Game.IsInBattle)
+            {
+                Fatal("error: isOpponentSpecialForm is only usable in battle.");
+                return false;
+            }
+
+            if (Bot.Game.ActiveBattle.WildPokemon != null)
+            {
+                return Bot.Game.ActiveBattle.WildPokemon.Form != "default";
+            }
+            return false;
+        }
 		// API: Displays the specified message to the message log and logs out.
 		private void Logout(string message)
 		{

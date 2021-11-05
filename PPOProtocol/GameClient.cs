@@ -1236,6 +1236,7 @@ namespace PPOProtocol
 
         private void HandleBattle(string[] data, bool disconnect = false)
         {
+            PrintSystemMessage(string.Join(", ", data));
             _movements.Clear();
             _isBusy = false;
             movingForBattle = false;
@@ -1264,8 +1265,12 @@ namespace PPOProtocol
             if (ActiveBattle.IsWildBattle)
             {
                 BattleMessage?.Invoke("A wild " + (ActiveBattle.WildPokemon.IsShiny ? "Shiny " : "")
-                    + (ActiveBattle.WildPokemon.IsElite ? "Elite " : "") + ActiveBattle.WildPokemon.Name +
-                                      " has appeared!");
+                                                + (ActiveBattle.WildPokemon.IsElite ? "Elite " : "") +
+                                                ActiveBattle.WildPokemon.Name +
+                                                (ActiveBattle.WildPokemon.Form != "default"
+                    ? ActiveBattle.WildPokemon.Form
+                    : string.Empty) +
+                      " has appeared!");
             }
             else
             {
