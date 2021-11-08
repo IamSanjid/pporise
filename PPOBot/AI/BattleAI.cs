@@ -276,17 +276,17 @@ namespace PPOBot
             }
 
 
-            if (useBestAttack && bestMove != null)
+            switch (useBestAttack)
             {
-                _client.UseAttack(bestIndex);
-                return true;
+                case true when bestMove != null:
+                    _client.UseAttack(bestIndex);
+                    return true;
+                case false when worstMove != null:
+                    _client.UseAttack(worstIndex);
+                    return true;
+                default:
+                    return false;
             }
-            if (!useBestAttack && worstMove != null)
-            {
-                _client.UseAttack(worstIndex);
-                return true;
-            }
-            return false;
         }
 
         public bool IsPokemonUsable(Pokemon pokemon)

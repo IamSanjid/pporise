@@ -1236,7 +1236,6 @@ namespace PPOProtocol
 
         private void HandleBattle(string[] data, bool disconnect = false)
         {
-            PrintSystemMessage(string.Join(", ", data));
             _movements.Clear();
             _isBusy = false;
             movingForBattle = false;
@@ -1246,12 +1245,12 @@ namespace PPOProtocol
             IsInBattle = true;
             ActiveBattle = new Battle(data, !IsTrainerBattle, disconnect, this);
 
-            // if Lastbreak was more than 5 mins ago, by .1 perc chance, we are taking a break between 10 to 120 seconds
-            if (PercentSuccess(0.1) && LastBreakTime.AddMinutes(5) < DateTime.Now)
+            // if Lastbreak was more than 5 mins ago, by .5 perc chance, we are taking a break between 10 to 120 seconds
+            if (PercentSuccess(0.5) && LastBreakTime.AddMinutes(5) < DateTime.Now)
             {
                 LastBreakTime = DateTime.Now;
                 var breakTime = Rand.Next(10000, 120000);
-                PrintSystemMessage($"Taking a break of {breakTime} miliseconds...");
+                PrintSystemMessage($"Taking a break of {breakTime} milliseconds...");
 
                 _battleTimeout.Set(breakTime);
 
@@ -1266,9 +1265,9 @@ namespace PPOProtocol
             {
                 BattleMessage?.Invoke("A wild " + (ActiveBattle.WildPokemon.IsShiny ? "Shiny " : "")
                                                 + (ActiveBattle.WildPokemon.IsElite ? "Elite " : "") +
-                                                ActiveBattle.WildPokemon.Name +
+                                                ActiveBattle.WildPokemon.Name + "(" + 
                                                 (ActiveBattle.WildPokemon.Form != "default"
-                    ? ActiveBattle.WildPokemon.Form
+                    ? ActiveBattle.WildPokemon.Form + ")"
                     : string.Empty) +
                       " has appeared!");
             }
@@ -1345,11 +1344,11 @@ namespace PPOProtocol
 
             int totalDelay = battleTexts.Sum(text => Rand.Next(2000, 3000));
 
-            if (PercentSuccess(0.01) && LastBreakTime.AddMinutes(5) < DateTime.Now)
+            if (PercentSuccess(0.2) && LastBreakTime.AddMinutes(5) < DateTime.Now)
             {
                 LastBreakTime = DateTime.Now;
                 var breakTime = Rand.Next(5000, 12000) + totalDelay;
-                PrintSystemMessage($"Taking a break of {breakTime} miliseconds...");
+                PrintSystemMessage($"Taking a break of {breakTime} milliseconds...");
 
                 _battleTimeout.Set(breakTime);
             }
@@ -1421,12 +1420,12 @@ namespace PPOProtocol
 
         public void EndBattle(bool lostBattle = false)
         {
-            if (PercentSuccess(0.01) && LastBreakTime.AddMinutes(5) < DateTime.Now)
+            if (PercentSuccess(0.5) && LastBreakTime.AddMinutes(5) < DateTime.Now)
             {
                 LastBreakTime = DateTime.Now;
                 var breakTime = Rand.Next(15000, 75000);
 
-                PrintSystemMessage($"Taking a break of {breakTime} miliseconds...");
+                PrintSystemMessage($"Taking a break of {breakTime} milliseconds...");
 
 
                 _battleTimeout.Set(breakTime);
