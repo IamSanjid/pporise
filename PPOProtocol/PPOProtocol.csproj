@@ -79,6 +79,7 @@
     <Compile Include="PokemonNature.cs" />
     <Compile Include="PokemonStats.cs" />
     <Compile Include="PokemonType.cs" />
+    <Compile Include="PortablePc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtocolTimeout.cs" />
     <Compile Include="Shop.cs" />

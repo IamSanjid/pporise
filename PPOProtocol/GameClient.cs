@@ -41,6 +41,8 @@ namespace PPOProtocol
         private bool lm = false;
         private DateTime Timer;
 
+        public List<PortablePc> PortablePcList;
+
         private Direction _lastMovement = Direction.Down;
 
         private List<Direction> _movements = new List<Direction>();
@@ -136,6 +138,7 @@ namespace PPOProtocol
             PokemonCaught = new string[900];
             Players = new Dictionary<string, PlayerInfos>();
             _removedPlayers = new Dictionary<string, PlayerInfos>();
+            PortablePcList = new List<PortablePc>();
 
             Rand = new ThreadSafeRandom();
         }
@@ -590,6 +593,12 @@ namespace PPOProtocol
                     case "b123":
                         PokemonCaught[Convert.ToInt32(data[3]) - 1] = "true";
                         break;
+                    case "b130":
+                        HandlePortablePcPlaced(data);
+                        break;
+                    case "b132":
+                        HandlePortablePcExpired(data);
+                        break;
                     case "b139":
                         Team[Convert.ToInt32(data[3])] = ParseOnePokemon(data[4]);
                         break;
@@ -655,6 +664,28 @@ namespace PPOProtocol
             {
                 OnXmlPacket(packet);
             }
+        }
+
+        private void HandlePortablePcExpired(string[] data)
+        {
+            PrintSystemMessage($"The Portable PC placed by {data[5]} has expired.");
+            foreach (var portablePc in PortablePcList.Where(portablePc => portablePc.X == Convert.ToInt32(data[3]) && portablePc.Y == Convert.ToInt32(data[4]) &&
+                                                                          portablePc.Owner == data[5]))
+            {
+                PortablePcList.Remove(portablePc);
+                break;
+            }
+        }
+
+        private void HandlePortablePcPlaced(string[] data)
+        {
+            var pc = new PortablePc()
+            {
+                X = Convert.ToInt32(data[3]) * 32,
+                Y = Convert.ToInt32(data[4]) * 32,
+                Owner = data[5]
+            };
+            PrintSystemMessage($"{data[5]} placed a Portable PC on this map!");
         }
 
         private void OnFishingBattle()
@@ -1246,19 +1277,19 @@ namespace PPOProtocol
             ActiveBattle = new Battle(data, !IsTrainerBattle, disconnect, this);
 
             // if Lastbreak was more than 5 mins ago, by .5 perc chance, we are taking a break between 10 to 120 seconds
-            if (PercentSuccess(0.5) && LastBreakTime.AddMinutes(5) < DateTime.Now)
-            {
-                LastBreakTime = DateTime.Now;
-                var breakTime = Rand.Next(10000, 120000);
-                PrintSystemMessage($"Taking a break of {breakTime} milliseconds...");
+            //if (PercentSuccess(0.5) && LastBreakTime.AddMinutes(5) < DateTime.Now)
+            //{
+            //    LastBreakTime = DateTime.Now;
+            //    var breakTime = Rand.Next(10000, 120000);
+            //    PrintSystemMessage($"Taking a break of {breakTime} milliseconds...");
 
-                _battleTimeout.Set(breakTime);
+            //    _battleTimeout.Set(breakTime);
 
-            }
-            else
-            {
+            //}
+            //else
+            //{
                 _battleTimeout.Set(Rand.Next(2000, 4500));
-            }
+            // }
 
             CanMove = false;
             if (ActiveBattle.IsWildBattle)
@@ -1344,18 +1375,18 @@ namespace PPOProtocol
 
             int totalDelay = battleTexts.Sum(text => Rand.Next(2000, 3000));
 
-            if (PercentSuccess(0.2) && LastBreakTime.AddMinutes(5) < DateTime.Now)
-            {
-                LastBreakTime = DateTime.Now;
-                var breakTime = Rand.Next(5000, 12000) + totalDelay;
-                PrintSystemMessage($"Taking a break of {breakTime} milliseconds...");
+            //if (PercentSuccess(0.2) && LastBreakTime.AddMinutes(5) < DateTime.Now)
+            //{
+            //    LastBreakTime = DateTime.Now;
+            //    var breakTime = Rand.Next(5000, 12000) + totalDelay;
+            //    PrintSystemMessage($"Taking a break of {breakTime} milliseconds...");
 
-                _battleTimeout.Set(breakTime);
-            }
-            else
-            {
+            //    _battleTimeout.Set(breakTime);
+            //}
+            //else
+            //{
                 _battleTimeout.Set(totalDelay + Rand.Next(1000, 3500));
-            }
+            // }
 
             var lastWPFainted = false;
             while (loc2 < battleTexts.Length)
@@ -1420,21 +1451,21 @@ namespace PPOProtocol
 
         public void EndBattle(bool lostBattle = false)
         {
-            if (PercentSuccess(0.5) && LastBreakTime.AddMinutes(5) < DateTime.Now)
-            {
-                LastBreakTime = DateTime.Now;
-                var breakTime = Rand.Next(15000, 75000);
+            //if (PercentSuccess(0.5) && LastBreakTime.AddMinutes(5) < DateTime.Now)
+            //{
+            //    LastBreakTime = DateTime.Now;
+            //    var breakTime = Rand.Next(15000, 75000);
 
-                PrintSystemMessage($"Taking a break of {breakTime} milliseconds...");
+            //    PrintSystemMessage($"Taking a break of {breakTime} milliseconds...");
 
 
-                _battleTimeout.Set(breakTime);
+            //    _battleTimeout.Set(breakTime);
 
-            }
-            else
-            {
+            //}
+            //else
+            //{
                 _battleTimeout.Set(Rand.Next(3500, 5500));
-            }
+            // }
 
             LastBattle = ActiveBattle;
             ActiveBattle = null;
@@ -1581,6 +1612,10 @@ namespace PPOProtocol
                     Shop = new Shop(data[4]);
                 }
 
+                if (data[6] != "")
+                {
+                    ParseAllPortablePc(data[6]);
+                }
                 if (data[7] != "")
                 {
                     ParseAllMiningRocks(data[7]);
@@ -1609,6 +1644,49 @@ namespace PPOProtocol
             }
         }
 
+        private void ParseAllPortablePc(string loc2)
+        {
+            if (loc2 != "[]" && loc2 != "")
+            {
+                if (loc2.LastIndexOf("[", StringComparison.Ordinal) != -1 && loc2.LastIndexOf("]", StringComparison.Ordinal) != -1)
+                {
+                    loc2 = loc2.Substring(2, loc2.Length - 4);
+                    var strArrayA = loc2.Split(new[] { "],[" }, StringSplitOptions.None);
+                    var loc1 = 0;
+                    while (loc1 <= strArrayA.Length)
+                    {
+                        var data = "[" + strArrayA[loc1] + "]";
+                        PortablePcList.Add(ParsePortablePc(data));
+                        PrintSystemMessage($"{data}");
+                        loc1 = loc1 + 1;
+                    }
+                    return;
+                }
+
+                Console.WriteLine("parseAllPortablePc bracket error: " + loc2);
+            }
+        }
+
+        private PortablePc ParsePortablePc(string tmpdata)
+        {
+            if (tmpdata != "[]" && tmpdata != "")
+            {
+                if (tmpdata.IndexOf("[", StringComparison.Ordinal) != -1 && tmpdata.IndexOf("]", StringComparison.Ordinal) == tmpdata.Length - 1)
+                {
+                    tmpdata = tmpdata.Substring(1, tmpdata.Length - 2);
+                    var data = tmpdata.Split(',');
+                    var portablePc = new PortablePc()
+                    {
+                        X = Convert.ToInt32(data[0]),
+                        Y = Convert.ToInt32(data[1]),
+                        Owner = data[2]
+                    };
+                    return portablePc;
+                }
+            }
+
+            return null;
+        }
         private void ParseAllEliteChests(string loc2)
         {
             if (loc2 != "[]" && loc2 != "")
@@ -1675,6 +1753,11 @@ namespace PPOProtocol
             }
 
             return false;
+        }
+
+        public void HealFromPc()
+        {
+            GetTimeStamp("portablePcHeal");
         }
 
         private void SendShopPokemart(int itemId, int quantity)
@@ -2575,6 +2658,10 @@ namespace PPOProtocol
             {
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b59", loc8, "str");
+            }
+            else if (type == "portablePcHeal")
+            {
+                SendXtMessage("PokemonPlanetExt", "b131", loc8, "str");
             }
             else if (type == "updateFollowPokemon")
             {

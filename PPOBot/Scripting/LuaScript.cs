@@ -320,8 +320,10 @@ namespace PPOBot.Scripting
             //pc
             _lua.Globals["withdrawPokemonFromPC"] = new Func<int, int, bool>(WithdrawPokemonFromPC);
             _lua.Globals["depositePokemonToPC"] = new Func<int, int, bool>(DepositePokemonToPC);
+            _lua.Globals["healFromPc"] = new Func<bool>(HealFromPc);
 
-            _lua.Globals["getPCBoxCount"] = new Func<int>(GetPCBoxCount);
+
+			_lua.Globals["getPCBoxCount"] = new Func<int>(GetPCBoxCount);
             _lua.Globals["getPCPokemonCount"] = new Func<int, int>(GetPCPokemonCount);
             _lua.Globals["getLastBoxIndexWithPokemon"] = new Func<int>(GetLastBoxIndexWithPokemon);
             _lua.Globals["getFirstBoxIndexWithPokemon"] = new Func<int>(GetFirstBoxIndexWithPokemon);
@@ -1071,6 +1073,27 @@ namespace PPOBot.Scripting
 
 			return Bot.Game.ActiveBattle.WildPokemon.Status;
 		}
+
+        private bool HealFromPc()
+        {
+            if (Bot.Game.PortablePcList.Any())
+            {
+                var pc = Bot.Game.PortablePcList.OrderBy(x => x.DistanceToPosition(Bot.Game.PlayerX, Bot.Game.PlayerY)).FirstOrDefault();
+                if (pc == null)
+                {
+                    return false;
+                }
+
+                var xToMove = pc.X;
+                var yToMove = pc.Y - 1;
+
+				MoveToCell(xToMove, yToMove, "pcHeal");
+
+                Bot.Game.HealFromPc();
+            }
+            return Bot.Game.Team.All(pok => pok.CurrentHealth == pok.MaxHealth);
+        }
+
 		private static Dictionary<string, StatType> _stats = new Dictionary<string, StatType>()
 		{
 			{ "HP", StatType.Health },
