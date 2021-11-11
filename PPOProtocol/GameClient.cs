@@ -1657,7 +1657,6 @@ namespace PPOProtocol
                     {
                         var data = "[" + strArrayA[loc1] + "]";
                         PortablePcList.Add(ParsePortablePc(data));
-                        PrintSystemMessage($"{data}");
                         loc1 = loc1 + 1;
                     }
                     return;
