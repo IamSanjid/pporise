@@ -1653,7 +1653,7 @@ namespace PPOProtocol
                     loc2 = loc2.Substring(2, loc2.Length - 4);
                     var strArrayA = loc2.Split(new[] { "],[" }, StringSplitOptions.None);
                     var loc1 = 0;
-                    while (loc1 <= strArrayA.Length)
+                    while (loc1 < strArrayA.Length)
                     {
                         var data = "[" + strArrayA[loc1] + "]";
                         PortablePcList.Add(ParsePortablePc(data));
