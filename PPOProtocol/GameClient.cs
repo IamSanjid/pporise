@@ -685,6 +685,8 @@ namespace PPOProtocol
                 Y = Convert.ToInt32(data[4]) * 32,
                 Owner = data[5]
             };
+            PortablePcList.Add(pc);
+
             PrintSystemMessage($"{data[5]} placed a Portable PC on this map!");
         }
 
@@ -1296,9 +1298,9 @@ namespace PPOProtocol
             {
                 BattleMessage?.Invoke("A wild " + (ActiveBattle.WildPokemon.IsShiny ? "Shiny " : "")
                                                 + (ActiveBattle.WildPokemon.IsElite ? "Elite " : "") +
-                                                ActiveBattle.WildPokemon.Name + "(" + 
+                                                ActiveBattle.WildPokemon.Name + 
                                                 (ActiveBattle.WildPokemon.Form != "default"
-                    ? ActiveBattle.WildPokemon.Form + ")"
+                    ? "(" + ActiveBattle.WildPokemon.Form + ")"
                     : string.Empty) +
                       " has appeared!");
             }
@@ -1680,6 +1682,7 @@ namespace PPOProtocol
                         Y = Convert.ToInt32(data[1]),
                         Owner = data[2]
                     };
+                    PrintSystemMessage($"{portablePc.X}, {portablePc.Y}, {portablePc.Owner}");
                     return portablePc;
                 }
             }
@@ -1992,6 +1995,7 @@ namespace PPOProtocol
             _movements.Clear();
 
             MiningObjects.Clear();
+            PortablePcList.Clear();
             Shop = null;
             OpenedShop = null;
             if (x == int.MinValue)

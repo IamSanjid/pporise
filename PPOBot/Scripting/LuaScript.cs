@@ -321,9 +321,10 @@ namespace PPOBot.Scripting
             _lua.Globals["withdrawPokemonFromPC"] = new Func<int, int, bool>(WithdrawPokemonFromPC);
             _lua.Globals["depositePokemonToPC"] = new Func<int, int, bool>(DepositePokemonToPC);
             _lua.Globals["healFromPc"] = new Func<bool>(HealFromPc);
+            _lua.Globals["isMapHasPc"] = new Func<bool>(isMapHasPc);
 
 
-			_lua.Globals["getPCBoxCount"] = new Func<int>(GetPCBoxCount);
+            _lua.Globals["getPCBoxCount"] = new Func<int>(GetPCBoxCount);
             _lua.Globals["getPCPokemonCount"] = new Func<int, int>(GetPCPokemonCount);
             _lua.Globals["getLastBoxIndexWithPokemon"] = new Func<int>(GetLastBoxIndexWithPokemon);
             _lua.Globals["getFirstBoxIndexWithPokemon"] = new Func<int>(GetFirstBoxIndexWithPokemon);
@@ -1090,8 +1091,14 @@ namespace PPOBot.Scripting
 				MoveToCell(xToMove, yToMove, "pcHeal");
 
                 Bot.Game.HealFromPc();
+				return true;
             }
-            return Bot.Game.Team.All(pok => pok.CurrentHealth == pok.MaxHealth);
+            return false;
+        }
+
+        private bool isMapHasPc()
+        {
+            return Bot.Game.PortablePcList.Any();
         }
 
 		private static Dictionary<string, StatType> _stats = new Dictionary<string, StatType>()
