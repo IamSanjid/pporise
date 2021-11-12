@@ -1682,7 +1682,9 @@ namespace PPOProtocol
                         Y = Convert.ToInt32(data[1]),
                         Owner = data[2]
                     };
+#if DEBUG
                     PrintSystemMessage($"{portablePc.X}, {portablePc.Y}, {portablePc.Owner}");
+#endif
                     return portablePc;
                 }
             }
