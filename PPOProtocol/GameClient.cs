@@ -1759,9 +1759,10 @@ namespace PPOProtocol
             return false;
         }
 
-        public void HealFromPc()
+        public bool HealFromPc()
         {
             GetTimeStamp("portablePcHeal");
+            return true;
         }
 
         private void SendShopPokemart(int itemId, int quantity)

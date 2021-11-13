@@ -1085,12 +1085,7 @@ namespace PPOBot.Scripting
                     return false;
                 }
 
-                var xToMove = pc.X;
-                var yToMove = pc.Y - 1;
-
-				MoveToCell(xToMove, yToMove, "pcHeal");
-
-                Bot.Game.HealFromPc();
+                ExecuteAction(Bot.Game.HealFromPc());
 				return true;
             }
             return false;
