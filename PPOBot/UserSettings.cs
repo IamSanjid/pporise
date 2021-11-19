@@ -90,8 +90,8 @@ namespace PPOBot
             public bool AutoEvolve = true;
             public string LastScript;
             public string[] ProtocolKeys = new string[2] {
-                "fadsg7980g08b4asbaudy-ds2d378hubfhgbaoeubf0-hzzvc3", // kg1
-                "fadsg7980g08b4asbaudy-ds2d378hubfhgbaoeubf0-hzzvc3" // kg2
+                "fadsg7980g08b4asbaudy-ds2d378hubfhgbaoeubf0-hzzvc3z", // kg1
+                "fadsg7980g08b4asbaudy-ds2d378hubfhgbaoeubf0-hzzvc3z" // kg2
             };
             public Dictionary<string, string> ExtraHttpHeaders = new Dictionary<string, string>();
 

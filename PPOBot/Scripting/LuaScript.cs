@@ -1346,6 +1346,7 @@ namespace PPOBot.Scripting
 			}
 			return false;
 		}
+
         private bool IsOpponentSpecialForm()
         {
             if (!Bot.Game.IsInBattle)
