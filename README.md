@@ -3,7 +3,7 @@ A free, open-source and advanced bot for Pokémon Planet.
 
 # Binaries
 
-Latest Builds: [![Build status](https://ci.appveyor.com/api/projects/status/ia8yxsiub9hyjqfv?svg=true)](http://tmearn.com/Kc8zlI)
+Latest Builds: [![Build status](https://ci.appveyor.com/api/projects/status/ia8yxsiub9hyjqfv?svg=true)](https://ci.appveyor.com/project/IamSanjid/pporise/build/artifacts)
 
 # TODO
 1) Add PC Features.
