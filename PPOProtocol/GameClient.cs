@@ -29,7 +29,7 @@ namespace PPOProtocol
 
         private bool _isBusy = false;
 
-        public bool IsTrainerBattle { get; private set; }
+        public bool IsTrainerBattle { get; private set; } = false;
 
         private readonly GameConnection _gameConnection;
         private readonly WebConnection _webConnection;
@@ -847,6 +847,8 @@ namespace PPOProtocol
                 rock.IsMined = true;
                 RockDepleted?.Invoke(rock);
                 _miningTimeout.Set(700);
+                if (_lastRock == rock)
+                    StopMining();
             }
         }
         private void HandleMiningRockRestored(string[] resObj)
@@ -1278,6 +1280,9 @@ namespace PPOProtocol
             LastBattle = null;
             OpenedShop = null;
             IsInBattle = true;
+            StopMining();
+            StopFishing();
+
             ActiveBattle = new Battle(data, !IsTrainerBattle, disconnect, this);
 
             // if Lastbreak was more than 5 mins ago, by .5 perc chance, we are taking a break between 10 to 120 seconds
@@ -3027,6 +3032,8 @@ namespace PPOProtocol
             Shop = null;
             OpenedShop = null;
             IsTrainerBattle = false;
+            StopMining();
+            StopFishing();
             GetTimeStamp("sendMovement", tempDir);
         }
 

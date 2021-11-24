@@ -63,14 +63,16 @@ namespace PPOProtocol
             if (data[6] != null && data[6] != "-1")
             {
                 BattleType = "wild";
+                // Fishing Wild Battle
             }
             else if (data.Length > 9)
             {
                 if (data[10] == "1")
                 {
                     BattleType = "wild";
-                    IsWildBattle = false;
+                    IsWildBattle = true;
                 }
+                // Normal/Mining Wild Battle
             }
             if (_client.HasEncounteredRarePokemon)
                 WildPokemon.IsRare = true;

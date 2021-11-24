@@ -53,7 +53,7 @@ namespace PPOProtocol
             }
         }
 
-        public bool IsActive() => _planTimer.Enabled;
+        public bool IsActive() => _planTimer != null && _planTimer.Enabled;
 
         public void Dispose()
         {
