@@ -33,7 +33,7 @@ namespace PPOProtocol
         private void GenericTimerCallback(object sender, System.Timers.ElapsedEventArgs e)
         {
             planAction();
-            if (!isRepeatedPlan)
+            if (!isRepeatedPlan && _planTimer != null)
             {
                 Abort();
             }

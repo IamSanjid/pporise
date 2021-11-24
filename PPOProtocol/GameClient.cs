@@ -267,9 +267,9 @@ namespace PPOProtocol
 
         public int GetTimer() => (int)(DateTime.UtcNow - Timer).TotalMilliseconds;
 
-        private void SetUserInfos(string id, string username, string hashpassword)
+        private void SetUserInfos(string username, string hashpassword)
         {
-            Id = id;
+            //Id = id;
             Username = username;
             HashPassword = hashpassword;
             EncryptedstepsWalked = ObjectSerilizer.CalcMd5(_stepsWalked + _kg1 + Username);
@@ -278,7 +278,7 @@ namespace PPOProtocol
         private void OnJoinedRoom()
         {
             LogMessage?.Invoke("Loading Game Data...");
-            GetTimeStamp("getStartingInfo", "3");
+            GetTimeStamp("getStartingInfo", "2");
 
             _checkForLoggingTimeout?.Dispose();
             _checkForLoggingTimeout = ExecutionPlan.Delay(180000, () => CheckForLoggingIn());
@@ -841,10 +841,11 @@ namespace PPOProtocol
             if (_lastRock != null)
                 if (x == _lastRock.X && y == _lastRock.Y)
                     _lastRock.IsMined = true;
-            if (MiningObjects.Count > 0)
+            var rock = MiningObjects.Find(r => r.X == x && r.Y == y);
+            if (rock != null)
             {
-                MiningObjects.Find(r => r.X == x && r.Y == y).IsMined = true;
-                RockDepleted?.Invoke(MiningObjects.Find(r => r.X == x && r.Y == y));
+                rock.IsMined = true;
+                RockDepleted?.Invoke(rock);
                 _miningTimeout.Set(700);
             }
         }
@@ -855,11 +856,12 @@ namespace PPOProtocol
             if (_lastRock != null)
                 if (x == _lastRock.X && y == _lastRock.Y)
                     _lastRock.IsMined = false;
-            if (MiningObjects.Count > 0)
+            var rock = MiningObjects.Find(r => r.X == x && r.Y == y);
+            if (rock != null)
             {
-                MiningObjects.Find(r => r.X == x && r.Y == y).IsMined = false;
-                MiningObjects.Find(r => r.X == x && r.Y == y).IsGoldMember = resObj[5] == "1";
-                RockRestored?.Invoke(MiningObjects.Find(r => r.X == x && r.Y == y));
+                rock.IsMined = false;
+                rock.IsGoldMember = resObj[5] == "1";
+                RockRestored?.Invoke(rock);
                 _miningTimeout.Set(700);
             }
         }
@@ -2317,9 +2319,9 @@ namespace PPOProtocol
             }
         }
 
-        public void SendAuthentication(string id, string username, string password)
+        public void SendAuthentication(string username, string password)
         {
-            SetUserInfos(id, username, password);
+            SetUserInfos(username, password);
             var packet = $"<login z=\'" + Zone + "\'><nick><![CDATA[" + username + "]]></nick><pword><![CDATA[" + password + "]]></pword></login>";
             SendCmd("tsys", "login", 0, packet);
         }
@@ -2541,7 +2543,6 @@ namespace PPOProtocol
             {
                 Console.WriteLine("@@getstartinginfo");
                 loc8.Add(HashPassword);
-                loc8.Add(Id);
                 loc8.Add(p1);
                 SendXtMessage("PokemonPlanetExt", "b61", loc8, "str");
             }
@@ -2787,7 +2788,7 @@ namespace PPOProtocol
 
         public bool IsAnyMinableRocks()
         {
-            return MiningObjects.Count > 0 && MiningObjects.Count(rock => !rock.IsMined) > 0;
+            return MiningObjects.Count(rock => !rock.IsMined) > 0;
         }
 
         public int CountMinableRocks()

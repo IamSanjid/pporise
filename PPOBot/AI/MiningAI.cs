@@ -28,27 +28,8 @@ namespace PPOBot
 
             public static RockPriority PriorityFromColor(string color)
             {
-                switch (color.ToLowerInvariant().Trim())
-                {
-                    case "gold":
-                        return RockPriority.Gold;
-                    case "rainbow":
-                        return RockPriority.Rainbow;
-                    case "dark":
-                        return RockPriority.Dark;
-                    case "pale":
-                        return RockPriority.Pale;
-                    case "prism":
-                        return RockPriority.Prism;
-                    case "green":
-                        return RockPriority.Green;
-                    case "blue":
-                        return RockPriority.Blue;
-                    case "red":
-                        return RockPriority.Red;
-                    default:
-                        return RockPriority.None;
-                }
+                if (!Enum.TryParse(color.Trim(), out RockPriority rock)) return RockPriority.None;
+                return rock;
             }
 #if DEBUG
             public static int CountPriorityPower(RockPriority pr)
@@ -93,11 +74,7 @@ namespace PPOBot
                 {
                     return;
                 }
-                if (_minedRocks.Any(r => r.X == rock.X && r.Y == rock.Y))
-                {
-                    var foundRock = _minedRocks.Find(r => r.X == rock.X && r.Y == rock.Y);
-                    _minedRocks.Remove(foundRock);
-                }
+                _minedRocks.RemoveAll(r => r.X == rock.X && r.Y == rock.Y);
             }
             catch (Exception e)
             {
@@ -111,12 +88,6 @@ namespace PPOBot
             try
             {
                 if (rock is null) return;
-                if (_minedRocks.Count <= 0)
-                {
-                    _minedRocks.Add(rock);
-                    return;
-                }
-
                 if (!_minedRocks.Any(r => r.X == rock.X && r.Y == rock.Y))
                     _minedRocks.Add(rock);
             }
@@ -182,41 +153,20 @@ namespace PPOBot
                     if (!IsColoredRocksMineable(colors))
                     {
                         int delay = 0;
-                        if (colors.Contains("Red"))
+                        if (colors.Contains("Red") || colors.Contains("Blue") || colors.Contains("Green"))
                         {
-                            _delayIfNoRockMineable.Set(30000);
                             delay = 30000;
                         }
-                        else if (colors.Contains("Blue"))
+                        else if (colors.Contains("Prism") || colors.Contains("Pale"))
                         {
-                            _delayIfNoRockMineable.Set(30000);
-                            delay = 30000;
-                        }
-                        else if (colors.Contains("Green"))
-                        {
-                            _delayIfNoRockMineable.Set(30000);
-                            delay = 30000;
-                        }
-                        else if (colors.Contains("Prism"))
-                        {
-                            _delayIfNoRockMineable.Set(60000);
                             delay = 60000;
                         }
-                        else if (colors.Contains("Pale"))
+                        else if (colors.Contains("Dark") || colors.Contains("Rainbow"))
                         {
-                            _delayIfNoRockMineable.Set(60000);
-                            delay = 60000;
-                        }
-                        else if (colors.Contains("Dark"))
-                        {
-                            _delayIfNoRockMineable.Set(180000);
                             delay = 180000;
                         }
-                        else if (colors.Contains("Rainbow"))
-                        {
-                            _delayIfNoRockMineable.Set(180000);
-                            delay = 180000;
-                        }
+
+                        _delayIfNoRockMineable.Set(delay);
                         LogMessage?.Invoke($"There is no specific colored mine able rocks. Waiting for {TimeSpan.FromMilliseconds(delay).FormatTimeString()}");
                     }
 #if DEBUG
@@ -279,13 +229,15 @@ namespace PPOBot
                 return rocks.FirstOrDefault();
             if (_lastRock != null)
             {
-                rocks.Remove(rocks.ToList().Find(r => r.X == _lastRock.X && r.Y == _lastRock.Y && _lastRock.Color == r.Color)); //removing last rock.
+                rocks.ToList().RemoveAll(r => r.X == _lastRock.X && r.Y == _lastRock.Y && _lastRock.Color == r.Color); //removing last rock.
             }
             foreach (var rock in rocks)
             {
-                if (_minedRocks.Count > 0 && _minedRocks.Contains(rock))
+                if (_minedRocks.Contains(rock))
                     continue;
+
                 if (rock.IsMined) continue;
+
                 var distance = GameClient.DistanceBetween(_client.PlayerX, _client.PlayerY, rock.X, rock.Y);
                 var node = new Node
                 {

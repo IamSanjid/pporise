@@ -274,7 +274,7 @@ namespace PPOBot
 
         private void Client_SmartFoxApiOk()
         {
-            Game.SendAuthentication(Account.ID, Account.Username, Account.HashPassword);
+            Game.SendAuthentication(Account.Username, Account.HashPassword);
         }
 
         private void Client_WebSuccessfullyLoggedIn(string id, string username, string hashpassword)
