@@ -3132,7 +3132,7 @@ namespace PPOProtocol
 
         public void Move(Direction direction, string reason)
         {
-            movingForBattle = reason == "battle";
+            movingForBattle = reason == "battle" || reason.Contains("surf");
             if (reason.Contains("surf") && !IsSurfing)
             {
                 SetMount("", true);
@@ -3240,7 +3240,13 @@ namespace PPOProtocol
                     {
                         _mapMovementSpeed = 16 * _movementSpeedMod;
                         if (_mount == "")
+                        {
                             SetMount("Bike");
+                        }
+                    }
+                    else if (IsSurfing && HasItemName("Surfboard"))
+                    {
+                        _mapMovementSpeed = 16 * _movementSpeedMod;
                     }
                     else
                     {
