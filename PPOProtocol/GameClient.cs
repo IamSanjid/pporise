@@ -431,7 +431,13 @@ namespace PPOProtocol
                     case "b86":
                         var itmData = data[3].Split(',');
                         var inventoryItem = Items.Find(i => i.Name == itmData[0]);
-                        inventoryItem.Quantity += Convert.ToInt32(itmData[1]);
+                        if (inventoryItem != null)
+                            inventoryItem.Quantity += Convert.ToInt32(itmData[1]);
+                        else
+                        {
+                            inventoryItem = new InventoryItem(itmData[0], Convert.ToInt32(itmData[1]), Items.LastOrDefault().Uid);
+                            Items.Add(inventoryItem);
+                        }
                         Items = Items.OrderBy(o => o.Uid).ToList();
                         InventoryUpdated?.Invoke();
                         break;
