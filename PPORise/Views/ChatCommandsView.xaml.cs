@@ -1365,7 +1365,7 @@ namespace PPORise
                                         return;
                                     }
 
-                                    var closeRock = _bot.MiningAI.FindClosestRock();
+                                    var closeRock = _bot.MiningAI.FindClosestRocks().FirstOrDefault();
                                     AddChatMessage(rtCommand,
                                         closeRock is null
                                             ? "Error: did not find any close rock."

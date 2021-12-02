@@ -59,6 +59,7 @@
     <Compile Include="AccountManager.cs" />
     <Compile Include="AI\BattleAI.cs" />
     <Compile Include="AI\Pathfinding.cs" />
+    <Compile Include="AI\RockPriority.cs" />
     <Compile Include="BotClient.cs" />
     <Compile Include="AI\MiningAI.cs" />
     <Compile Include="HttpProxy.cs" />

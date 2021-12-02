@@ -11,41 +11,15 @@ namespace PPOBot
     public class MiningAI
     {
         //wrost AI ever.... Don't laugh :D
-        public static class RockPrority
-        {
-            public enum RockPriority
-            {
-                Gold = 9,
-                Rainbow = 8,
-                Dark = 7,
-                Pale = 5,
-                Prism = 4,
-                Green = 3,
-                Blue = 2,
-                Red = 1,
-                None = 0
-            }
-
-            public static RockPriority PriorityFromColor(string color)
-            {
-                if (!Enum.TryParse(color.Trim(), out RockPriority rock)) return RockPriority.None;
-                return rock;
-            }
-#if DEBUG
-            public static int CountPriorityPower(RockPriority pr)
-            {
-                return (int)pr;
-            }
-#endif
-        }
-
         public event Action<string> LogMessage;
 
         private readonly ProtocolTimeout _delayIfNoRockMineable = new ProtocolTimeout();
         private readonly GameClient _client;
 
-        private IList<MiningObject> Rocks => _client.MiningObjects;
+        private List<MiningObject> Rocks => _client.MiningObjects;
         private readonly List<MiningObject> _minedRocks = new List<MiningObject>();
+
+        private static readonly Random Random = new Random();
 
         public MiningAI(GameClient client)
         {
@@ -69,11 +43,7 @@ namespace PPOBot
         {
             try
             {
-                if (rock is null) return;
-                if (_minedRocks.Count <= 0)
-                {
-                    return;
-                }
+                if (rock is null || _minedRocks.Count <= 0) return;
                 _minedRocks.RemoveAll(r => r.X == rock.X && r.Y == rock.Y);
             }
             catch (Exception e)
@@ -101,7 +71,7 @@ namespace PPOBot
         private MiningObject _lastRock;
         public bool IsAnyMineAbleRock() => _client.IsAnyMinableRocks();
         public bool IsRockMineAbleAt(int x, int y) => _client.IsMinable(x, y);
-        public bool IsRockMineAble(MiningObject rock) => IsRockMineAbleAt(rock.X, rock.Y);
+        public bool IsRockMineAble(MiningObject rock) => !_minedRocks.Contains(rock) && IsRockMineAbleAt(rock.X, rock.Y);
         public bool MineRockAt(int x, int y, string axe)
         {
             if (!IsRockMineAbleAt(x, y)) return false;
@@ -117,30 +87,17 @@ namespace PPOBot
             _minedRocks.Add(rock);
             return MineRockAt(rock.X, rock.Y, axe);
         }
+
         public bool MineMultipleColoredRocks(string axe, string[] colors, bool waitForRocks = false)
         {
             try
             {
                 if (IsAnyMineAbleRock())
                 {
-                    var tempRocks = Rocks.ToList().FindAll(r => !_minedRocks.Contains(r));
-                    var coloredRocks = new List<MiningObject>();
-                    foreach (var rock in tempRocks)
-                    {
-                        if (rock.IsGoldMember == _client.IsGoldMember && IsRockMineAble(rock) &&
-                            colors.ToList().Contains(rock.Color))
-                        {
-                            coloredRocks.Add(rock);
-                        }
-                        else if (IsRockMineAble(rock) && colors.ToList().Contains(rock.Color))
-                        {
-                            coloredRocks.Add(rock);
-                        }
-                    }
-
+                    var coloredRocks = Rocks.FindAll(r => IsRockMineAble(r)).ToList();
                     if (coloredRocks.Count > 0)
                     {
-                        _lastRock = FindClosestRock(coloredRocks);
+                        _lastRock = FindBestRock(coloredRocks);
                         if (_lastRock != null)
                         {
                             MineRock(_lastRock, axe);
@@ -170,9 +127,9 @@ namespace PPOBot
                         LogMessage?.Invoke($"There is no specific colored mine able rocks. Waiting for {TimeSpan.FromMilliseconds(delay).FormatTimeString()}");
                     }
 #if DEBUG
-                    Rocks.ToList().FindAll(r => colors.Contains(r.Color)).ForEach(r =>
+                    Rocks.FindAll(r => colors.Contains(r.Color)).ForEach(r =>
                         Console.WriteLine($"Is Mineable {r.Color}({r.X}, {r.Y}): {IsRockMineAble(r)}"));
-                    Rocks.ToList().ForEach(r =>
+                    Rocks.ForEach(r =>
                         Console.WriteLine($"Is Mineable {r.Color}({r.X}, {r.Y}): {IsRockMineAble(r)}"));
 #endif
                 }
@@ -191,22 +148,10 @@ namespace PPOBot
         {
             if (IsAnyMineAbleRock())
             {
-                var tempRocks = new List<MiningObject>();
-                foreach (var rock in Rocks)
-                {
-                    if (rock.IsGoldMember == _client.IsGoldMember && IsRockMineAble(rock))
-                    {
-                        tempRocks.Add(rock);
-                    }
-                    else if (IsRockMineAble(rock))
-                    {
-                        tempRocks.Add(rock);
-                    }
-                }
-                tempRocks = tempRocks.FindAll(r => !_minedRocks.Contains(r));
+                var tempRocks = Rocks.FindAll(rock => IsRockMineAble(rock));
                 if (tempRocks.Count > 0)
                 {
-                    _lastRock = FindClosestRock(tempRocks);
+                    _lastRock = FindBestRock(tempRocks);
                     MineRock(_lastRock, axe);
                     return true;
                 }
@@ -215,99 +160,37 @@ namespace PPOBot
             return false;
         }
 
-        private class Node
+        public MiningObject FindBestRock(List<MiningObject> rocks = null)
         {
-            public int Distance { get; set; }
-            public RockPrority.RockPriority Priority { get; set; }
+            var closets_rocks = FindClosestRocks(rocks).FindAll(rock => rock.Priority().RequiredLevel() <= _client.Mining.MiningLevel).ToList();
+
+            var best_priority = closets_rocks.Max(rock => rock.Priority());
+            closets_rocks.RemoveAll(rock => rock.Priority() != best_priority);
+
+            var best_distance = closets_rocks.Min(rock => _client.DistanceTo(rock.X, rock.Y));
+            closets_rocks.RemoveAll(rock => _client.DistanceTo(rock.X, rock.Y) != best_distance);
+
+            return closets_rocks[Random.Next(0, closets_rocks.Count - 1)];
         }
-        public MiningObject FindClosestRock(IList<MiningObject> rocks = null)
+
+
+        public List<MiningObject> FindClosestRocks(List<MiningObject> rocks = null)
         {
-            var nodes = new Dictionary<MiningObject, Node>();
             if (rocks is null)
                 rocks = Rocks;
             if (rocks.Count == 1)
-                return rocks.FirstOrDefault();
+                return rocks;
             if (_lastRock != null)
             {
                 rocks.ToList().RemoveAll(r => r.X == _lastRock.X && r.Y == _lastRock.Y && _lastRock.Color == r.Color); //removing last rock.
             }
-            foreach (var rock in rocks)
-            {
-                if (_minedRocks.Contains(rock))
-                    continue;
 
-                if (rock.IsMined) continue;
+            var closets_rocks = rocks.OrderBy(rock => rock.Priority()).Reverse().ToList(); /* reverse coz we want the big boiz first */
+            closets_rocks.Sort((lhs, rhs) => _client.DistanceTo(lhs.X, lhs.Y).CompareTo(_client.DistanceTo(rhs.X, rhs.Y))); /* and we want the closest boiz first */
 
-                var distance = GameClient.DistanceBetween(_client.PlayerX, _client.PlayerY, rock.X, rock.Y);
-                var node = new Node
-                {
-                    Distance = distance,
-                    Priority = RockPrority.PriorityFromColor(rock.Color)
-                };
+            closets_rocks.RemoveAll(rock => !IsRockMineAble(rock));
 
-                if (distance == 0) return rock;
-                if (!nodes.ContainsKey(rock))
-                    nodes.Add(rock, node);
-            }
-            // ReSharper disable once InvertIf
-            if (nodes.Count > 0)
-            {
-                var bestNodes = FindBestNodes(nodes);
-#if DEBUG
-                foreach (var n in nodes)
-                {
-                    Console.WriteLine(
-                        $"X:{n.Key.X}-Y:{n.Key.Y}-Distance:{n.Value.Distance}\tColor:{n.Key.Color}\tPrority-Power:{RockPrority.CountPriorityPower(n.Value.Priority)}");
-                    //bestNodes = FindBestNodes(nodes);
-                }
-#endif
-                if (bestNodes.Count > 0)
-                {
-                    bestNodes = FindBestNodes(nodes);
-#if DEBUG
-                    Console.WriteLine("Best Nodes:");
-                    foreach (var n in bestNodes)
-                    {
-                        Console.WriteLine(
-                            $"X:{n.Key.X}-Y:{n.Key.Y}-Distance:{n.Value.Distance}\tColor:{n.Key.Color}\tPrority-Power:{RockPrority.CountPriorityPower(n.Value.Priority)}");
-                    }
-#endif
-                    rocks = bestNodes.Keys.ToList();
-                    foreach (var n in bestNodes)
-                    {
-                        if (IsNodeClosest(n.Value, rocks))
-                            return n.Key;
-                        //_nodes.Remove(n.Key);
-                    }
-                }
-            }
-            return null;
-        }
-
-        private Dictionary<MiningObject, Node> FindBestNodes(Dictionary<MiningObject, Node> nodes)
-        {
-            var newNodes = new Dictionary<MiningObject, Node>();
-            foreach (var node in nodes)
-            {
-                if (nodes.Values.Any(n => n.Priority > node.Value.Priority))
-                {
-                    // ReSharper disable once RedundantJumpStatement
-                    continue;
-                }
-                newNodes.Add(node.Key, node.Value);
-            }
-
-            return newNodes;
-        }
-        private bool IsNodeClosest(Node node, IList<MiningObject> rocks)
-        {
-            if (rocks.Any(r =>
-                GameClient.DistanceBetween(_client.PlayerX, _client.PlayerY, r.X, r.Y) < node.Distance))
-            {
-                return false;
-            }
-
-            return true;
+            return closets_rocks;
         }
     }
 
