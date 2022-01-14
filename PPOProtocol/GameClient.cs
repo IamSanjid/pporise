@@ -665,6 +665,8 @@ namespace PPOProtocol
                         break;
                     case "b141":
                     case "b141_2":
+                    case "blg":
+                    case "blg2":
                     case "b177":
                         OnAuthenticationFailed(data[1]);
                         break;
