@@ -32,7 +32,7 @@ namespace PPOProtocol
         public bool IsTrainerBattle { get; private set; } = false;
 
         private readonly GameConnection _gameConnection;
-        private readonly WebConnection _webConnection;
+        //private readonly WebConnection _webConnection;
         private MiningObject _lastRock;
         private int _mapInstance = -1;
         private string _moveType = "";
@@ -113,7 +113,7 @@ namespace PPOProtocol
         public bool IsOnGround => _mount != "surf" && _moveType != "surf";
         public bool IsBiking => _moveType == "bike";
 
-        public GameClient(GameConnection gameConnection, WebConnection webConnection, string kg1, string kg2)
+        /*public GameClient(GameConnection gameConnection, WebConnection webConnection, string kg1, string kg2)
         {
             _kg1 = kg1;
             _kg2 = kg2;
@@ -121,6 +121,32 @@ namespace PPOProtocol
 
             _webConnection.LoggingError += OnWebConnectionLoggingError;
             _webConnection.LoggedIn += OnWebConnectionLoggedIn;
+
+            _gameConnection = gameConnection;
+            _gameConnection.PacketReceived += OnPacketReceived;
+            _gameConnection.Connected += OnConnectionOpened;
+            _gameConnection.Disconnected += OnConnectionClosed;
+
+            Items = new List<InventoryItem>();
+            MiningObjects = new List<MiningObject>();
+            EliteChests = new List<EliteChest>();
+            Team = new List<Pokemon>();
+            PCPokemon = new Dictionary<int, List<Pokemon>>();
+            WildPokemons = new List<WildPokemon>();
+            Badges = new List<string>();
+            TempMap = "";
+            PokemonCaught = new string[900];
+            Players = new Dictionary<string, PlayerInfos>();
+            _removedPlayers = new Dictionary<string, PlayerInfos>();
+            PortablePcList = new List<PortablePc>();
+
+            Rand = new ThreadSafeRandom();
+        }*/
+
+        public GameClient(GameConnection gameConnection, string kg1, string kg2)
+        {
+            _kg1 = kg1;
+            _kg2 = kg2;
 
             _gameConnection = gameConnection;
             _gameConnection.PacketReceived += OnPacketReceived;
@@ -149,10 +175,10 @@ namespace PPOProtocol
             _gameConnection.Connect();
         }
 
-        public void SendWebsiteLogin(string name, string password)
+        /*public void SendWebsiteLogin(string name, string password)
         {
             _webConnection.PostLogin(name, password);
-        }
+        }*/
         
         public int PlayerX { get; private set; }
         public int PlayerY { get; private set; }
@@ -208,15 +234,15 @@ namespace PPOProtocol
         public event Action<bool> TeamUpdated;
         public event Action PlayerPositionUpdated;
         public event Action SuccessfullyAuthenticated;
-        public event Action<string, string, string> WebSuccessfullyLoggedIn;
-        public event Action AuthenticationFailed;
+        //public event Action<string, string, string> WebSuccessfullyLoggedIn;
+        public event Action<string> AuthenticationFailed;
         public event Action BattleStarted;
         public event Action<int> BattleEnded;
         public event Action<string> BattleMessage;
         public event Action<IList<WildPokemon>, int> EnemyUpdated;
         public event Action Evolving;
         public event Action<string, int> LearningMove;
-        public event Action<Exception> LoggingError;
+        //public event Action<Exception> LoggingError;
         public event Action LoggedIn;
         public event Action<string[]> PrivateChat;
         public event Action<string> SystemMessage;
@@ -240,7 +266,7 @@ namespace PPOProtocol
             if (!IsMapLoaded)
             {
                 Close();
-                AuthenticationFailed?.Invoke();
+                AuthenticationFailed?.Invoke("Probably MD5 key was wrong.");
             }
         }
 
@@ -253,7 +279,7 @@ namespace PPOProtocol
             return Rand.NextDouble() * 100 < _chance;
         }
 
-        private void OnWebConnectionLoggingError(Exception obj)
+        /*private void OnWebConnectionLoggingError(Exception obj)
         {
             LoggingError?.Invoke(obj);
         }
@@ -263,7 +289,7 @@ namespace PPOProtocol
             Open();
             _webConnection.Client.Dispose();
             WebSuccessfullyLoggedIn?.Invoke(_webConnection.Id, _webConnection.Username, _webConnection.HashPassword);
-        }
+        }*/
 
         public int GetTimer() => (int)(DateTime.UtcNow - Timer).TotalMilliseconds;
 
@@ -638,13 +664,9 @@ namespace PPOProtocol
                         HandleFinishMining(data);
                         break;
                     case "b141":
-                        LogMessage?.Invoke("You've been permanently banned from the game.");
-                        AuthenticationFailed?.Invoke();
-                        Close();
-                        break;
+                    case "b141_2":
                     case "b177":
-                        LogMessage?.Invoke("Client out of date.");
-                        Close();
+                        OnAuthenticationFailed(data[1]);
                         break;
                     case "b179":
                         HandleBattleRequests(data);
@@ -672,6 +694,30 @@ namespace PPOProtocol
             }
         }
 
+        private void OnAuthenticationFailed(string reason)
+        {
+            string msg = "";
+            switch (reason)
+            {
+                case "b141":
+                    msg = "You've been permanently banned from the game.";
+                    break;
+                case "b141_2":
+                    msg = "This account has been banned. See the forums for more details.";
+                    break;
+                case "blg":
+                    msg = "Incorrect username/password!";
+                    break;
+                case "blg2":
+                    msg = "Failed to log in - please try again.";
+                    break;
+                case "b177":
+                    msg = "Client out of date.";
+                    break;
+            }
+            AuthenticationFailed?.Invoke(msg);
+            Close();
+        }
         private void HandlePortablePcExpired(string[] data)
         {
             PrintSystemMessage($"The Portable PC placed by {data[5]} has expired.");

@@ -171,16 +171,16 @@ namespace PPORise
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 #endif
-            {
+            /*{
                 ServicePointManager.Expect100Continue = true;
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            }
+            }*/
 
             Thread.CurrentThread.Name = "UI Thread";
             Bot = new BotClient();
             Bot.ConnectionOpened += Bot_ConnectionOpened;
             Bot.ConnectionClosed += Bot_ConnectionClosed;
-            Bot.WebSuccessfullyLoggedIn += OnWebSuccessfullyLoggedIn;
+            //Bot.WebSuccessfullyLoggedIn += OnWebSuccessfullyLoggedIn;
             Bot.AutoReconnector.StateChanged += Bot_AutoReconnectorStateChanged;
             Bot.PokemonEvolver.StateChanged += Bot_PokemonEvolverStateChanged;
             Bot.LogMessage += Bot_LogMessage;
@@ -264,7 +264,7 @@ namespace PPORise
             });
         }
 
-        private void Bot_LoggingFailed(Exception ex)
+        /*private void Bot_LoggingFailed(Exception ex)
         {
             Dispatcher.InvokeAsync(delegate
             {
@@ -276,7 +276,7 @@ namespace PPORise
                 StatusText.Text = "Offline";
                 StatusText.Foreground = Brushes.Red;
             });
-        }
+        }*/
 
         private void Client_LoggedIn()
         {
@@ -500,12 +500,11 @@ namespace PPORise
 
                     if (Bot.AccountManager.Accounts.ContainsKey(login.Username))
                     {
-                        account.HashPassword = Bot.AccountManager.Accounts[login.Username].HashPassword;
+                        account.Password = Bot.AccountManager.Accounts[login.Username].Password;
                         account.ID = Bot.AccountManager.Accounts[login.Username].ID;
-                        account.Username = Bot.AccountManager.Accounts[login.Username].Username;
                     }
 
-                    if (string.IsNullOrEmpty(account.ID) || string.IsNullOrEmpty(account.HashPassword) || string.IsNullOrEmpty(account.Username))
+                    /*if (string.IsNullOrEmpty(account.ID) || string.IsNullOrEmpty(account.HashPassword) || string.IsNullOrEmpty(account.Username))
                         LogMessage("Connecting and logging in to the web server....", (Brush)new BrushConverter().ConvertFrom("#28d659"));
                     else
                         LogMessage("Connecting to the server....", (Brush)new BrushConverter().ConvertFrom("#28d659"));
@@ -522,7 +521,8 @@ namespace PPORise
                     {
                         account.HttpProxy.Host = login.HttpProxyHost;
                         account.HttpProxy.Port = login.HttpProxyPort;
-                    }
+                    }*/
+                    LogMessage("Connecting to the server....", (Brush)new BrushConverter().ConvertFrom("#28d659"));
                     Bot.Login(account, login.SaveIdAndHashPassword);
                 }
             }
@@ -641,7 +641,7 @@ namespace PPORise
                 if (Bot.Game != null)
                 {
                     Bot.Game.LoggedIn += Client_LoggedIn;
-                    Bot.Game.LoggingError += Bot_LoggingFailed;
+                    //Bot.Game.LoggingError += Bot_LoggingFailed;
                     Bot.Game.PlayerDataUpdated += Game_PlayerDataUpdated;
                     Bot.Game.InventoryUpdated += Client_InventoryUpdated;
                     Bot.Game.MapUpdated += Game_MapUpdated;
@@ -683,14 +683,11 @@ namespace PPORise
             });
         }
 
-        private void Client_AuthenticationFailed()
+        private void Client_AuthenticationFailed(string reason)
         {
             Dispatcher.InvokeAsync(delegate
             {
-                LogMessage(
-                    "Something went wrong while trying to log in to the server. " +
-                    "Make sure you have been logged out from the web browser or website and re-check your username and password. " +
-                    "Or may be it is your connection problem like slow Internet or proxy is slow.", Brushes.OrangeRed);
+                LogMessage("Authentication failed: " + reason, Brushes.OrangeRed);
             });
         }
 
@@ -703,7 +700,7 @@ namespace PPORise
             });
         }
 
-        private void OnWebSuccessfullyLoggedIn()
+        /*private void OnWebSuccessfullyLoggedIn()
         {
             Dispatcher.InvokeAsync(delegate
             {
@@ -711,7 +708,7 @@ namespace PPORise
                     (Brush)new BrushConverter().ConvertFrom("#28d659"));
                 LogMessage("Connecting to the game server....", (Brush)new BrushConverter().ConvertFrom("#28d659"));
             });
-        }
+        }*/
 
         private void Client_InventoryUpdated()
         {

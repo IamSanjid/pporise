@@ -9,13 +9,11 @@ using System.Windows.Interop;
 using MaterialDesignThemes.Wpf;
 using PPOBot;
 
-// ReSharper disable once CheckNamespace
 namespace PPORise
 {
     /// <summary>
     /// Interaction logic for LoginWindow.xaml
     /// </summary>
-    // ReSharper disable once RedundantExtendsListEntry
     public partial class LoginWindow : Window
     {
         #region CUSTOM EVENTS
@@ -59,7 +57,7 @@ namespace PPORise
         public string Username => UsernameTextBox.Text.Trim();
         public string Password => PasswordTextBox.Password;
         public bool HasProxy => ProxyCheckBox?.IsChecked != null && ProxyCheckBox.IsChecked.Value;
-        public bool HasHttpProxy => HttpProxyCheck?.IsChecked != null && HttpProxyCheck.IsChecked.Value;
+        //public bool HasHttpProxy => HttpProxyCheck?.IsChecked != null && HttpProxyCheck.IsChecked.Value;
         public bool SaveIdAndHashPassword => SaveIdHashCheckBox?.IsChecked != null && SaveIdHashCheckBox.IsChecked.Value;
 
         public int ProxyVersion
@@ -86,9 +84,9 @@ namespace PPORise
 
         public string ProxyPassword => ProxyPasswordTextBox.Password;
 
-        public string HttpProxyHost => HttpProxyHostTextBox.Text.Trim();
+        /*public string HttpProxyHost => HttpProxyHostTextBox.Text.Trim();
 
-        public int HttpProxyPort { get; private set; } = -1;
+        public int HttpProxyPort { get; private set; } = -1;*/
 
 
         public LoginWindow(BotClient bot)
@@ -135,7 +133,7 @@ namespace PPORise
                 return;
             }
 
-            if (HasProxy)
+            /*if (HasProxy)
             {
                 if (int.TryParse(ProxyPortTextBox.Text.Trim(), out int port) && port >= 0 && port <= 65535)
                 {
@@ -150,7 +148,7 @@ namespace PPORise
                 {
                     HttpProxyPort = httpport;
                 }
-            }
+            }*/
 
             DialogResult = true;
         }
@@ -160,13 +158,10 @@ namespace PPORise
         }
         private void RefreshVisibility()
         {
-            // ReSharper disable once PossibleInvalidOperationException
             var hasProxy = ProxyCheckBox.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
-            // ReSharper disable once PossibleInvalidOperationException
             var isSocks5 = ProxyCheckBox.IsChecked.Value && Socks5RadioButton.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
-            // ReSharper disable once PossibleInvalidOperationException
-            var hasAuth = ProxyCheckBox.IsChecked.Value && Socks5RadioButton.IsChecked.Value && /*ReSharper disable once PossibleInvalidOperationException*/ !AnonymousCheckBox.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
-            var hasHttp = HttpProxyCheck != null && HttpProxyCheck.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
+            var hasAuth = ProxyCheckBox.IsChecked.Value && Socks5RadioButton.IsChecked.Value && !AnonymousCheckBox.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
+            //var hasHttp = HttpProxyCheck != null && HttpProxyCheck.IsChecked.Value ? Visibility.Visible : Visibility.Collapsed;
 
             if (ProxyTypePanel != null)
             {
@@ -208,14 +203,14 @@ namespace PPORise
             {
                 ProxyPasswordTextBox.Visibility = hasAuth;
             }
-            if (HttpProxyHostLabel != null)
+            /*if (HttpProxyHostLabel != null)
                 HttpProxyHostLabel.Visibility = hasHttp;
             if (HttpProxyHostLabel != null)
                 HttpProxyHostTextBox.Visibility = hasHttp;
             if (HttpProxyPortLabel != null)
                 HttpProxyPortLabel.Visibility = hasHttp;
             if (HttpProxyPortTextBox != null)
-                HttpProxyPortTextBox.Visibility = hasHttp;
+                HttpProxyPortTextBox.Visibility = hasHttp;*/
         }
         private void ShowAccounts_Click(object sender, RoutedEventArgs e)
         {
@@ -312,7 +307,7 @@ namespace PPORise
                         ProxyPasswordTextBox.Password = account.Socks.Password;
                     }
 
-                    if (!string.IsNullOrEmpty(account.HttpProxy.Host) && account.HttpProxy.Port != -1)
+                    /*if (!string.IsNullOrEmpty(account.HttpProxy.Host) && account.HttpProxy.Port != -1)
                         HttpProxyCheck.IsChecked = true;
                     else
                         HttpProxyCheck.IsChecked = false;
@@ -329,7 +324,7 @@ namespace PPORise
                     else
                     {
                         HttpProxyPortTextBox.Text = account.HttpProxy.Port.ToString();
-                    }
+                    }*/
                 }
             }
         }
@@ -348,8 +343,7 @@ namespace PPORise
             if (_bot.AccountManager.Accounts.ContainsKey(account.Name))
             {
                 account.ID = _bot.AccountManager.Accounts[account.Name].ID;
-                account.HashPassword = _bot.AccountManager.Accounts[account.Name].HashPassword;
-                account.Username = _bot.AccountManager.Accounts[account.Name].Username;
+                account.Password = _bot.AccountManager.Accounts[account.Name].Password;
             }
 
             if (!string.IsNullOrEmpty(PasswordTextBox.Password))
@@ -390,20 +384,20 @@ namespace PPORise
                 }
             }
 
-            if (HasHttpProxy)
-            {
-                if (!string.IsNullOrEmpty(HttpProxyHostTextBox.Text))
-                {
-                    account.HttpProxy.Host = HttpProxyHostTextBox.Text.Trim();
-                }
-                if (!string.IsNullOrEmpty(HttpProxyPortTextBox.Text))
-                {
-                    if (int.TryParse(HttpProxyPortTextBox.Text.Trim(), out int httpport))
-                    {
-                        account.HttpProxy.Port = httpport;
-                    }
-                }
-            }
+            //if (HasHttpProxy)
+            //{
+            //    if (!string.IsNullOrEmpty(HttpProxyHostTextBox.Text))
+            //    {
+            //        account.HttpProxy.Host = HttpProxyHostTextBox.Text.Trim();
+            //    }
+            //    if (!string.IsNullOrEmpty(HttpProxyPortTextBox.Text))
+            //    {
+            //        if (int.TryParse(HttpProxyPortTextBox.Text.Trim(), out int httpport))
+            //        {
+            //            account.HttpProxy.Port = httpport;
+            //        }
+            //    }
+            //}
 
             lock (_bot)
             {

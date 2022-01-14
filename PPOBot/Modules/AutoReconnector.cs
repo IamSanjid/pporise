@@ -78,7 +78,7 @@ namespace PPOBot.Modules
             _reconnecting = false;
         }
 
-        private void Client_AuthenticationFailed()
+        private void Client_AuthenticationFailed(string msg)
         {
             IsEnabled = false;
             _reconnecting = false;

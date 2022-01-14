@@ -18,7 +18,7 @@ namespace PPOBot
         }
 
         public event Action<State> StateChanged;
-        public event Action WebSuccessfullyLoggedIn;
+        //public event Action WebSuccessfullyLoggedIn;
         public event Action ConnectionOpened;
         public event Action ConnectionClosed;
         public event Action<string> LogMessage;
@@ -262,10 +262,10 @@ namespace PPOBot
                 client.ConnectionOpened += Client_ConnectionOpened;
                 client.ConnectionFailed += Client_ConnectionFailed;
                 client.ConnectionClosed += Client_ConnectionClosed;
-                client.WebSuccessfullyLoggedIn += Client_WebSuccessfullyLoggedIn;
+                //client.WebSuccessfullyLoggedIn += Client_WebSuccessfullyLoggedIn;
                 client.TeleportationOccuring += Client_TeleportationOccuring;
                 client.BattleMessage += Client_BattleMessage;
-                client.LoggingError += Client_LoggingError;
+                //client.LoggingError += Client_LoggingError;
                 client.SystemMessage += Client_SystemMessage;
                 client.SmartFoxApiOk += Client_SmartFoxApiOk;
             }
@@ -274,30 +274,30 @@ namespace PPOBot
 
         private void Client_SmartFoxApiOk()
         {
-            Game.SendAuthentication(Account.Username, Account.HashPassword);
+            Game.SendAuthentication(Account.Name, ObjectSerilizer.CalcSH1(Account.Name.ToLowerInvariant() + Account.Password));
         }
 
-        private void Client_WebSuccessfullyLoggedIn(string id, string username, string hashpassword)
-        {
-            Account.SetInfo(id, username, hashpassword);
+        //private void Client_WebSuccessfullyLoggedIn(string id, string username, string hashpassword)
+        //{
+        //    Account.SetInfo(id, username, hashpassword);
             
-            if (_saveIdAndHashPassword)
-            {
-                if (AccountManager.Accounts.ContainsKey(Account.Name))
-                    AccountManager.Accounts[Account.Name] = Account;
-                else
-                    AccountManager.Accounts.Add(Account.Name, Account);
-                AccountManager.SaveAccount(Account.Name);
-                _saveIdAndHashPassword = false;
-            }
+        //    if (_saveIdAndHashPassword)
+        //    {
+        //        if (AccountManager.Accounts.ContainsKey(Account.Name))
+        //            AccountManager.Accounts[Account.Name] = Account;
+        //        else
+        //            AccountManager.Accounts.Add(Account.Name, Account);
+        //        AccountManager.SaveAccount(Account.Name);
+        //        _saveIdAndHashPassword = false;
+        //    }
 
-            WebSuccessfullyLoggedIn?.Invoke();
-        }
+        //    WebSuccessfullyLoggedIn?.Invoke();
+        //}
 
-        private void Client_LoggingError(Exception obj)
-        {
-            SetClient(null);
-        }
+        //private void Client_LoggingError(Exception obj)
+        //{
+        //    SetClient(null);
+        //}
 
         public void LoadScript(string filename)
         {
@@ -455,7 +455,7 @@ namespace PPOBot
         private void LoginUpdate()
         {
             GameConnection gameConnection;
-            WebConnection webConnection;
+            //WebConnection webConnection;
             if (Account.Socks.Version != SocksVersion.None)
             {
                 gameConnection = new GameConnection((int)Account.Socks.Version, Account.Socks.Host,
@@ -466,7 +466,7 @@ namespace PPOBot
                 gameConnection = new GameConnection();
             }
 
-            if (!string.IsNullOrEmpty(Account.HttpProxy.Host) && Account.HttpProxy.Port > 0)
+            /*if (!string.IsNullOrEmpty(Account.HttpProxy.Host) && Account.HttpProxy.Port > 0)
             {
                 webConnection = new WebConnection(Account.HttpProxy.Host, Account.HttpProxy.Port);
             }
@@ -483,18 +483,19 @@ namespace PPOBot
                     if (header.Key.ToLowerInvariant() == "cookie")
                         webConnection.ParseCookies(header.Value);
                 }
-            }
+            }*/
 
-            SetClient(new GameClient(gameConnection, webConnection, Settings.ProtocolKeys[0], Settings.ProtocolKeys[1]));
-            if (!string.IsNullOrEmpty(Account.ID) && !string.IsNullOrEmpty(Account.Username))
+            SetClient(new GameClient(gameConnection, Settings.ProtocolKeys[0], Settings.ProtocolKeys[1]));
+            Game.Open();
+            /*if (!string.IsNullOrEmpty(Account.ID) && !string.IsNullOrEmpty(Account.Username))
             {
-                Account.HashPassword = ObjectSerilizer.CalcSH1(Account.Username + Account.Password);
+                Account.HashPassword = ObjectSerilizer.CalcSH1(Account.Username.ToLowerInvariant() + Account.Password);
                 Game.Open();
             }
             else
             {
                 Game.SendWebsiteLogin(Account.Name, Account.Password);
-            }
+            }*/
         }
     }
 }

@@ -14,9 +14,9 @@ namespace PPOBot
         public Socks Socks { get; set; }
         public HttpProxy HttpProxy { get; set; }
         public string ID { get; set; }
-        public string HashPassword { get; set; }
+        //public string HashPassword { get; set; }
         // the actual username Pokemone Planet saved as... including all lowercase and uppercase stuff... this matters for MD5 encryption stuff
-        public string Username { get; set; }
+        //public string Username { get; set; }
 
         [JsonIgnore]
         public string FileName { get; set; }
@@ -26,13 +26,7 @@ namespace PPOBot
             Name = name;
             Socks = new Socks();
             HttpProxy = new HttpProxy();
-        }
-
-        public void SetInfo(string id, string username, string hp)
-        {
-            ID = id;
-            Username = username;
-            HashPassword = hp;
+            ID = "0";
         }
     }
 }
