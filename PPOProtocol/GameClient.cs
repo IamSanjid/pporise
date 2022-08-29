@@ -1363,7 +1363,7 @@ namespace PPOProtocol
                                                 (ActiveBattle.WildPokemon.Form != "default"
                     ? "(" + ActiveBattle.WildPokemon.Form + ")"
                     : string.Empty) +
-                      " has appeared!");
+                      " has appeared!" + (ActiveBattle.WildPokemon.IsSynced ? " Synchronized" : ""));
             }
             else
             {
@@ -1806,6 +1806,27 @@ namespace PPOProtocol
             }
 
             return new string[0];
+        }
+        
+        public static string[] ParseMultiArray(string _loc2)
+        {
+            var result = new List<string>();
+            if (_loc2 != "[]" && _loc2 != "")
+            {
+                if (_loc2.IndexOf("[", StringComparison.Ordinal) == 0 && _loc2.IndexOf("]", StringComparison.Ordinal) != -1)
+                {
+                    _loc2 = _loc2.Substring(2, _loc2.Length - 4);
+                    var strArrayA = _loc2.Split(new string[]
+                    {
+                        "],["
+                    }, StringSplitOptions.None);
+                    for (var _loc1 = 0; _loc1 < strArrayA.Length; ++_loc1)
+                    {
+                        result.Add(strArrayA[_loc1]);
+                    }
+                }
+            }
+            return result.ToArray();
         }
 
         public bool BuyItem(int itemId, int quantity)
