@@ -1363,7 +1363,7 @@ namespace PPOProtocol
                                                 (ActiveBattle.WildPokemon.Form != "default"
                     ? "(" + ActiveBattle.WildPokemon.Form + ")"
                     : string.Empty) +
-                      " has appeared!");
+                      " has appeared!" + (ActiveBattle.WildPokemon.IsSynced ? " Synchronized" : ""));
             }
             else
             {
