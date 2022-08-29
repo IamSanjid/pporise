@@ -23,6 +23,7 @@ namespace PPOProtocol
         public PokemonType Type2 { get; private set; }
         public string Ailment { get; private set; }
         public string EncryptedAbility { get; private set; }
+        public bool IsSynced { get; set; }
         public bool IsRare;
         public bool IsElite { get; private set; }
 
