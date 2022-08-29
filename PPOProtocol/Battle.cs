@@ -76,6 +76,11 @@ namespace PPOProtocol
             }
             if (_client.HasEncounteredRarePokemon)
                 WildPokemon.IsRare = true;
+            
+            // Set Synchronized status
+            var syncDat = GameClient.ParseMultiArray(data[13]);
+            WildPokemon.IsSynced = syncDat[4] == "1";
+
 
             var currentPPs = data[9].Split(',');
             for (int i = 0; i < currentPPs.Length; i++)
