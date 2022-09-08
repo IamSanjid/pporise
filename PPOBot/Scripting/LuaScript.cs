@@ -1,4 +1,4 @@
-﻿using MoonSharp.Interpreter;
+using MoonSharp.Interpreter;
 using PPOBot.Utils;
 using PPOProtocol;
 using System;
@@ -209,6 +209,7 @@ namespace PPOBot.Scripting
             _lua.Globals["isOpponentShiny"] = new Func<bool>(IsOpponentShiny);
             _lua.Globals["isSpecialForm"] = new Func<bool>(IsOpponentSpecialForm);
             _lua.Globals["isAlreadyCaught"] = new Func<bool>(IsAlreadyCaught);
+			_lua.Globals["isOpponentSynced"] = new Func<bool>(IsOpponentSynced);
             _lua.Globals["isOpponentEffortValue"] = new Func<string, bool>(IsOpponentEffortValue);
             _lua.Globals["getOpponentEffortValue"] = new Func<string, int>(GetOpponentEffortValue);
             _lua.Globals["getOpponentType"] = new Func<string[]>(GetOpponentType);
@@ -727,6 +728,16 @@ namespace PPOBot.Scripting
 				return false;
 			}
 			return Bot.Game.ActiveBattle.IsAlreadyCaught;
+		}
+		// API: Returns true if the opponent pokemon is synced.
+		private bool IsOpponentSynced()
+        {
+			if (!Bot.Game.IsInBattle || Bot.Game.ActiveBattle is null)
+			{
+				Fatal("error: isOpponentSynced is only usable in battle.");
+				return false;
+			}
+			return Bot.Game.ActiveBattle.WildPokemon.IsSynced;
 		}
 		// API: Returns the X-coordinate of the current cell.
 		private int GetPlayerX()
